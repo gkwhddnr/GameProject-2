@@ -20,28 +20,21 @@ public class GridMovementSystem : MonoBehaviour
     {
         if (moveInputRef != null) moveInputRef.action.Enable();
     }
-
     private void OnDisable()
     {
         if (moveInputRef != null) moveInputRef.action.Disable();
     }
-
     void Update()
     {
-        // 1. 현재 입력값 읽기
         Vector2 input = moveInputRef.action.ReadValue<Vector2>();
 
-        // [핵심 로직] 키를 뗐는지 확인 (입력값이 0이면 리셋)
         if (input == Vector2.zero)
         {
-            isInputProcessed = false; // 키를 뗐으니 다음 입력 받을 준비 완료!
+            isInputProcessed = false;
             return;
         }
 
-        // 2. 이미 이동 중이거나, 현재 누르고 있는 키에 대해 이미 이동 명령을 내렸다면 무시
         if (isMoving || isInputProcessed) return;
-
-        // --- 아래는 이전과 동일한 이동 계산 로직 ---
 
         if (Mathf.Abs(input.x) > Mathf.Abs(input.y)) input.y = 0;
         else input.x = 0;
@@ -61,7 +54,7 @@ public class GridMovementSystem : MonoBehaviour
                 isInputProcessed = true; // 입력 처리 완료
                 StartCoroutine(MoveRoutine(targetPosition)); // 이동 코루틴
             }
-            GameManager.Instance.AddMoveCount(1);
+            GameManager.Instance.NotifyTurnProcessed();
         }
     }
     private IEnumerator BumpAnimation(Vector3 direction)

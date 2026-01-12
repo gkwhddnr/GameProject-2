@@ -1,25 +1,36 @@
-using System.ComponentModel.Design;
 using TMPro;
-using UnityEditor;
+using System;
 using UnityEngine;
 
 public class GameManager : MonoBehaviour
 {
     public static GameManager Instance;
+    public event Action OnPlayerTurnEnd;
 
     [Header("UI References")]
     public TextMeshProUGUI countText;
 
-    private int currentMoveCount = 0;
+    private int MoveCount = 0;
 
     void Awake()
     {
         if (Instance == null) Instance = this;
         else Destroy(gameObject);
     }
+    public void NotifyTurnProcessed()
+    {
+        AddMoveCount(1);
+        OnPlayerTurnEnd?.Invoke();
+    }
     public void AddMoveCount(int i)
     {
-        currentMoveCount += i;
+        MoveCount += i;
+        UpdateUI();
+    }
+
+    public void ResetMoveCount()
+    {
+        MoveCount = 0;
         UpdateUI();
     }
 
@@ -27,7 +38,7 @@ public class GameManager : MonoBehaviour
     {
         if (countText != null)
         {
-            countText.text = "Count: " + currentMoveCount.ToString();
+            countText.text = "Count: " + MoveCount.ToString();
         }
     }
 }
