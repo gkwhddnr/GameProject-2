@@ -1,0 +1,26 @@
+{
+    "asset": "d073679a4beb682478c3009b750e36da",
+    "fileName": "019bb6ba-4e06-7965-b694-918c2f1c3cdc.jpg",
+    "prompt": "space themed 2D mirror sprite with reflective metallic surface, cosmic light and galaxy reflection",
+    "negativePrompt": "",
+    "model": "1a149e0e-3482-46a2-be9b-de997b8829fb",
+    "modelName": "Realistic Textures 3.0",
+    "customSeed": -1,
+    "w3CTraceId": "be8423de0a74dc07efc618047569c295",
+    "refinementMode": "Generation",
+    "pixelateTargetSize": 0,
+    "pixelateKeepImageSize": false,
+    "pixelatePixelBlockSize": 0,
+    "pixelateMode": 0,
+    "pixelateOutlineThickness": 0,
+    "doodles": {
+        "m_Items": []
+    },
+    "upscaleFactor": 0,
+    "dimensions": {
+        "width": 1024,
+        "height": 1024
+    },
+    "spriteSheet": false,
+    "duration": 0.0
+}

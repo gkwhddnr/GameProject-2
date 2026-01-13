@@ -1,0 +1,43 @@
+{
+    "asset": "07bd35165d4366742b6d1abcd00c61bf",
+    "fileName": "019bb6c0-1705-7893-869a-0a68d56da987.mp4",
+    "prompt": "animated space themed 2D mirror with shimmering cosmic reflections and flowing starlight",
+    "negativePrompt": "",
+    "model": "d8abdb7e-8844-4a91-8eee-55f4c8e60ca0",
+    "modelName": "Seedance 1 Pro",
+    "customSeed": -1,
+    "w3CTraceId": "7b8129331b3a7993f6fefd57320c79e3",
+    "refinementMode": "Spritesheet",
+    "pixelateTargetSize": 0,
+    "pixelateKeepImageSize": false,
+    "pixelatePixelBlockSize": 0,
+    "pixelateMode": 0,
+    "pixelateOutlineThickness": 0,
+    "doodles": {
+        "m_Items": [
+            {
+                "doodleReferenceType": 9,
+                "doodle": [],
+                "label": "First",
+                "strength": 1.0,
+                "invertStrength": false,
+                "assetReferenceGuid": "d073679a4beb682478c3009b750e36da"
+            },
+            {
+                "doodleReferenceType": 10,
+                "doodle": [],
+                "label": "Last",
+                "strength": 1.0,
+                "invertStrength": false,
+                "assetReferenceGuid": "d073679a4beb682478c3009b750e36da"
+            }
+        ]
+    },
+    "upscaleFactor": 0,
+    "dimensions": {
+        "width": 0,
+        "height": 0
+    },
+    "spriteSheet": true,
+    "duration": 5.0
+}

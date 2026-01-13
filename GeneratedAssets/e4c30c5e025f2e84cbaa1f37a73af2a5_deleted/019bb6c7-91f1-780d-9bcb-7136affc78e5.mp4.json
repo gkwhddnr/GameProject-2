@@ -1,0 +1,43 @@
+{
+    "asset": "e4c30c5e025f2e84cbaa1f37a73af2a5",
+    "fileName": "019bb6c7-91f1-780d-9bcb-7136affc78e5.mp4",
+    "prompt": "animated space mirror 2D sprite with cosmic reflections and glowing stars across frames",
+    "negativePrompt": "",
+    "model": "d8abdb7e-8844-4a91-8eee-55f4c8e60ca0",
+    "modelName": "Seedance 1 Pro",
+    "customSeed": -1,
+    "w3CTraceId": "a5bc9187bfba288c01a1939fe2efe494",
+    "refinementMode": "Spritesheet",
+    "pixelateTargetSize": 0,
+    "pixelateKeepImageSize": false,
+    "pixelatePixelBlockSize": 0,
+    "pixelateMode": 0,
+    "pixelateOutlineThickness": 0,
+    "doodles": {
+        "m_Items": [
+            {
+                "doodleReferenceType": 9,
+                "doodle": [],
+                "label": "First",
+                "strength": 1.0,
+                "invertStrength": false,
+                "assetReferenceGuid": "d073679a4beb682478c3009b750e36da"
+            },
+            {
+                "doodleReferenceType": 10,
+                "doodle": [],
+                "label": "Last",
+                "strength": 1.0,
+                "invertStrength": false,
+                "assetReferenceGuid": "d073679a4beb682478c3009b750e36da"
+            }
+        ]
+    },
+    "upscaleFactor": 0,
+    "dimensions": {
+        "width": 0,
+        "height": 0
+    },
+    "spriteSheet": true,
+    "duration": 5.0
+}

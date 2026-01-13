@@ -1,0 +1,13 @@
+{
+    "asset": "a89f366de4b2de34191c64dcb627d27f",
+    "fileName": "019bb6d1-14f0-7b2d-888a-27b173cee362.wav",
+    "prompt": "loopable space ambient sound with cosmic hum, gentle wind, and soft reverb for the space mirror map",
+    "negativePrompt": "",
+    "model": "5de0686a-fb27-40e5-9df0-28ae810d70ca",
+    "modelName": "ElevenLabs Sound Effects V2",
+    "customSeed": -1,
+    "w3CTraceId": "3ea000a511e549fd0202be7acc529149",
+    "duration": 8.0,
+    "autoTrim": false,
+    "hasReference": false
+}

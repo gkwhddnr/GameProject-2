@@ -1,0 +1,11 @@
+{
+    "asset": "7a0ba3dae06dfe4419c99baaebf373c2",
+    "fileName": "019bb6b6-8089-7e41-96cf-602cd3bd4e71_Preview.jpg",
+    "prompt": "highly reflective mirror surface with metallic finish and smoothness for realistic reflection",
+    "negativePrompt": "",
+    "model": "1a149e0e-3482-46a2-be9b-de997b8829fb",
+    "modelName": "Realistic Textures 3.0",
+    "customSeed": 383075086,
+    "w3CTraceId": "d7700ecbb3d665255a18dc32567ac91b",
+    "refinementMode": "Generation"
+}
