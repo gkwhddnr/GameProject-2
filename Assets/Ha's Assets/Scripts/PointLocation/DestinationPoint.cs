@@ -1,7 +1,7 @@
 using UnityEngine;
 using UnityEngine.Events;
 
-[RequireComponent(typeof(BoxCollider2D))]
+[RequireComponent(typeof(PolygonCollider2D))]
 [DisallowMultipleComponent]
 public class DestinationPoint : MonoBehaviour
 {
@@ -18,8 +18,8 @@ public class DestinationPoint : MonoBehaviour
         if (string.IsNullOrEmpty(gameObject.name) || gameObject.name.StartsWith("GameObject"))
             gameObject.name = "Destination";
 
-        var bc = GetComponent<BoxCollider2D>();
-        if (bc == null) bc = gameObject.AddComponent<BoxCollider2D>();
+        var bc = GetComponent<PolygonCollider2D>();
+        if (bc == null) bc = gameObject.AddComponent<PolygonCollider2D>();
         // Reset 시점에는 useCollision 값이 인스펙터 기본값(true)일 수 있으므로 일단 설정
         bc.isTrigger = !useCollision;
     }
@@ -81,7 +81,7 @@ public class DestinationPoint : MonoBehaviour
         onReached?.Invoke();
 
         // 2) 테스트용 종료 처리(명시적 GameManager 의존성 없이 동작하게 함)
-        EndGameForTest(playerGO);
+        // EndGameForTest(playerGO);
     }
 
     void EndGameForTest(GameObject playerGO)
