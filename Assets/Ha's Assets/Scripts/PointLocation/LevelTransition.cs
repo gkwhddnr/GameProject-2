@@ -1,3 +1,4 @@
+using System.Collections;
 using UnityEngine;
 
 /// <summary>
@@ -17,19 +18,12 @@ public class LevelTransition : MonoBehaviour
 
     [Tooltip("다음 배경(영역)으로 사용할 BoxCollider2D")]
     public BoxCollider2D nextBounds;
-
-    [Tooltip("플레이어가 텔레포트될 위치(빈 오브젝트의 Transform)")]
     public Transform nextPoint;
-
-    [Tooltip("텔레포트할 플레이어 오브젝트. 비어있으면 Tag로 찾음.")]
     public GameObject playerObject;
-
-    [Tooltip("playerObject 미할당 시 사용할 Tag (기본 'Player')")]
-    public string playerTag = "Player";
 
     [Header("MapCamera.SetBounds options")]
     public bool snapCameraToBounds = true;
-    public bool fitViewToBounds = false;
+    public bool fitViewToBounds = true;
 
     [Header("Teleport options")]
     [Tooltip("텔레포트 시 플레이어 Rigidbody2D의 속도를 0으로 초기화")]
@@ -47,7 +41,7 @@ public class LevelTransition : MonoBehaviour
         // 이동 시스템 강제 정지
         var moveSystem = player.GetComponent<GridMovementSystem>();
 
-        if (moveSystem != null)moveSystem.enabled = false;
+        if (moveSystem != null) moveSystem.enabled = false;
 
         // 2) 텔레포트
         if (nextPoint != null)
@@ -55,19 +49,16 @@ public class LevelTransition : MonoBehaviour
             Vector3 teleportPos = nextPoint.position;
 
             var sr = nextPoint.GetComponentInChildren<SpriteRenderer>();
-            if (sr != null)
-                teleportPos = sr.bounds.center;
+            if (sr != null) teleportPos = sr.bounds.center;
 
             player.transform.position = teleportPos;
         }
 
 
         if (moveSystem != null) moveSystem.enabled = true;
-        
 
         // 3) 카메라 전환
-        if (mapCamera == null)
-            mapCamera = FindFirstObjectByType<MapCamera>();
+        if (mapCamera == null) mapCamera = FindFirstObjectByType<MapCamera>();
 
         if (mapCamera != null && nextBounds != null)
         {
@@ -82,7 +73,6 @@ public class LevelTransition : MonoBehaviour
             fade.gameObject.SetActive(true); // 혹시 비활성화돼 있다면
             fade.FadeOut();
         }
-
     }
 
 
@@ -90,17 +80,6 @@ public class LevelTransition : MonoBehaviour
     GameObject ResolvePlayer()
     {
         if (playerObject != null) return playerObject;
-
-        if (!string.IsNullOrEmpty(playerTag))
-        {
-            try
-            {
-                var found = GameObject.FindWithTag(playerTag);
-                if (found != null) return found;
-            }
-            catch { /* 태그 미존재 등 예외 무시 */ }
-        }
-
         return null;
     }
 }

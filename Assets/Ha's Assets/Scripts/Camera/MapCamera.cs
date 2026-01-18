@@ -1,15 +1,6 @@
 ﻿using UnityEngine;
 using UnityEngine.SceneManagement;
 
-/// <summary>
-/// 2D 맵용 카메라 컨트롤러
-/// - SetBound() : 외부에서 bound 설정
-/// - boundsCollider: 카메라 이동 제한(카메라가 영역 밖으로 나가지 않도록)
-/// - FitCameraToBounds() : boundsCollider 전체가 화면에 들어오도록 orthographicSize를 정확히 맞춤
-/// - useFixedViewSize == false 일 때 카메라가 Player 레이어 오브젝트를 따라다님 (deadzone 기반)
-/// - autoScaleFollowView: follow 모드일 때 bounds 크기의 일부로 카메라 뷰를 자동 설정
-/// - Zoom : 카메라 확대/축소
-/// </summary>
 [RequireComponent(typeof(Camera))]
 public class MapCamera : MonoBehaviour
 {
@@ -19,9 +10,13 @@ public class MapCamera : MonoBehaviour
     [Header("카메라 영역 범위 설정")]
     public BoxCollider2D boundsCollider; // 카메라 이동 클램프용
 
-    [Header("전체 배경에 맞게 자동 카메라 영역 설정")]
+    [Header("전체 배경 카메라 (둘다 체크)")]
     [Tooltip("true면 boundsCollider 영역 전체가 보이도록 카메라를 자동으로 맞춥니다. (이 경우 카메라는 정지)")]
     public bool autoFitToBounds = false;
+
+    [Tooltip("Bounds에 맞춰 카메라를 맞출 때 maxOrthoSize를 무시하고 강제로 맞출지 여부")]
+    public bool forceFitIgnoreMaxOrtho = false;
+
 
     [Header("Zoom")]
     public bool allowZoom = false;        // 마우스 휠 줌 허용 (useFixedViewSize가 켜져있으면 무시됨)
@@ -33,10 +28,6 @@ public class MapCamera : MonoBehaviour
     public bool useFixedViewSize = false;
     public float viewWidth = 20f;
     public float viewHeight = 10f;
-
-    [Header("Fit behavior")]
-    [Tooltip("Bounds에 맞춰 카메라를 맞출 때 maxOrthoSize를 무시하고 강제로 맞출지 여부")]
-    public bool forceFitIgnoreMaxOrtho = false;
 
     [Header("플레이어 캐릭터 카메라")]
     public Transform playerTarget;
@@ -58,13 +49,13 @@ public class MapCamera : MonoBehaviour
     public BoxCollider2D CurrentBounds { get; private set; }
 
     // 내부 상태
-    Vector3 targetPos;
-    Vector3 velocity = Vector3.zero;
-    Camera cam;
+    private Vector3 targetPos;
+    private Vector3 velocity = Vector3.zero;
+    private Camera cam;
 
     // 화면 리사이즈 감지용
-    int lastScreenW = 0;
-    int lastScreenH = 0;
+    private int lastScreenW = 0;
+    private int lastScreenH = 0;
 
     void Start()
     {
@@ -81,29 +72,24 @@ public class MapCamera : MonoBehaviour
         TryAutoFindPlayerByLayer();
 
         // 시작 시 동작:
-        if (autoFitToBounds && boundsCollider != null)
+        if (autoFitToBounds && boundsCollider != null) FitCameraToBounds(ignoreMaxOrtho: forceFitIgnoreMaxOrtho);
+        
+        else if (useFixedViewSize)
         {
-            FitCameraToBounds(ignoreMaxOrtho: forceFitIgnoreMaxOrtho);
-            ClampTargetToBounds();
+            ApplyFixedViewSize(ignoreMaxOrtho: false);
+            if (boundsCollider != null) ClampTargetToBounds();
             transform.position = new Vector3(targetPos.x, targetPos.y, transform.position.z);
         }
         else
         {
-            if (useFixedViewSize)
-            {
-                ApplyFixedViewSize(ignoreMaxOrtho: false);
-            }
-           
-            if (!useFixedViewSize && playerTarget != null)
+            // follow 모드: autoScaleFollowView가 있다면 사이즈 적용
+            if (autoScaleFollowView && boundsCollider != null) ApplyAutoFollowViewSizing();
+
+            if (playerTarget != null)
             {
                 targetPos.x = playerTarget.position.x;
                 targetPos.y = playerTarget.position.y;
                 if (boundsCollider != null) ClampTargetToBounds();
-                transform.position = new Vector3(targetPos.x, targetPos.y, transform.position.z);
-            }
-            else if (boundsCollider != null)
-            {
-                ClampTargetToBounds();
                 transform.position = new Vector3(targetPos.x, targetPos.y, transform.position.z);
             }
         }
@@ -115,8 +101,7 @@ public class MapCamera : MonoBehaviour
     void Update()
     {
         // 플레이어 자동 검색(런타임에 플레이어가 생성될 수 있으므로)
-        if (playerTarget == null)
-            TryAutoFindPlayerByLayer();
+        if (playerTarget == null) TryAutoFindPlayerByLayer();
 
         // 화면 크기(해상도) 변경 시 재적용
         if (Screen.width != lastScreenW || Screen.height != lastScreenH)
@@ -124,11 +109,7 @@ public class MapCamera : MonoBehaviour
             lastScreenW = Screen.width;
             lastScreenH = Screen.height;
 
-            if (autoFitToBounds && boundsCollider != null)
-            {
-                FitCameraToBounds(ignoreMaxOrtho: forceFitIgnoreMaxOrtho);
-                ClampTargetToBounds();
-            }
+            if (autoFitToBounds && boundsCollider != null) FitCameraToBounds(ignoreMaxOrtho: forceFitIgnoreMaxOrtho);
             else if (useFixedViewSize)
             {
                 ApplyFixedViewSize();
@@ -140,18 +121,17 @@ public class MapCamera : MonoBehaviour
         if (!autoFitToBounds && !useFixedViewSize && allowZoom && cam != null && cam.orthographic)
         {
             float scroll = Input.GetAxis("Mouse ScrollWheel");
-            if (Mathf.Abs(scroll) > 0.0001f)
-            {
-                cam.orthographicSize = Mathf.Clamp(cam.orthographicSize - scroll * zoomSpeed, minOrthoSize, maxOrthoSize);
-            }
+            if (Mathf.Abs(scroll) > 0.0001f) cam.orthographicSize = Mathf.Clamp(cam.orthographicSize - scroll * zoomSpeed, minOrthoSize, maxOrthoSize);
         }
 
         // 동작 분기
         if (autoFitToBounds)
         {
+            // AutoFit 상태에서는 카메라 위치/사이즈는 FitCameraToBounds가 책임짐.
+            // 다만 bounds가 런타임에 바뀌면 재적용이 필요.
             if (boundsCollider != null && cam != null && cam.orthographic)
             {
-                ClampTargetToBounds();
+                FitCameraToBounds(ignoreMaxOrtho: forceFitIgnoreMaxOrtho);
             }
         }
         else
@@ -159,11 +139,8 @@ public class MapCamera : MonoBehaviour
             if (!useFixedViewSize)
             {
                 // 플레이어 따라다니기 + follow 뷰 자동 스케일 적용
-                if (autoScaleFollowView && boundsCollider != null && cam != null && cam.orthographic)
-                {
-                    ApplyAutoFollowViewSizing();
-                }
-
+                if (autoScaleFollowView && boundsCollider != null && cam != null && cam.orthographic) ApplyAutoFollowViewSizing();
+                
                 HandleFollow();
             }
             else
@@ -177,10 +154,8 @@ public class MapCamera : MonoBehaviour
         }
 
         // Smooth 이동
-        if (panSmooth > 0f)
-            transform.position = Vector3.SmoothDamp(transform.position, new Vector3(targetPos.x, targetPos.y, transform.position.z), ref velocity, panSmooth);
-        else
-            transform.position = new Vector3(targetPos.x, targetPos.y, transform.position.z);
+        if (panSmooth > 0f) transform.position = Vector3.SmoothDamp(transform.position, new Vector3(targetPos.x, targetPos.y, transform.position.z), ref velocity, panSmooth);
+        else transform.position = new Vector3(targetPos.x, targetPos.y, transform.position.z);
     }
 
     // player 자동 탐색
@@ -274,8 +249,7 @@ public class MapCamera : MonoBehaviour
             targetPos.x = playerTarget.position.x;
             targetPos.y = playerTarget.position.y;
 
-            if (boundsCollider != null)
-                ClampTargetToBounds();
+            if (boundsCollider != null) ClampTargetToBounds();
         }
     }
 
@@ -298,7 +272,7 @@ public class MapCamera : MonoBehaviour
         float desiredWidth = Mathf.Max(0.01f, boundsWidth * followViewFraction);
         float desiredHeight = Mathf.Max(0.01f, boundsHeight * followViewFraction);
 
-        float aspect = (float)Screen.width / Mathf.Max(1, Screen.height);
+        float aspect = cam.aspect; // use camera aspect for accuracy
 
         float orthoFromHeight = desiredHeight * 0.5f;
         float orthoFromWidth = (desiredWidth / aspect) * 0.5f;
@@ -308,17 +282,15 @@ public class MapCamera : MonoBehaviour
         desiredOrtho = Mathf.Max(desiredOrtho, minOrthoSize);
         desiredOrtho = Mathf.Min(desiredOrtho, maxOrthoSize);
 
-        if (followZoomSmooth <= 0f)
-        {
-            cam.orthographicSize = desiredOrtho;
-        }
+        if (followZoomSmooth <= 0f) cam.orthographicSize = desiredOrtho;
+        
         else
         {
             // 부드럽게 보간 (프레임 단위 단순 Lerp)
             cam.orthographicSize = Mathf.Lerp(cam.orthographicSize, desiredOrtho, followZoomSmooth);
         }
 
-        // viewWidth/viewHeight 반영(정보용)
+        // viewWidth/viewHeight 반영
         float appliedHeight = cam.orthographicSize * 2f;
         float appliedWidth = appliedHeight * aspect;
         viewWidth = appliedWidth;
@@ -339,31 +311,57 @@ public class MapCamera : MonoBehaviour
         float boundsWidth = Mathf.Max(0.0001f, b.size.x);
         float boundsHeight = Mathf.Max(0.0001f, b.size.y);
 
-        float aspect = (float)Screen.width / Mathf.Max(1, Screen.height);
+        // 카메라 화면 종횡비 (camera.aspect 보다 안전)
+        float aspect = cam.aspect;
 
-        // needed ortho to fit both width and height
+        // 기본으로 필요한 ortho (가로/세로 중 더 큰 쪽 기준)
         float orthoFromHeight = boundsHeight * 0.5f;
         float orthoFromWidth = (boundsWidth / aspect) * 0.5f;
         float neededOrtho = Mathf.Max(orthoFromHeight, orthoFromWidth);
 
-        // Respect minOrthoSize
+        // bounds 기준으로 허용되는 최대 orthographicSize 계산 (이 값을 넘기면 밖이 보일 수 있음)
+        float allowedOrthoFromHeight = boundsHeight * 0.5f;
+        float allowedOrthoFromWidth = (boundsWidth / aspect) * 0.5f;
+        float allowedOrtho = Mathf.Min(allowedOrthoFromHeight, allowedOrthoFromWidth);
+        allowedOrtho = Mathf.Max(allowedOrtho, 0.0001f);
+
+        // 필요한 값이 허용값보다 크면 허용값으로 줄임 (bounds 우선)
+        if (neededOrtho > allowedOrtho) neededOrtho = allowedOrtho;
+
         neededOrtho = Mathf.Max(neededOrtho, minOrthoSize);
 
-        // Apply maxOrthoSize unless we are ignoring it
-        if (!ignoreMaxOrtho)
-            neededOrtho = Mathf.Min(neededOrtho, maxOrthoSize);
+        if (!ignoreMaxOrtho) neededOrtho = Mathf.Min(neededOrtho, maxOrthoSize);
 
-        // 강제 적용
         cam.orthographicSize = neededOrtho;
 
-        // 적용된 화면 크기를 viewWidth/viewHeight에 반영
+        // 카메라 중심을 bounds 내 허용 범위로 보정
+        float verticalExtent = neededOrtho;
+        float horizontalExtent = neededOrtho * aspect;
+
+        float minX = b.min.x + horizontalExtent;
+        float maxX = b.max.x - horizontalExtent;
+        float minY = b.min.y + verticalExtent;
+        float maxY = b.max.y - verticalExtent;
+
+        float centerX, centerY;
+        if (minX > maxX) centerX = (b.min.x + b.max.x) * 0.5f;
+        else centerX = Mathf.Clamp(b.center.x, minX, maxX);
+
+        if (minY > maxY) centerY = (b.min.y + b.max.y) * 0.5f;
+        else centerY = Mathf.Clamp(b.center.y, minY, maxY);
+
+        targetPos.x = centerX;
+        targetPos.y = centerY;
+        transform.position = new Vector3(targetPos.x, targetPos.y, transform.position.z);
+
+        // viewWidth/viewHeight 갱신
         float appliedHeight = neededOrtho * 2f;
         float appliedWidth = appliedHeight * aspect;
         viewWidth = appliedWidth;
         viewHeight = appliedHeight;
-
-        Debug.Log($"FitCameraToBounds applied: ortho={neededOrtho:F3}, viewW={viewWidth:F3}, viewH={viewHeight:F3}, aspect={aspect:F3}");
     }
+
+
 
     /// <summary>
     /// viewWidth x viewHeight 를 기준으로 orthographicSize 계산 후 적용.
@@ -403,7 +401,7 @@ public class MapCamera : MonoBehaviour
 
         if (!ignoreMaxOrtho) targetOrtho = Mathf.Clamp(targetOrtho, 0.0001f, maxOrthoSize);
         else targetOrtho = Mathf.Max(0.0001f, targetOrtho);
-        
+
         cam.orthographicSize = targetOrtho;
     }
 
@@ -478,14 +476,12 @@ public class MapCamera : MonoBehaviour
         if (cam == null) cam = GetComponent<Camera>();
         if (boundsCollider == null) return;
 
-        if (fitViewToBounds || autoFitToBounds)
-        {
-            FitCameraToBounds(ignoreMaxOrtho: forceFitIgnoreMaxOrtho);
-        }
+        if (fitViewToBounds || autoFitToBounds) FitCameraToBounds(ignoreMaxOrtho: forceFitIgnoreMaxOrtho);
 
         if (snapCameraToBounds)
         {
-            ClampTargetToBounds();
+            if (!(fitViewToBounds || autoFitToBounds)) ClampTargetToBounds();
+
             transform.position = new Vector3(targetPos.x, targetPos.y, transform.position.z);
         }
     }

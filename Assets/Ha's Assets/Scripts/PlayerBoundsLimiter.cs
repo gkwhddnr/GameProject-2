@@ -26,17 +26,12 @@ public class PlayerBoundsLimiter : MonoBehaviour
     {
         playerCollider = GetComponent<Collider2D>();
 
-        if (autoSyncFromMapCamera && mapCamera == null)
-            mapCamera = FindFirstObjectByType<MapCamera>();
+        if (autoSyncFromMapCamera && mapCamera == null) mapCamera = FindFirstObjectByType<MapCamera>();
     }
 
     void LateUpdate()
     {
-        if (autoSyncFromMapCamera)
-        {
-            SyncBoundsFromCamera();
-        }
-
+        if (autoSyncFromMapCamera) SyncBoundsFromCamera();
         if (boundsCollider == null) return;
 
         ClampPosition();
@@ -44,10 +39,7 @@ public class PlayerBoundsLimiter : MonoBehaviour
 
     void SyncBoundsFromCamera()
     {
-        if (mapCamera != null && mapCamera.CurrentBounds != null)
-        {
-            boundsCollider = mapCamera.CurrentBounds;
-        }
+        if (mapCamera != null && mapCamera.CurrentBounds != null) boundsCollider = mapCamera.CurrentBounds;
     }
 
     void ClampPosition()

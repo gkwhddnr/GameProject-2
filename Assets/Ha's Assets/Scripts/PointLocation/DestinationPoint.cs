@@ -1,72 +1,68 @@
+using System;
+using System.Collections;
+using System.Reflection;
 using UnityEngine;
 using UnityEngine.Events;
 
-[RequireComponent(typeof(PolygonCollider2D))]
+[RequireComponent(typeof(BoxCollider2D))]
 [DisallowMultipleComponent]
 public class DestinationPoint : MonoBehaviour
 {
-    [Tooltip("ÇÃ·¹ÀÌ¾î°¡ µµÂøÇßÀ» ¶§ È£ÃâµÇ´Â ÀÌº¥Æ®ÀÔ´Ï´Ù. (ÀÎ½ºÆåÅÍ¿¡¼­ GameManager ÇÔ¼ö ¿¬°á °¡´É)")]
+    [Tooltip("í”Œë ˆì´ì–´ê°€ ë„ì°©í–ˆì„ ë•Œ í˜¸ì¶œë˜ëŠ” ì´ë²¤íŠ¸ì…ë‹ˆë‹¤. (ì¸ìŠ¤í™í„°ì—ì„œ GameManager í•¨ìˆ˜ ì—°ê²° ê°€ëŠ¥)")]
     public UnityEvent onReached;
 
-    [Tooltip("ÇÃ·¹ÀÌ¾î ÆÇº°: Tag 'Player' ¶Ç´Â PlayerController ÄÄÆ÷³ÍÆ®°¡ ÀÖÀ¸¸é µµÂøÀ¸·Î °£ÁÖÇÕ´Ï´Ù.")]
     public string playerTag = "Player";
 
-    public bool useCollision = true;
+    [Header("ìºë¦­í„°ê°€ ëª©í‘œì§€ì ì— ë„ì°© ì‹œ ë”œë ˆì´ í›„ ì´ë™")]
+    public float delaySeconds = 0.6f;
+
+    [Tooltip("ëŒ€ê¸° ì‹œê°„ ë™ì•ˆ í”Œë ˆì´ì–´ ì´ë™ ìŠ¤í¬ë¦½íŠ¸(GridMovementSystem)ë¥¼ ë¹„í™œì„±í™”í•©ë‹ˆë‹¤(ìˆì„ ê²½ìš°).")]
+    public bool disablePlayerMovementDuringDelay = true;
+
+    [Tooltip("disablePlayerMovementDuringDelayê°€ trueì¼ ë•Œ ì´ë™ ì½”ë£¨í‹´ë“¤ì„ StopAllCoroutines()ë¡œ ê°•ì œ ì¤‘ì§€í•©ë‹ˆë‹¤.")]
+    public bool stopMoveCoroutines = true;
+
+    [Tooltip("ëŒ€ê¸° ì‹œê°„ ë™ì•ˆ Rigidbody2Dì˜ ì‹œë®¬ë ˆì´ì…˜ì„ ëŒì§€ ì—¬ë¶€ (ìˆì„ ê²½ìš°). ë¬¼ë¦¬ ì¶©ëŒ/ê´€ì„±ì„ ë©ˆì¶¤.")]
+    public bool disableRigidbodySimulationDuringDelay = true;
+
+    // ë‚´ë¶€ í”Œë˜ê·¸: ì¤‘ë³µ íŠ¸ë¦¬ê±° ë°©ì§€
+    bool triggered = false;
 
     void Reset()
     {
         if (string.IsNullOrEmpty(gameObject.name) || gameObject.name.StartsWith("GameObject"))
             gameObject.name = "Destination";
 
-        var bc = GetComponent<PolygonCollider2D>();
-        if (bc == null) bc = gameObject.AddComponent<PolygonCollider2D>();
-        // Reset ½ÃÁ¡¿¡´Â useCollision °ªÀÌ ÀÎ½ºÆåÅÍ ±âº»°ª(true)ÀÏ ¼ö ÀÖÀ¸¹Ç·Î ÀÏ´Ü ¼³Á¤
-        bc.isTrigger = !useCollision;
+        var bc = GetComponent<BoxCollider2D>();
+        if (bc == null) bc = gameObject.AddComponent<BoxCollider2D>();
     }
 
     void Start()
     {
-        var col = GetComponent<Collider2D>();
-        if (col != null)
-        {
-            // ½ÃÀÛ ½ÃÁ¡¿¡ ¿É¼Ç¿¡ µû¶ó isTrigger¸¦ ¸ÂÃã
-            col.isTrigger = !useCollision;
-        }
     }
 
-    // Collision ¹æ½Ä (Collider.isTrigger == false »óÅÂ¿¡¼­ È£Ãâ)
+    // Collision ë°©ì‹ (Collider.isTrigger == false ìƒíƒœì—ì„œ í˜¸ì¶œ)
     void OnCollisionEnter2D(Collision2D collision)
     {
-        if (!useCollision) return;
-
         var otherGO = collision.collider?.gameObject;
         if (otherGO == null) return;
 
-        if (IsPlayerObject(otherGO))
-        {
-            HandleReached(otherGO);
-        }
+        if (IsPlayerObject(otherGO)) HandleReached(otherGO);
     }
 
-    // Trigger ¹æ½Ä (Collider.isTrigger == true »óÅÂ¿¡¼­ È£Ãâ)
+    // Trigger ë°©ì‹ (Collider.isTrigger == true ìƒíƒœì—ì„œ í˜¸ì¶œ)
     void OnTriggerEnter2D(Collider2D other)
     {
-        if (useCollision) return;
-
         if (other == null) return;
 
         var otherGO = other.gameObject;
-        if (IsPlayerObject(otherGO))
-        {
-            HandleReached(otherGO);
-        }
+        if (IsPlayerObject(otherGO)) HandleReached(otherGO);
     }
 
     bool IsPlayerObject(GameObject go)
     {
         if (go == null) return false;
 
-        // ÅÂ±× ¿ì¼± °Ë»ç
         if (!string.IsNullOrEmpty(playerTag) && go.CompareTag(playerTag)) return true;
         if (go.GetComponent<Rigidbody2D>() != null && string.IsNullOrEmpty(playerTag)) return true;
 
@@ -75,29 +71,154 @@ public class DestinationPoint : MonoBehaviour
 
     void HandleReached(GameObject playerGO)
     {
-        Debug.Log($"Destination reached by {playerGO.name}");
+        if (triggered) return; // ì¤‘ë³µ ë°©ì§€
+        triggered = true;
 
-        // 1) UnityEvent È£Ãâ (ÀÎ½ºÆåÅÍ¿¡¼­ GameManagerÀÇ PlayerReachedDestination µî ¿¬°á °¡´É)
-        onReached?.Invoke();
+        Debug.Log($"Destination reached by {playerGO.name} â€” will process after {delaySeconds} s");
 
-        // 2) Å×½ºÆ®¿ë Á¾·á Ã³¸®(¸í½ÃÀû GameManager ÀÇÁ¸¼º ¾øÀÌ µ¿ÀÛÇÏ°Ô ÇÔ)
-        // EndGameForTest(playerGO);
+        // ì½”ë£¨í‹´ìœ¼ë¡œ ì§€ì—° ì²˜ë¦¬ ë° ì•ˆì „ ì¡°ì¹˜
+        StartCoroutine(DelayAndHandle(playerGO));
     }
 
-    void EndGameForTest(GameObject playerGO)
+    IEnumerator DelayAndHandle(GameObject playerGO)
     {
-        // °ÔÀÓ ÀÏ½ÃÁ¤Áö (Å×½ºÆ®¿ë)
-        Time.timeScale = 0f;
+        if (playerGO == null) yield break;
+        
+        // 1) ì„ íƒì : í”Œë ˆì´ì–´ ì´ë™/ë¬¼ë¦¬ ë¹„í™œì„±í™”í•˜ê³  í˜„ì¬ ì†ë„ 0ìœ¼ë¡œ
+        Component moveSysComp = null;
+        MonoBehaviour moveSysMB = null;
+        bool moveSysWasEnabled = false;
 
+        Rigidbody2D rb = null;
+        bool rbSimulatedWas = true;
 
-        // Rigidbody2D ¼Óµµ ÃÊ±âÈ­
-        var rb = playerGO.GetComponent<Rigidbody2D>();
-        if (rb != null) rb.linearVelocity = Vector2.zero;
+        if (disablePlayerMovementDuringDelay)
+        {
+            // GridMovementSystemì„ êµ¬ì²´ íƒ€ì…ìœ¼ë¡œ ì°¸ì¡°í•˜ì§€ ì•Šê³  ì»´í¬ë„ŒíŠ¸ ì´ë¦„ìœ¼ë¡œ ì°¾ìŒ
+            moveSysComp = playerGO.GetComponent("GridMovementSystem");
+            moveSysMB = moveSysComp as MonoBehaviour;
+            if (moveSysMB != null)
+            {
+                moveSysWasEnabled = moveSysMB.enabled;
+                if (stopMoveCoroutines)
+                {
+                    try { moveSysMB.StopAllCoroutines(); } catch { }
+                }
+                try { moveSysMB.enabled = false; } catch { }
+                // ë¦¬í”Œë ‰ì…˜ìœ¼ë¡œ ë‚´ë¶€ bool í•„ë“œ ë¦¬ì…‹ ì‹œë„ (ì¤‘ìš”)
+                ResetMovementFlagsViaReflection(moveSysMB);
+            }
+        }
 
-        Debug.Log("EndGameForTest: °ÔÀÓÀ» ÀÏ½ÃÁ¤ÁöÇÏ°í ÇÃ·¹ÀÌ¾î ÀÔ·ÂÀ» ºñÈ°¼ºÈ­Çß½À´Ï´Ù. (Å×½ºÆ® µ¿ÀÛ)");
+        if (disableRigidbodySimulationDuringDelay)
+        {
+            rb = playerGO.GetComponent<Rigidbody2D>();
+            if (rb != null)
+            {
+                rbSimulatedWas = rb.simulated;
+                try
+                {
+                    rb.linearVelocity = Vector2.zero;
+                    rb.angularVelocity = 0f;
+                    rb.simulated = false;
+                }
+                catch { }
+            }
+        }
+        else
+        {
+            rb = playerGO.GetComponent<Rigidbody2D>();
+            if (rb != null)
+            {
+                try
+                {
+                    rb.linearVelocity = Vector2.zero;
+                    rb.angularVelocity = 0f;
+                }
+                catch { }
+            }
+        }
+
+        // 2) ëŒ€ê¸° (ì‹¤ì‹œê°„)
+        if (delaySeconds > 0f) yield return new WaitForSecondsRealtime(delaySeconds);
+        else yield return null;
+
+        // 4) onReached ì´ë²¤íŠ¸ í˜¸ì¶œ (ì›í•˜ë©´ í…”ë ˆí¬íŠ¸ ì „ í˜¸ì¶œë¡œ ë°”ê¿€ ìˆ˜ ìˆìŒ)
+        try
+        {
+            onReached?.Invoke();
+        }
+        catch (Exception ex)
+        {
+            Debug.LogException(ex);
+        }
+
+        // 5) ë³µêµ¬: ë¬¼ë¦¬/ì´ë™ ë‹¤ì‹œ í™œì„±í™” (playerGOê°€ ë°”ë€Œì—ˆì„ ìˆ˜ ìˆìœ¼ë¯€ë¡œ ì•ˆì „ ì²´í¬)
+        if (playerGO != null)
+        {
+            // Rigidbody ë³µêµ¬
+            if (rb != null)
+            {
+                try
+                {
+                    rb.simulated = rbSimulatedWas;
+                    rb.linearVelocity = Vector2.zero;
+                    rb.angularVelocity = 0f;
+                }
+                catch { }
+            }
+
+            // movement component ë³µêµ¬ ë° ë‚´ë¶€ í”Œë˜ê·¸ ì´ˆê¸°í™”
+            if (moveSysMB != null)
+            {
+                ResetMovementFlagsViaReflection(moveSysMB);
+                try { moveSysMB.enabled = moveSysWasEnabled; } catch { }
+                try { moveSysMB.StopAllCoroutines(); } catch { }
+            }
+        }
     }
 
-    // ¾À¿¡¼­ ½Ã°¢È­
+    /// <summary>
+    /// GridMovementSystem(ë˜ëŠ” ìœ ì‚¬ ì´ë™ ì»´í¬ë„ŒíŠ¸)ì˜ í”í•œ ë‚´ë¶€ bool í•„ë“œë“¤ì„ reflectionìœ¼ë¡œ falseë¡œ ë§Œë“­ë‹ˆë‹¤.
+    /// ì‹¤íŒ¨í•´ë„ ì˜ˆì™¸ëŠ” ë¬´ì‹œí•©ë‹ˆë‹¤.
+    /// </summary>
+    void ResetMovementFlagsViaReflection(MonoBehaviour moveSysMB)
+    {
+        if (moveSysMB == null) return;
+
+        Type t = moveSysMB.GetType();
+
+        string[] boolFieldCandidates = new string[] { "isMoving", "isInputProcessed", "_isMoving", "_isInputProcessed", "moving", "inputProcessed" };
+
+        foreach (var name in boolFieldCandidates)
+        {
+            try
+            {
+                var f = t.GetField(name, BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public);
+                if (f != null && f.FieldType == typeof(bool))
+                {
+                    f.SetValue(moveSysMB, false);
+                }
+            }
+            catch { }
+        }
+
+        string[] propCandidates = new string[] { "IsMoving", "IsInputProcessed" };
+        foreach (var name in propCandidates)
+        {
+            try
+            {
+                var p = t.GetProperty(name, BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public);
+                if (p != null && p.PropertyType == typeof(bool) && p.CanWrite)
+                {
+                    p.SetValue(moveSysMB, false, null);
+                }
+            }
+            catch { }
+        }
+    }
+
+    // ì”¬ì—ì„œ ì‹œê°í™”
     void OnDrawGizmosSelected()
     {
         var col = GetComponent<Collider2D>();
