@@ -3,7 +3,8 @@
 --- !u!78 &1
 TagManager:
   serializedVersion: 3
-  tags: []
+  tags:
+  - item
   layers:
   - Default
   - TransparentFX
@@ -15,7 +16,7 @@ TagManager:
   - Obstacle
   - Destination
   - next
-  - 
+  - Item
   - 
   - 
   - 
@@ -43,6 +44,9 @@ TagManager:
     locked: 0
   - name: UI
     uniqueID: 1840987721
+    locked: 0
+  - name: Player
+    uniqueID: 1859387957
     locked: 0
   m_RenderingLayers:
   - Default
