@@ -61,7 +61,6 @@ public class BackgroundManager : MonoBehaviour
         if (currentStage >= 0 && currentStage < stages.Count)
         {
             var prev = stages[currentStage];
-            // Stop movers immediately (optional)
             foreach (var m in prev.movers)
             {
                 if (m == null) continue;

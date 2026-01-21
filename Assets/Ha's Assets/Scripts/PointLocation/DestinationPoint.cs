@@ -11,27 +11,21 @@ public class DestinationPoint : MonoBehaviour
     [Tooltip("플레이어가 도착했을 때 호출되는 이벤트입니다. (인스펙터에서 GameManager 함수 연결 가능)")]
     public UnityEvent onReached;
 
-    public string playerTag = "Player";
-
     [Header("캐릭터가 목표지점에 도착 시 딜레이 후 이동")]
     public float delaySeconds = 0.6f;
 
-    [Tooltip("대기 시간 동안 플레이어 이동 스크립트(GridMovementSystem)를 비활성화합니다(있을 경우).")]
-    public bool disablePlayerMovementDuringDelay = true;
+    private bool disablePlayerMovementDuringDelay = true;
+    private bool stopMoveCoroutines = true;
+    private bool disableRigidbodySimulationDuringDelay = true;
 
-    [Tooltip("disablePlayerMovementDuringDelay가 true일 때 이동 코루틴들을 StopAllCoroutines()로 강제 중지합니다.")]
-    public bool stopMoveCoroutines = true;
-
-    [Tooltip("대기 시간 동안 Rigidbody2D의 시뮬레이션을 끌지 여부 (있을 경우). 물리 충돌/관성을 멈춤.")]
-    public bool disableRigidbodySimulationDuringDelay = true;
+    private string playerTag = "Player";
 
     // 내부 플래그: 중복 트리거 방지
     bool triggered = false;
 
     void Reset()
     {
-        if (string.IsNullOrEmpty(gameObject.name) || gameObject.name.StartsWith("GameObject"))
-            gameObject.name = "Destination";
+        if (string.IsNullOrEmpty(gameObject.name) || gameObject.name.StartsWith("GameObject")) gameObject.name = "Destination";
 
         var bc = GetComponent<BoxCollider2D>();
         if (bc == null) bc = gameObject.AddComponent<BoxCollider2D>();
@@ -41,7 +35,6 @@ public class DestinationPoint : MonoBehaviour
     {
     }
 
-    // Collision 방식 (Collider.isTrigger == false 상태에서 호출)
     void OnCollisionEnter2D(Collision2D collision)
     {
         var otherGO = collision.collider?.gameObject;
@@ -50,7 +43,6 @@ public class DestinationPoint : MonoBehaviour
         if (IsPlayerObject(otherGO)) HandleReached(otherGO);
     }
 
-    // Trigger 방식 (Collider.isTrigger == true 상태에서 호출)
     void OnTriggerEnter2D(Collider2D other)
     {
         if (other == null) return;
@@ -83,20 +75,32 @@ public class DestinationPoint : MonoBehaviour
     IEnumerator DelayAndHandle(GameObject playerGO)
     {
         if (playerGO == null) yield break;
-        
-        // 1) 선택적: 플레이어 이동/물리 비활성화하고 현재 속도 0으로
-        Component moveSysComp = null;
+
+        // --- 0) 가능한 경우: 현재 이동(픽셀 보간)이 끝날 때까지 기다려서 mid-move teleport 방지 ---
+        GridMovementSystem gms = playerGO.GetComponent<GridMovementSystem>();
+        if (gms != null)
+        {
+            // 최대 대기 타임(안전망)
+            float waitTimeout = 1.5f;
+            float waited = 0f;
+            while (gms.GetMoving() && waited < waitTimeout)
+            {
+                waited += Time.deltaTime;
+                yield return null;
+            }
+        }
+
+        // --- 1) 이동 시스템 안전 차단 ---
         MonoBehaviour moveSysMB = null;
         bool moveSysWasEnabled = false;
 
         Rigidbody2D rb = null;
         bool rbSimulatedWas = true;
 
-        if (disablePlayerMovementDuringDelay)
+        if (disablePlayerMovementDuringDelay && playerGO != null)
         {
-            // GridMovementSystem을 구체 타입으로 참조하지 않고 컴포넌트 이름으로 찾음
-            moveSysComp = playerGO.GetComponent("GridMovementSystem");
-            moveSysMB = moveSysComp as MonoBehaviour;
+            var comp = playerGO.GetComponent("GridMovementSystem");
+            moveSysMB = comp as MonoBehaviour;
             if (moveSysMB != null)
             {
                 moveSysWasEnabled = moveSysMB.enabled;
@@ -105,12 +109,12 @@ public class DestinationPoint : MonoBehaviour
                     try { moveSysMB.StopAllCoroutines(); } catch { }
                 }
                 try { moveSysMB.enabled = false; } catch { }
-                // 리플렉션으로 내부 bool 필드 리셋 시도 (중요)
+                // 추가 안전: 내부 상태 초기화
                 ResetMovementFlagsViaReflection(moveSysMB);
             }
         }
 
-        if (disableRigidbodySimulationDuringDelay)
+        if (disableRigidbodySimulationDuringDelay && playerGO != null)
         {
             rb = playerGO.GetComponent<Rigidbody2D>();
             if (rb != null)
@@ -125,38 +129,26 @@ public class DestinationPoint : MonoBehaviour
                 catch { }
             }
         }
-        else
+        else if (playerGO != null)
         {
             rb = playerGO.GetComponent<Rigidbody2D>();
             if (rb != null)
             {
-                try
-                {
-                    rb.linearVelocity = Vector2.zero;
-                    rb.angularVelocity = 0f;
-                }
-                catch { }
+                try { rb.linearVelocity = Vector2.zero; rb.angularVelocity = 0f; } catch { }
             }
         }
 
-        // 2) 대기 (실시간)
+        // --- 2) 실제 대기 ---
         if (delaySeconds > 0f) yield return new WaitForSecondsRealtime(delaySeconds);
         else yield return null;
 
-        // 4) onReached 이벤트 호출 (원하면 텔레포트 전 호출로 바꿀 수 있음)
-        try
-        {
-            onReached?.Invoke();
-        }
-        catch (Exception ex)
-        {
-            Debug.LogException(ex);
-        }
+        // --- 3) 이벤트 호출(텔레포트/전환 등은 onReached 리스너에서 처리) ---
+        try{ onReached?.Invoke(); }
+        catch (Exception ex){ Debug.LogException(ex); }
 
-        // 5) 복구: 물리/이동 다시 활성화 (playerGO가 바뀌었을 수 있으므로 안전 체크)
+        // --- 4) 복구: 이동/물리 다시 활성화 ---
         if (playerGO != null)
         {
-            // Rigidbody 복구
             if (rb != null)
             {
                 try
@@ -168,12 +160,11 @@ public class DestinationPoint : MonoBehaviour
                 catch { }
             }
 
-            // movement component 복구 및 내부 플래그 초기화
             if (moveSysMB != null)
             {
+                // 내부 플래그 초기화
                 ResetMovementFlagsViaReflection(moveSysMB);
                 try { moveSysMB.enabled = moveSysWasEnabled; } catch { }
-                try { moveSysMB.StopAllCoroutines(); } catch { }
             }
         }
     }
@@ -195,10 +186,7 @@ public class DestinationPoint : MonoBehaviour
             try
             {
                 var f = t.GetField(name, BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public);
-                if (f != null && f.FieldType == typeof(bool))
-                {
-                    f.SetValue(moveSysMB, false);
-                }
+                if (f != null && f.FieldType == typeof(bool)) f.SetValue(moveSysMB, false);
             }
             catch { }
         }
@@ -209,16 +197,12 @@ public class DestinationPoint : MonoBehaviour
             try
             {
                 var p = t.GetProperty(name, BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public);
-                if (p != null && p.PropertyType == typeof(bool) && p.CanWrite)
-                {
-                    p.SetValue(moveSysMB, false, null);
-                }
+                if (p != null && p.PropertyType == typeof(bool) && p.CanWrite) p.SetValue(moveSysMB, false, null);
             }
             catch { }
         }
     }
 
-    // 씬에서 시각화
     void OnDrawGizmosSelected()
     {
         var col = GetComponent<Collider2D>();

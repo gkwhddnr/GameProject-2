@@ -113,4 +113,9 @@ public class GridMovementSystem : MonoBehaviour
 
         return collider != null;
     }
+
+    public bool GetMoving()
+    {
+        return isMoving;
+    }
 }

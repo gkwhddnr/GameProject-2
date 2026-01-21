@@ -68,6 +68,8 @@ public class TurnBasedWall : MonoBehaviour
 
     private void OnTurnMove()
     {
+        if (!isActiveAndEnabled) return;
+
         // [핵심 로직]
         // 만약 이미 이동 중이라면? 
         // 1. 진행 중이던 이동 코루틴을 즉시 멈춤

@@ -26,7 +26,6 @@ public class BackgroundMover : MonoBehaviour
     float startTime = 0f;
     bool running = false;
 
-    // optional: bounds provided by BackgroundManager / MapCamera
     BoxCollider2D bounds;
 
     void Awake()
@@ -55,15 +54,12 @@ public class BackgroundMover : MonoBehaviour
         // X
         if (pingPongX)
         {
-            // PingPong result 0..1 mapped to -0.5..+0.5 to get symmetric movement if wanted.
             float p = Mathf.PingPong(t / Mathf.Max(0.0001f, pingPeriodX), 1f);
-            // multiply by sign of speed.x to keep direction info
             offset.x = p * Mathf.Sign(speed.x);
         }
         else
         {
-            if (moveX)
-                offset.x += speed.x * realDt;
+            if (moveX) offset.x += speed.x * realDt;
         }
 
         // Y
@@ -74,11 +70,9 @@ public class BackgroundMover : MonoBehaviour
         }
         else
         {
-            if (moveY)
-                offset.y += speed.y * realDt;
+            if (moveY) offset.y += speed.y * realDt;
         }
 
-        // wrap to 0..1 to avoid large numbers
         offset.x = Wrap01(offset.x);
         offset.y = Wrap01(offset.y);
 
@@ -99,23 +93,13 @@ public class BackgroundMover : MonoBehaviour
         rend.SetPropertyBlock(mpb);
     }
 
-    // public API expected by BackgroundManager / LevelTransition
-    public void SetBounds(BoxCollider2D newBounds)
-    {
-        bounds = newBounds;
-        // 현재 구현은 텍스처 오프셋 기반 스크롤이라 bounds 자체로 즉시 시각적 크기를 조정하진 않음.
-        // 필요하면 bounds 크기를 참고해 speed를 조정하거나 다른 동작 추가 가능.
-    }
+    public void SetBounds(BoxCollider2D newBounds){ bounds = newBounds; }
+    public void StopMove() { running = false; }
 
     public void StartMove()
     {
         running = true;
         startTime = useUnscaledTime ? Time.realtimeSinceStartup : Time.time;
-    }
-
-    public void StopMove()
-    {
-        running = false;
     }
 
     // 유틸: 즉시 오프셋 초기화

@@ -34,7 +34,6 @@ public class MapCamera : MonoBehaviour
 
     [Tooltip("플레이어가 이 값(월드 단위) 이상 카메라 중심에서 벗어나면 카메라가 따라감")]
     public float followDeadzone = 1.5f;
-    public string playerLayerName = "Player";
 
     [Header("플레이어를 추적하는 카메라 영역 설정")]
     [Tooltip("플레이어 추적 모드일 때 boundsCollider의 일부 크기로 카메라 뷰를 자동 계산할지 여부")]
@@ -52,6 +51,7 @@ public class MapCamera : MonoBehaviour
     private Vector3 targetPos;
     private Vector3 velocity = Vector3.zero;
     private Camera cam;
+    private string playerLayerName = "Player";
 
     // 화면 리사이즈 감지용
     private int lastScreenW = 0;

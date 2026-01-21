@@ -4,19 +4,19 @@ using UnityEngine;
 public class StartPoint : MonoBehaviour
 {
     [Header("Spawn Settings")]
-    [Tooltip("씬에 플레이어가 없을 때만 스폰할 플레이어 프리팹")]
     public GameObject playerPrefab;
 
+
+
     [Tooltip("게임 시작 시 자동으로 스폰/이동할지 여부")]
-    public bool spawnOnStart = true;
+    private bool spawnOnStart = true;
 
     [Tooltip("씬에서 기존 플레이어를 찾을 때 사용할 태그")]
-    public string playerTag = "Player";
+    private string playerTag = "Player";
 
     void Reset()
     {
-        if (string.IsNullOrEmpty(gameObject.name) || gameObject.name.StartsWith("GameObject"))
-            gameObject.name = "StartPoint";
+        if (string.IsNullOrEmpty(gameObject.name) || gameObject.name.StartsWith("GameObject")) gameObject.name = "StartPoint";
     }
 
     void Start()
@@ -24,8 +24,7 @@ public class StartPoint : MonoBehaviour
         if (!spawnOnStart) return;
 
         var fade = GetComponentInChildren<PointSpriteFadeController>();
-        if (fade != null)
-            fade.FadeOut();
+        if (fade != null) fade.FadeOut();
 
         // 씬에 이미 플레이어가 있는지 먼저 확인
         GameObject existingPlayer = null;
@@ -70,11 +69,6 @@ public class StartPoint : MonoBehaviour
 
             Debug.Log($"StartPoint: 플레이어 프리팹 '{spawned.name}'를 새로 스폰했습니다.");
         }
-        else
-        {
-            Debug.LogWarning("StartPoint: 씬에 플레이어도 없고 playerPrefab도 지정되지 않았습니다.");
-        }
-
     }
 
     // 유틸리티
