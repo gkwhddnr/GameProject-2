@@ -17053,7 +17053,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlayerMoveScript
   moveInputRef: {fileID: 1308913088}
-  moveSpeed: 0.1
+  moveSpeed: 0.05
   gridSize: 1
   obstacleLayer:
     serializedVersion: 2
