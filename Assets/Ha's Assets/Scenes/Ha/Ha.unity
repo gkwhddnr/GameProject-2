@@ -16819,6 +16819,23 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::GameManager
   countText: {fileID: 666451192}
+  playerTransform: {fileID: 4902334896773200455}
+  stageBounds:
+  - {fileID: 235279391}
+  - {fileID: 1159171097}
+  - {fileID: 36376981}
+  - {fileID: 449652801}
+  - {fileID: 1944182047}
+  stageAssignedCounts: 3200000032000000320000003200000032000000
+  itemSlots:
+  - {fileID: 67362093}
+  - {fileID: 1895091032}
+  - {fileID: 1354718033}
+  - {fileID: 653532008}
+  - {fileID: 870165773}
+  - {fileID: 268001617}
+  itemSlotExtraTurns: 190000000a000000
+  itemSlotConsumeOnCollect: 
 --- !u!114 &2128370992
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -16834,7 +16851,6 @@ MonoBehaviour:
   itemLayerMask:
     serializedVersion: 2
     m_Bits: 1024
-  useTagOrLayer: 1
   nextPoints:
   - {fileID: 587273915}
   - {fileID: 655414129}
@@ -16847,16 +16863,11 @@ MonoBehaviour:
   - "\uC783\uC5B4\uBC84\uB9B0 \uBCC4 \uCC3E\uAE30: {collected} / ??"
   uiText: {fileID: 743607133}
   playerTransform: {fileID: 4902334896773200455}
-  showUIImmediatelyIfNoBounds: 0
-  fadeOutItems: 1
   itemFadeDuration: 0.6
-  disableColliderDuringItemFade: 1
-  destroyItemAfterFade: 1
   revealItemsSequentially: 1
   initialVisibleCount: 1
   itemFadeInDuration: 0.6
   subsequentRevealCount: 1
-  hideByAlphaAndDisableCollider: 1
 --- !u!23 &1266386156231481502
 MeshRenderer:
   m_ObjectHideFlags: 0
