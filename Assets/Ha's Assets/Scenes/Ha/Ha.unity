@@ -16867,7 +16867,7 @@ MonoBehaviour:
   revealItemsSequentially: 1
   initialVisibleCount: 1
   itemFadeInDuration: 0.6
-  subsequentRevealCount: 1
+  subsequentRevealCount: 2
 --- !u!23 &1266386156231481502
 MeshRenderer:
   m_ObjectHideFlags: 0

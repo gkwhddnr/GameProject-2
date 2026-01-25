@@ -368,6 +368,13 @@ public class ItemCollector : MonoBehaviour
 
         collectedInstanceIds.Add(id);
         collected++;
+
+        if (FloatingTextSpawner.Instance != null)
+        {
+            // 아이템의 현재 위치를 기반으로 텍스트 생성 요청
+            FloatingTextSpawner.Instance.ShowForCollectedItem(candidate);
+        }
+
         UpdateUI();
 
         if (GameManager.Instance != null) GameManager.Instance.OnItemCollected(candidate);

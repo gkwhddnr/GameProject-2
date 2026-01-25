@@ -17,8 +17,8 @@ public class GameManager : MonoBehaviour
     [Header("Item Slot Settings")]
     public GameObject[] itemSlots;
     public int[] itemSlotExtraTurns;
-    public bool[] itemSlotConsumeOnCollect;
 
+    private bool[] itemSlotConsumeOnCollect;
     private int MoveCount = 0;
     private int[] stageRemainingCounts;
     private int currentStageIndex = -1;
@@ -78,6 +78,8 @@ public class GameManager : MonoBehaviour
                 return;
             }
         }
+
+        FloatingTextSpawner.Instance?.ShowForCollectedItem(item);
     }
 
     private void UpdateCurrentStage()
@@ -119,5 +121,16 @@ public class GameManager : MonoBehaviour
         countText.text = IsValidStage(currentStageIndex)
             ? $"Stage {currentStageIndex} : {stageRemainingCounts[currentStageIndex]}"
             : $"Count: {MoveCount}";
+    }
+
+    public void RefreshPlayerStage()
+    {
+        if (isGameOver) return;
+
+        UpdateCurrentStage();
+        UpdateUI();
+
+        // 필요하다면 스테이지가 바뀌었을 때 추가 로직을 여기에 넣을 수 있습니다.
+        Debug.Log($"Stage Refreshed: Current Index is {currentStageIndex}");
     }
 }

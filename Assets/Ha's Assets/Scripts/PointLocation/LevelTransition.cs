@@ -57,6 +57,8 @@ public class LevelTransition : MonoBehaviour
                     rb.angularVelocity = 0f;
                 }
             }
+
+            if (GameManager.Instance != null) GameManager.Instance.RefreshPlayerStage();
         }
 
         // 카메라 전환
