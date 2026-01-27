@@ -75,6 +75,8 @@ public class LevelTransition : MonoBehaviour
         {
             backgroundManager.AdvanceToNextStage(previousDeactivateDelay: fadeDuration);
         }
+
+        SoundManager.Instance?.PlayDestination();
     }
 
     // playerObject 또는 tag로 플레이어 찾기

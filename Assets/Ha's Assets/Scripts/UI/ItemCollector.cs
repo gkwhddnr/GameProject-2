@@ -204,6 +204,7 @@ public class ItemCollector : MonoBehaviour
         nextHiddenIndex = Mathf.Clamp(initialVisibleCount, 0, itemsList.Count);
         totalRevealedCount = nextHiddenIndex;
 
+
         if (stageBoundsArray != null && stageBoundsArray.Length > 0)
         {
             stageItemsMap = new List<GameObject>[stageBoundsArray.Length];
@@ -264,6 +265,7 @@ public class ItemCollector : MonoBehaviour
     void ApplyInitialHide(GameObject item)
     {
         if (item == null) return;
+
         var sprs = item.GetComponentsInChildren<SpriteRenderer>(true);
         foreach (var s in sprs)
         {
@@ -316,12 +318,14 @@ public class ItemCollector : MonoBehaviour
     IEnumerator FadeInItemRoutine(GameObject item, float duration)
     {
         if (item == null) yield break;
+
         item.SetActive(true);
+
+
+        // 아이템 자체의 페이드 인 연출
         var sprs = item.GetComponentsInChildren<SpriteRenderer>(true);
         var rends = item.GetComponentsInChildren<Renderer>(true);
         var cols = GetCachedColliders(item);
-
-        foreach (var col in cols) col.enabled = false;
 
         float t = 0f;
         while (t < duration)
@@ -334,6 +338,7 @@ public class ItemCollector : MonoBehaviour
         UpdateItemAlpha(item, sprs, rends, 1f);
         foreach (var col in cols) col.enabled = true;
     }
+
 
     void UpdateItemAlpha(GameObject item, SpriteRenderer[] sprs, Renderer[] rends, float alpha)
     {
@@ -355,8 +360,23 @@ public class ItemCollector : MonoBehaviour
     }
 
     bool IsItemObject(GameObject go) => go != null && ((1 << go.layer) & itemLayerMask.value) != 0;
+    void OnTriggerEnter2D(Collider2D other)
+    {
+        // 1. 아이템 수집 체크 (기존 로직)
+        if (other is BoxCollider2D poly && poly.isTrigger)
+        {
+            TryCollect(other.gameObject);
+        }
 
-    void OnTriggerEnter2D(Collider2D other) { if (other is BoxCollider2D poly && poly.isTrigger) TryCollect(other.gameObject); }
+        // 2. 목적지(NextPoint) 도달 체크 추가
+        // 만약 목적지에 SpriteRotator가 붙어있다면 실행
+        SpriteRotator rotator = other.GetComponent<SpriteRotator>();
+        if (rotator != null && other.gameObject.CompareTag("NextPoint")) // 태그나 레이어로 구분
+        {
+            rotator.TriggerDisappear(); // 빠르게 회전하며 사라짐 실행
+            SoundManager.Instance?.PlayDestination(); // 도착 사운드 재생
+        }
+    }
     void OnCollisionEnter2D(Collision2D collision) { TryCollect(collision.collider.gameObject); }
     public void CollectBy(GameObject item) => TryCollect(item);
 
@@ -390,6 +410,24 @@ public class ItemCollector : MonoBehaviour
             if (collected >= currentTotal) RevealNextHiddenBatch(subsequentRevealCount);
         }
         if (collected >= currentStageTotalItems) RevealNextPointForStage(currentStageIndex);
+
+        SpriteRotator rotator = candidate.GetComponent<SpriteRotator>();
+        if (rotator != null){
+            rotator.TriggerDisappear(); // 회전 애니메이션 시작
+            StartCoroutine(HandleStageComplete(rotator));
+        }
+
+        else
+        {
+            if (fadeOutItems) StartCoroutine(FadeOutItemRoutine(candidate));
+        }
+
+        SoundManager.Instance?.PlayCollect();
+    }
+
+    IEnumerator HandleStageComplete(SpriteRotator rotator)
+    {
+        yield return StartCoroutine(rotator.WaitForDisappear());
     }
 
     IEnumerator FadeOutItemRoutine(GameObject target)
