@@ -16,9 +16,6 @@ public class ItemPickup : MonoBehaviour
         if (!other.CompareTag("Player")) return;
 
         // 수집 로직 실행
-        if (collector != null)
-        {
-            collector.CollectBy(gameObject);
-        }
+        if (collector != null) collector.CollectBy(gameObject);
     }
 }

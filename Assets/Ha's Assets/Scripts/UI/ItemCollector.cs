@@ -12,7 +12,7 @@ public class ItemCollector : MonoBehaviour
 
     [Header("각 스테이지마다 보여질 DestinationPoint")]
     public GameObject[] nextPoints;
-    public float nextPointFadeDuration = 0.8f;
+    private float nextPointFadeDuration = 0.8f;
 
     [Header("각 스테이지마다 보여질 UI 설정")]
     public BoxCollider2D[] stageBoundsArray;
@@ -31,9 +31,9 @@ public class ItemCollector : MonoBehaviour
 
     [Header("연속으로 아이템 드러내기")]
     public bool revealItemsSequentially = true;
-    public int initialVisibleCount = 1;
-    public float itemFadeInDuration = 0.6f;
-    public int subsequentRevealCount = 1;
+    private float itemFadeInDuration = 0.6f;
+    private int initialVisibleCount = 1;
+    private int subsequentRevealCount = 2;
 
     [Tooltip("플레이어가 다른 스테이지로 들어갈 때 collected와 수거 이력 초기화 여부")]
     private bool resetCollectedOnStageEnter = true;
@@ -132,10 +132,7 @@ public class ItemCollector : MonoBehaviour
             {
                 if (!uiShown || currentStageIndex != foundIndex)
                 {
-                    if (currentStageIndex != foundIndex && resetCollectedOnStageEnter)
-                    {
-                        ResetCollectedForNewStage(foundIndex);
-                    }
+                    if (currentStageIndex != foundIndex && resetCollectedOnStageEnter) ResetCollectedForNewStage(foundIndex);
                     currentStageIndex = foundIndex;
                     ShowUI();
                 }
@@ -187,10 +184,8 @@ public class ItemCollector : MonoBehaviour
         currentStageNextHiddenIndex = Mathf.Clamp(initialVisibleCount, 0, currentStageTotalItems);
         currentStageTotalRevealedCount = currentStageNextHiddenIndex;
 
-        if (revealItemsSequentially && currentStageItems.Count > 0)
-        {
-            HideItemsForList(currentStageItems, initialVisibleCount);
-        }
+        if (revealItemsSequentially && currentStageItems.Count > 0) HideItemsForList(currentStageItems, initialVisibleCount);
+        
         UpdateUI();
     }
 
@@ -363,13 +358,8 @@ public class ItemCollector : MonoBehaviour
     void OnTriggerEnter2D(Collider2D other)
     {
         // 1. 아이템 수집 체크 (기존 로직)
-        if (other is BoxCollider2D poly && poly.isTrigger)
-        {
-            TryCollect(other.gameObject);
-        }
-
-        // 2. 목적지(NextPoint) 도달 체크 추가
-        // 만약 목적지에 SpriteRotator가 붙어있다면 실행
+        if (other is BoxCollider2D poly && poly.isTrigger) TryCollect(other.gameObject);
+        
         SpriteRotator rotator = other.GetComponent<SpriteRotator>();
         if (rotator != null && other.gameObject.CompareTag("NextPoint")) // 태그나 레이어로 구분
         {
@@ -389,13 +379,10 @@ public class ItemCollector : MonoBehaviour
         collectedInstanceIds.Add(id);
         collected++;
 
-        if (FloatingTextSpawner.Instance != null)
-        {
-            // 아이템의 현재 위치를 기반으로 텍스트 생성 요청
-            FloatingTextSpawner.Instance.ShowForCollectedItem(candidate);
-        }
+        if (FloatingTextSpawner.Instance != null) FloatingTextSpawner.Instance.ShowForCollectedItem(candidate);
 
         UpdateUI();
+        SequentialRevealManager.Instance?.NotifyCollected(candidate);
 
         if (GameManager.Instance != null) GameManager.Instance.OnItemCollected(candidate);
         if (disableColliderDuringItemFade) foreach (var col in GetCachedColliders(candidate)) col.enabled = false;
@@ -508,6 +495,9 @@ public class ItemCollector : MonoBehaviour
         foreach (var cg in canvasGroups) { if (cg) { cg.alpha = alpha; cg.interactable = cg.blocksRaycasts = alpha > 0.9f; } }
         foreach (var r in renderers) { if (r && r.sharedMaterial.HasProperty("_Color")) { Color c = r.sharedMaterial.color; c.a = alpha; r.sharedMaterial.color = c; } }
     }
+
+    public int GetInitialVisibleCount(){ return initialVisibleCount; }
+    public int GetSubsequentRevealCount(){ return subsequentRevealCount; }
 
     void ToggleNextPointCollider(bool enabled, GameObject point) { if (point) foreach (var col in GetCachedColliders(point)) col.enabled = enabled; }
 }
