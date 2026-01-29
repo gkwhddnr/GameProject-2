@@ -30,7 +30,7 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: -15, y: 2, z: 0}
-  m_LocalScale: {x: 1.0526316, y: 0.5, z: 1}
+  m_LocalScale: {x: 0.75, y: 0.5, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
@@ -80,7 +80,7 @@ SpriteRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: a97c105638bdf8b4a8650670310a4cd3, type: 2}
+  - {fileID: 2100000, guid: 2b1dc93b8f60240b79f5660a5eaea4c4, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -143,18 +143,12 @@ MonoBehaviour:
   baseRotationSpeed: 18
   idleSpeedVariance: 2
   randomizeDirectionOnStart: 1
+  ease: 0.8
+  fadeOnDisappear: 1
+  disableOnComplete: 1
   approachScale: {x: 0.85, y: 0.85, z: 1}
   approachRotationMultiplier: 1.2
   disappearSpinSpeed: 720
   targetDisappearScale: {x: 0, y: 0, z: 0}
   disappearDuration: 0.5
-  fadeOnDisappear: 1
   targetAlpha: 0
-  disableOnComplete: 1
-  ease: 0.8
-  onDisappearStart:
-    m_PersistentCalls:
-      m_Calls: []
-  onDisappearComplete:
-    m_PersistentCalls:
-      m_Calls: []

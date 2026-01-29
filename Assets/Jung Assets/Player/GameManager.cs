@@ -18,6 +18,10 @@ public class GameManager : MonoBehaviour
     public GameObject[] itemSlots;
     public int[] itemSlotExtraTurns;
 
+    [Header("Key Slot Settings")]
+    public GameObject[] keySlots;
+
+    private bool[] keySlotConsumeOnCollect;
     private bool[] itemSlotConsumeOnCollect;
     private int MoveCount = 0;
     private int[] stageRemainingCounts;
@@ -129,8 +133,41 @@ public class GameManager : MonoBehaviour
 
         UpdateCurrentStage();
         UpdateUI();
+        MapCameraStageController stageController = FindAnyObjectByType<MapCameraStageController>();
+        stageController?.ApplyCurrentStageSettingsImmediate();
 
         // 필요하다면 스테이지가 바뀌었을 때 추가 로직을 여기에 넣을 수 있습니다.
         Debug.Log($"Stage Refreshed: Current Index is {currentStageIndex}");
+    }
+
+
+    public bool IsKeySlotMatch(GameObject item, out int slotIndex)
+    {
+        slotIndex = -1;
+        if (item == null || keySlots == null) return false;
+
+        for (int i = 0; i < keySlots.Length; ++i)
+        {
+            var slot = keySlots[i];
+            if (slot == null) continue;
+
+            bool matched = (item == slot) ||
+                           (!string.IsNullOrEmpty(slot.tag) && slot.tag != "Untagged" && item.CompareTag(slot.tag)) ||
+                           (item.name.Contains(slot.name) || slot.name.Contains(item.name));
+
+            if (matched)
+            {
+                slotIndex = i;
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    public void ConsumeKeySlot(int slotIndex)
+    {
+        if (keySlots == null || slotIndex < 0 || slotIndex >= keySlots.Length) return;
+        if (keySlotConsumeOnCollect != null && slotIndex < keySlotConsumeOnCollect.Length && keySlotConsumeOnCollect[slotIndex]) keySlots[slotIndex] = null;
     }
 }

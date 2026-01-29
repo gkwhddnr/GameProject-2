@@ -8,19 +8,13 @@ public class MapCamera : MonoBehaviour
     public float panSmooth = 0.08f;
 
     [Header("카메라 영역 범위 설정")]
-    public BoxCollider2D boundsCollider; // 카메라 이동 클램프용
+    public BoxCollider2D boundsCollider;
 
     [Header("전체 배경 카메라 (둘다 체크)")]
-    [Tooltip("true면 boundsCollider 영역 전체가 보이도록 카메라를 자동으로 맞춥니다. (이 경우 카메라는 정지)")]
     public bool autoFitToBounds = false;
-
-    [Tooltip("Bounds에 맞춰 카메라를 맞출 때 maxOrthoSize를 무시하고 강제로 맞출지 여부")]
     public bool forceFitIgnoreMaxOrtho = false;
 
-
     [Header("Zoom")]
-    public bool allowZoom = false;        // 마우스 휠 줌 허용 (useFixedViewSize가 켜져있으면 무시됨)
-    public float zoomSpeed = 5f;
     public float minOrthoSize = 3f;
     public float maxOrthoSize = 20f;
 
@@ -31,68 +25,50 @@ public class MapCamera : MonoBehaviour
 
     [Header("플레이어 캐릭터 카메라")]
     public Transform playerTarget;
-
-    [Tooltip("플레이어가 이 값(월드 단위) 이상 카메라 중심에서 벗어나면 카메라가 따라감")]
     public float followDeadzone = 1.5f;
 
     [Header("플레이어를 추적하는 카메라 영역 설정")]
-    [Tooltip("플레이어 추적 모드일 때 boundsCollider의 일부 크기로 카메라 뷰를 자동 계산할지 여부")]
     public bool autoScaleFollowView = true;
-    [Tooltip("bounds 대비 카메라가 차지할 비율(예: 0.25 = 1/4, 0.125 = 1/8). 0.01 ~ 1.0")]
-    [Range(0.01f, 1f)]
-    public float followViewFraction = 0.25f;
-    [Tooltip("카메라 크기 변화의 부드러움(0 = 즉시, 0.1~0.3 추천)")]
-    [Range(0f, 1f)]
-    public float followZoomSmooth = 0.15f;
+    [Range(0.01f, 1f)] public float followViewFraction = 0.25f;
+    [Range(0f, 1f)] public float followZoomSmooth = 0.15f;
 
     public BoxCollider2D CurrentBounds { get; private set; }
 
-    // 내부 상태
     private Vector3 targetPos;
     private Vector3 velocity = Vector3.zero;
-    private Camera cam;
-    private string playerLayerName = "Player";
+    private Camera _cam;
+    private int _playerLayer;
+    private float _nextSearchTime = 0f;
+    private const float SEARCH_INTERVAL = 0.5f; // 플레이어 탐색 간격 (초)
 
-    // 화면 리사이즈 감지용
     private int lastScreenW = 0;
     private int lastScreenH = 0;
 
+    private Camera Cam {
+        get {
+            if (_cam == null) _cam = GetComponent<Camera>();
+            return _cam;
+        }
+    }
+
+    void Awake()
+    {
+        _cam = GetComponent<Camera>();
+        _playerLayer = LayerMask.NameToLayer("Player");
+    }
+
     void Start()
     {
-        cam = GetComponent<Camera>();
         targetPos = transform.position;
 
-        // 안전값
+        // 안전값 설정
         viewWidth = Mathf.Max(0.01f, viewWidth);
         viewHeight = Mathf.Max(0.01f, viewHeight);
         minOrthoSize = Mathf.Max(0.0001f, minOrthoSize);
         maxOrthoSize = Mathf.Max(minOrthoSize, maxOrthoSize);
 
-        // 플레이어 자동 검색 시도(인스펙터에 없으면)
-        TryAutoFindPlayerByLayer();
-
-        // 시작 시 동작:
-        if (autoFitToBounds && boundsCollider != null) FitCameraToBounds(ignoreMaxOrtho: forceFitIgnoreMaxOrtho);
-        
-        else if (useFixedViewSize)
-        {
-            ApplyFixedViewSize(ignoreMaxOrtho: false);
-            if (boundsCollider != null) ClampTargetToBounds();
-            transform.position = new Vector3(targetPos.x, targetPos.y, transform.position.z);
-        }
-        else
-        {
-            // follow 모드: autoScaleFollowView가 있다면 사이즈 적용
-            if (autoScaleFollowView && boundsCollider != null) ApplyAutoFollowViewSizing();
-
-            if (playerTarget != null)
-            {
-                targetPos.x = playerTarget.position.x;
-                targetPos.y = playerTarget.position.y;
-                if (boundsCollider != null) ClampTargetToBounds();
-                transform.position = new Vector3(targetPos.x, targetPos.y, transform.position.z);
-            }
-        }
+        // 초기 실행
+        RefreshCameraState();
 
         lastScreenW = Screen.width;
         lastScreenH = Screen.height;
@@ -100,93 +76,86 @@ public class MapCamera : MonoBehaviour
 
     void Update()
     {
-        // 플레이어 자동 검색(런타임에 플레이어가 생성될 수 있으므로)
-        if (playerTarget == null) TryAutoFindPlayerByLayer();
+        // [최적화] 플레이어가 없을 때만 정해진 주기로 탐색 (매 프레임 X)
+        if (playerTarget == null && Time.time >= _nextSearchTime)
+        {
+            _nextSearchTime = Time.time + SEARCH_INTERVAL;
+            TryAutoFindPlayerByLayer();
+        }
 
-        // 화면 크기(해상도) 변경 시 재적용
+        // 해상도 변경 체크
         if (Screen.width != lastScreenW || Screen.height != lastScreenH)
         {
             lastScreenW = Screen.width;
             lastScreenH = Screen.height;
+            RefreshCameraState();
+        }
 
-            if (autoFitToBounds && boundsCollider != null) FitCameraToBounds(ignoreMaxOrtho: forceFitIgnoreMaxOrtho);
-            else if (useFixedViewSize)
+        // 동작 분기
+        if (autoFitToBounds)
+        {
+            if (boundsCollider != null && Cam.orthographic) FitCameraToBounds(ignoreMaxOrtho: forceFitIgnoreMaxOrtho);
+        }
+        else
+        {
+            if (!useFixedViewSize)
+            {
+                if (autoScaleFollowView && boundsCollider != null && Cam.orthographic) ApplyAutoFollowViewSizing();
+                
+                HandleFollow();
+            }
+            else if (Cam.orthographic)
             {
                 ApplyFixedViewSize();
                 if (boundsCollider != null) ClampTargetToBounds();
             }
         }
 
-        // 줌
-        if (!autoFitToBounds && !useFixedViewSize && allowZoom && cam != null && cam.orthographic)
+        // [최적화] 위치 이동 (목표지점과의 거리가 아주 작으면 연산 스킵)
+        Vector3 currentPos = transform.position;
+        Vector3 nextTarget = new Vector3(targetPos.x, targetPos.y, currentPos.z);
+        
+        if (Vector3.SqrMagnitude(currentPos - nextTarget) > 0.00001f)
         {
-            float scroll = Input.GetAxis("Mouse ScrollWheel");
-            if (Mathf.Abs(scroll) > 0.0001f) cam.orthographicSize = Mathf.Clamp(cam.orthographicSize - scroll * zoomSpeed, minOrthoSize, maxOrthoSize);
+            if (panSmooth > 0f) transform.position = Vector3.SmoothDamp(currentPos, nextTarget, ref velocity, panSmooth);
+            else transform.position = nextTarget;
         }
+    }
 
-        // 동작 분기
-        if (autoFitToBounds)
+    private void RefreshCameraState()
+    {
+        if (autoFitToBounds && boundsCollider != null) FitCameraToBounds(ignoreMaxOrtho: forceFitIgnoreMaxOrtho);
+        else if (useFixedViewSize)
         {
-            // AutoFit 상태에서는 카메라 위치/사이즈는 FitCameraToBounds가 책임짐.
-            // 다만 bounds가 런타임에 바뀌면 재적용이 필요.
-            if (boundsCollider != null && cam != null && cam.orthographic)
-            {
-                FitCameraToBounds(ignoreMaxOrtho: forceFitIgnoreMaxOrtho);
-            }
+            ApplyFixedViewSize(ignoreMaxOrtho: false);
+            if (boundsCollider != null) ClampTargetToBounds();
+            SyncTransformImmediate();
         }
         else
         {
-            if (!useFixedViewSize)
+            if (autoScaleFollowView && boundsCollider != null) ApplyAutoFollowViewSizing();
+            if (playerTarget != null)
             {
-                // 플레이어 따라다니기 + follow 뷰 자동 스케일 적용
-                if (autoScaleFollowView && boundsCollider != null && cam != null && cam.orthographic) ApplyAutoFollowViewSizing();
-                
-                HandleFollow();
-            }
-            else
-            {
-                if (cam != null && cam.orthographic)
-                {
-                    ApplyFixedViewSize();
-                    if (boundsCollider != null) ClampTargetToBounds();
-                }
+                targetPos = playerTarget.position;
+                if (boundsCollider != null) ClampTargetToBounds();
+                SyncTransformImmediate();
             }
         }
-
-        // Smooth 이동
-        if (panSmooth > 0f) transform.position = Vector3.SmoothDamp(transform.position, new Vector3(targetPos.x, targetPos.y, transform.position.z), ref velocity, panSmooth);
-        else transform.position = new Vector3(targetPos.x, targetPos.y, transform.position.z);
     }
 
-    // player 자동 탐색
+    private void SyncTransformImmediate(){ transform.position = new Vector3(targetPos.x, targetPos.y, transform.position.z); }
+
+
+
     void TryAutoFindPlayerByLayer()
     {
-        if (playerTarget != null) return;
-        if (string.IsNullOrEmpty(playerLayerName)) return;
+        if (playerTarget != null || _playerLayer < 0) return;
 
-        int layerIdx = LayerMask.NameToLayer(playerLayerName);
-        if (layerIdx < 0) return;
-
-        GameObject candidate = null;
-        try
-        {
-            candidate = Object.FindFirstObjectByType<GameObject>();
-        }
-        catch
-        {
-            candidate = null;
-        }
-
-        if (candidate != null && candidate.layer == layerIdx)
-        {
-            playerTarget = candidate.transform;
-            return;
-        }
-
+        // [최적화] 씬의 루트 오브젝트들만 순회하여 가비지 발생 최소화
         var roots = SceneManager.GetActiveScene().GetRootGameObjects();
         foreach (var root in roots)
         {
-            var found = RecursiveFindByLayer(root.transform, layerIdx);
+            var found = RecursiveFindByLayer(root.transform, _playerLayer);
             if (found != null)
             {
                 playerTarget = found;
@@ -195,285 +164,169 @@ public class MapCamera : MonoBehaviour
         }
     }
 
-    // 루트->자식 재귀 탐색
     Transform RecursiveFindByLayer(Transform t, int layerIdx)
     {
         if (t.gameObject.layer == layerIdx) return t;
-        for (int i = 0; i < t.childCount; ++i)
+        int childCount = t.childCount;
+        for (int i = 0; i < childCount; ++i)
         {
-            var child = t.GetChild(i);
-            var r = RecursiveFindByLayer(child, layerIdx);
+            var r = RecursiveFindByLayer(t.GetChild(i), layerIdx);
             if (r != null) return r;
         }
         return null;
     }
 
-    // 팔로우 처리 (deadzone 체크 후 이동, bounds 내로 클램프)
     void HandleFollow()
     {
-        if (cam == null) cam = GetComponent<Camera>();
-        if (cam == null || !cam.orthographic)
+        if (!Cam.orthographic)
         {
-            if (playerTarget != null)
-            {
-                targetPos.x = playerTarget.position.x;
-                targetPos.y = playerTarget.position.y;
-            }
+            if (playerTarget != null) targetPos = playerTarget.position;
             return;
         }
 
-        // bounds 전체를 커버하면 팔로우 중지
         if (boundsCollider != null)
         {
             Bounds b = boundsCollider.bounds;
-            float boundsWidth = Mathf.Max(0.0001f, b.size.x);
-            float boundsHeight = Mathf.Max(0.0001f, b.size.y);
+            float verticalExtent = Cam.orthographicSize;
+            float horizontalExtent = verticalExtent * Cam.aspect;
 
-            float verticalExtent = cam.orthographicSize;
-            float horizontalExtent = cam.orthographicSize * cam.aspect;
-
-            float eps = 0.05f;
-            bool coversHor = horizontalExtent >= (boundsWidth * 0.5f - eps);
-            bool coversVer = verticalExtent >= (boundsHeight * 0.5f - eps);
-
-            if (coversHor && coversVer) return;
+            // 이미 화면이 영역 전체를 다 보여주고 있다면 이동 불필요
+            if (horizontalExtent >= (b.size.x * 0.5f - 0.05f) && verticalExtent >= (b.size.y * 0.5f - 0.05f)) return;
         }
 
         if (playerTarget == null) return;
 
-        Vector3 camCenter = new Vector3(transform.position.x, transform.position.y, 0f);
-        Vector3 toPlayer = (Vector3)playerTarget.position - camCenter;
+        // Deadzone 체크
+        float diffX = playerTarget.position.x - transform.position.x;
+        float diffY = playerTarget.position.y - transform.position.y;
 
-        if (Mathf.Abs(toPlayer.x) > followDeadzone || Mathf.Abs(toPlayer.y) > followDeadzone)
+        if (Mathf.Abs(diffX) > followDeadzone || Mathf.Abs(diffY) > followDeadzone)
         {
-            targetPos.x = playerTarget.position.x;
-            targetPos.y = playerTarget.position.y;
-
+            targetPos = playerTarget.position;
             if (boundsCollider != null) ClampTargetToBounds();
         }
     }
 
-    /// <summary>
-    /// follow 모드에서 bounds의 일부 크기를 사용해 카메라 orthographicSize를 계산/적용.
-    /// followViewFraction 비율로 boundsWidth/boundsHeight를 줄여 사용.
-    /// followZoomSmooth로 부드럽게 보간.
-    /// </summary>
     void ApplyAutoFollowViewSizing()
     {
-        if (cam == null) cam = GetComponent<Camera>();
-        if (cam == null || !cam.orthographic) return;
-        if (boundsCollider == null) return;
+        if (boundsCollider == null || !Cam.orthographic) return;
 
         Bounds b = boundsCollider.bounds;
-        float boundsWidth = Mathf.Max(0.0001f, b.size.x);
-        float boundsHeight = Mathf.Max(0.0001f, b.size.y);
+        float aspect = Cam.aspect;
 
-        // 원하는 view (월드 단위)
-        float desiredWidth = Mathf.Max(0.01f, boundsWidth * followViewFraction);
-        float desiredHeight = Mathf.Max(0.01f, boundsHeight * followViewFraction);
-
-        float aspect = cam.aspect; // use camera aspect for accuracy
+        float desiredWidth = b.size.x * followViewFraction;
+        float desiredHeight = b.size.y * followViewFraction;
 
         float orthoFromHeight = desiredHeight * 0.5f;
         float orthoFromWidth = (desiredWidth / aspect) * 0.5f;
-        float desiredOrtho = Mathf.Max(orthoFromHeight, orthoFromWidth);
+        float desiredOrtho = Mathf.Clamp(Mathf.Max(orthoFromHeight, orthoFromWidth), minOrthoSize, maxOrthoSize);
 
-        // clamp with min/max
-        desiredOrtho = Mathf.Max(desiredOrtho, minOrthoSize);
-        desiredOrtho = Mathf.Min(desiredOrtho, maxOrthoSize);
+        if (followZoomSmooth <= 0f) Cam.orthographicSize = desiredOrtho;
+        else Cam.orthographicSize = Mathf.Lerp(Cam.orthographicSize, desiredOrtho, followZoomSmooth);
 
-        if (followZoomSmooth <= 0f) cam.orthographicSize = desiredOrtho;
-        
-        else
-        {
-            // 부드럽게 보간 (프레임 단위 단순 Lerp)
-            cam.orthographicSize = Mathf.Lerp(cam.orthographicSize, desiredOrtho, followZoomSmooth);
-        }
-
-        // viewWidth/viewHeight 반영
-        float appliedHeight = cam.orthographicSize * 2f;
-        float appliedWidth = appliedHeight * aspect;
-        viewWidth = appliedWidth;
-        viewHeight = appliedHeight;
+        viewHeight = Cam.orthographicSize * 2f;
+        viewWidth = viewHeight * aspect;
     }
 
-    /// <summary>
-    /// boundsCollider(또는 viewWidth/viewHeight) 기반으로 orthographicSize를 계산하여 카메라에 적용.
-    /// ignoreMaxOrtho = true이면 maxOrthoSize 제한을 무시하고 정확히 맞춤.
-    /// </summary>
     public void FitCameraToBounds(bool ignoreMaxOrtho = true)
     {
-        if (cam == null) cam = GetComponent<Camera>();
-        if (cam == null || !cam.orthographic) return;
-        if (boundsCollider == null) return;
+        if (boundsCollider == null || !Cam.orthographic) return;
 
         Bounds b = boundsCollider.bounds;
-        float boundsWidth = Mathf.Max(0.0001f, b.size.x);
-        float boundsHeight = Mathf.Max(0.0001f, b.size.y);
+        float aspect = Cam.aspect;
 
-        // 카메라 화면 종횡비 (camera.aspect 보다 안전)
-        float aspect = cam.aspect;
-
-        // 기본으로 필요한 ortho (가로/세로 중 더 큰 쪽 기준)
-        float orthoFromHeight = boundsHeight * 0.5f;
-        float orthoFromWidth = (boundsWidth / aspect) * 0.5f;
+        float orthoFromHeight = b.size.y * 0.5f;
+        float orthoFromWidth = (b.size.x / aspect) * 0.5f;
         float neededOrtho = Mathf.Max(orthoFromHeight, orthoFromWidth);
 
-        // bounds 기준으로 허용되는 최대 orthographicSize 계산 (이 값을 넘기면 밖이 보일 수 있음)
-        float allowedOrthoFromHeight = boundsHeight * 0.5f;
-        float allowedOrthoFromWidth = (boundsWidth / aspect) * 0.5f;
-        float allowedOrtho = Mathf.Min(allowedOrthoFromHeight, allowedOrthoFromWidth);
-        allowedOrtho = Mathf.Max(allowedOrtho, 0.0001f);
-
-        // 필요한 값이 허용값보다 크면 허용값으로 줄임 (bounds 우선)
+        // 영역을 벗어나지 않는 최대 사이즈
+        float allowedOrtho = Mathf.Min(b.size.y * 0.5f, (b.size.x / aspect) * 0.5f);
         if (neededOrtho > allowedOrtho) neededOrtho = allowedOrtho;
 
         neededOrtho = Mathf.Max(neededOrtho, minOrthoSize);
-
         if (!ignoreMaxOrtho) neededOrtho = Mathf.Min(neededOrtho, maxOrthoSize);
 
-        cam.orthographicSize = neededOrtho;
+        Cam.orthographicSize = neededOrtho;
 
-        // 카메라 중심을 bounds 내 허용 범위로 보정
-        float verticalExtent = neededOrtho;
+        // 중심점 클램프 연산
         float horizontalExtent = neededOrtho * aspect;
-
         float minX = b.min.x + horizontalExtent;
         float maxX = b.max.x - horizontalExtent;
-        float minY = b.min.y + verticalExtent;
-        float maxY = b.max.y - verticalExtent;
+        float minY = b.min.y + neededOrtho;
+        float maxY = b.max.y - neededOrtho;
 
-        float centerX, centerY;
-        if (minX > maxX) centerX = (b.min.x + b.max.x) * 0.5f;
-        else centerX = Mathf.Clamp(b.center.x, minX, maxX);
+        targetPos.x = (minX > maxX) ? b.center.x : Mathf.Clamp(b.center.x, minX, maxX);
+        targetPos.y = (minY > maxY) ? b.center.y : Mathf.Clamp(b.center.y, minY, maxY);
 
-        if (minY > maxY) centerY = (b.min.y + b.max.y) * 0.5f;
-        else centerY = Mathf.Clamp(b.center.y, minY, maxY);
+        SyncTransformImmediate();
 
-        targetPos.x = centerX;
-        targetPos.y = centerY;
-        transform.position = new Vector3(targetPos.x, targetPos.y, transform.position.z);
-
-        // viewWidth/viewHeight 갱신
-        float appliedHeight = neededOrtho * 2f;
-        float appliedWidth = appliedHeight * aspect;
-        viewWidth = appliedWidth;
-        viewHeight = appliedHeight;
+        viewHeight = neededOrtho * 2f;
+        viewWidth = viewHeight * aspect;
     }
 
-
-
-    /// <summary>
-    /// viewWidth x viewHeight 를 기준으로 orthographicSize 계산 후 적용.
-    /// ignoreMaxOrtho = true 이면 maxOrthoSize 제한을 무시하고 필요한 ortho를 강제 설정.
-    /// </summary>
     void ApplyFixedViewSize(bool ignoreMaxOrtho = false)
     {
-        if (cam == null || !cam.orthographic) return;
+        if (!Cam.orthographic) return;
 
         float orthoFromHeight = viewHeight * 0.5f;
-        float orthoFromWidth = (viewWidth / cam.aspect) * 0.5f;
+        float orthoFromWidth = (viewWidth / Cam.aspect) * 0.5f;
         float targetOrtho = Mathf.Max(orthoFromHeight, orthoFromWidth);
 
-        // bounds가 있으면 bounds에 맞춰 축소(필요하면)
         if (boundsCollider != null)
         {
             Bounds b = boundsCollider.bounds;
-            float boundsWidth = Mathf.Max(0.0001f, b.size.x);
-            float boundsHeight = Mathf.Max(0.0001f, b.size.y);
-
-            float allowedOrthoFromHeight = boundsHeight * 0.5f;
-            float allowedOrthoFromWidth = (boundsWidth / cam.aspect) * 0.5f;
-            float allowedOrtho = Mathf.Min(allowedOrthoFromHeight, allowedOrthoFromWidth);
-            allowedOrtho = Mathf.Max(0.0001f, allowedOrtho);
-
+            float allowedOrtho = Mathf.Min(b.size.y * 0.5f, (b.size.x / Cam.aspect) * 0.5f);
             if (targetOrtho > allowedOrtho)
             {
                 targetOrtho = allowedOrtho;
-
-                float appliedHeight = targetOrtho * 2f;
-                float appliedWidth = appliedHeight * cam.aspect;
-
-                viewWidth = appliedWidth;
-                viewHeight = appliedHeight;
+                viewHeight = targetOrtho * 2f;
+                viewWidth = viewHeight * Cam.aspect;
             }
         }
 
-        if (!ignoreMaxOrtho) targetOrtho = Mathf.Clamp(targetOrtho, 0.0001f, maxOrthoSize);
-        else targetOrtho = Mathf.Max(0.0001f, targetOrtho);
-
-        cam.orthographicSize = targetOrtho;
+        Cam.orthographicSize = ignoreMaxOrtho ? Mathf.Max(0.0001f, targetOrtho) : Mathf.Clamp(targetOrtho, 0.0001f, maxOrthoSize);
     }
 
-    // targetPos가 bounds 내부가 되도록 클램프(가운데 고정)
     void ClampTargetToBounds()
     {
-        if (boundsCollider == null || cam == null || !cam.orthographic) return;
+        if (boundsCollider == null || !Cam.orthographic) return;
 
         Bounds b = boundsCollider.bounds;
-        float verticalExtent = cam.orthographicSize;
-        float horizontalExtent = cam.orthographicSize * cam.aspect;
+        float vExt = Cam.orthographicSize;
+        float hExt = vExt * Cam.aspect;
 
-        float minX = b.min.x + horizontalExtent;
-        float maxX = b.max.x - horizontalExtent;
-        float minY = b.min.y + verticalExtent;
-        float maxY = b.max.y - verticalExtent;
+        float minX = b.min.x + hExt;
+        float maxX = b.max.x - hExt;
+        float minY = b.min.y + vExt;
+        float maxY = b.max.y - vExt;
 
-        if (minX > maxX)
-        {
-            float centerX = (b.min.x + b.max.x) / 2f;
-            minX = maxX = centerX;
-        }
-        if (minY > maxY)
-        {
-            float centerY = (b.min.y + b.max.y) / 2f;
-            minY = maxY = centerY;
-        }
-
-        targetPos.x = Mathf.Clamp(targetPos.x, minX, maxX);
-        targetPos.y = Mathf.Clamp(targetPos.y, minY, maxY);
+        targetPos.x = (minX > maxX) ? (b.min.x + b.max.x) * 0.5f : Mathf.Clamp(targetPos.x, minX, maxX);
+        targetPos.y = (minY > maxY) ? (b.min.y + b.max.y) * 0.5f : Mathf.Clamp(targetPos.y, minY, maxY);
     }
 
-    // 씬에서 영역 및 카메라 위치 시각화
     void OnDrawGizmosSelected()
     {
+        // 기즈모 코드는 에디터 기능이므로 메모리 최적화와는 무관하여 유지합니다.
         if (boundsCollider != null)
         {
             Gizmos.color = new Color(0f, 1f, 0f, 0.25f);
             Gizmos.DrawCube(boundsCollider.bounds.center, boundsCollider.bounds.size);
-            Gizmos.color = Color.green;
-            Gizmos.DrawWireCube(boundsCollider.bounds.center, boundsCollider.bounds.size);
         }
 
-        Camera c = (cam != null) ? cam : GetComponent<Camera>();
+        Camera c = Cam;
         if (c != null && c.orthographic)
         {
             float vExt = c.orthographicSize;
             float hExt = vExt * c.aspect;
-            Vector3 center = transform.position;
-            center.z = 0f;
-            Gizmos.color = new Color(0f, 0f, 1f, 0.15f);
-            Gizmos.DrawCube(new Vector3(center.x, center.y, 0f), new Vector3(hExt * 2f, vExt * 2f, 0.01f));
             Gizmos.color = Color.blue;
-            Gizmos.DrawWireCube(new Vector3(center.x, center.y, 0f), new Vector3(hExt * 2f, vExt * 2f, 0.01f));
-        }
-
-        if (useFixedViewSize)
-        {
-            Gizmos.color = new Color(1f, 0.8f, 0f, 0.15f);
-            Vector3 size = new Vector3(viewWidth, viewHeight, 0.01f);
-            Gizmos.DrawCube(new Vector3(transform.position.x, transform.position.y, 0f), size);
-            Gizmos.color = Color.yellow;
-            Gizmos.DrawWireCube(new Vector3(transform.position.x, transform.position.y, 0f), size);
+            Gizmos.DrawWireCube(new Vector3(transform.position.x, transform.position.y, 0f), new Vector3(hExt * 2f, vExt * 2f, 0.01f));
         }
     }
 
-    // 외부에서 bounds를 설정하고 즉시 fit 시킬 수 있게 함
     public void SetBounds(BoxCollider2D newBounds, bool snapCameraToBounds = true, bool fitViewToBounds = false)
     {
-        CurrentBounds = newBounds;
         boundsCollider = newBounds;
-        if (cam == null) cam = GetComponent<Camera>();
+        CurrentBounds = newBounds;
         if (boundsCollider == null) return;
 
         if (fitViewToBounds || autoFitToBounds) FitCameraToBounds(ignoreMaxOrtho: forceFitIgnoreMaxOrtho);
@@ -481,8 +334,7 @@ public class MapCamera : MonoBehaviour
         if (snapCameraToBounds)
         {
             if (!(fitViewToBounds || autoFitToBounds)) ClampTargetToBounds();
-
-            transform.position = new Vector3(targetPos.x, targetPos.y, transform.position.z);
+            SyncTransformImmediate();
         }
     }
 }

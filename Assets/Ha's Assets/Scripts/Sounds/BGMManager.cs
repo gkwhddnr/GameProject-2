@@ -2,8 +2,6 @@ using System.Collections;
 using UnityEngine;
 
 /// <summary>
-/// BGMManager
-/// - Singleton
 /// - 두 개의 AudioSource로 크로스페이드(부드러운 전환) 구현
 /// - 재생/정지/일시정지/재개, 볼륨 제어, 플레이리스트(다음/이전) 지원
 /// - DontDestroyOnLoad 로 씬간 유지
@@ -111,7 +109,6 @@ public class BGMManager : MonoBehaviour
         }
     }
 
-    /// <summary>Play a clip with optional fade and loop flag (crossfades with current).</summary>
     public void PlayBGM(AudioClip clip, float fadeTime = -1f, bool loopClip = true)
     {
         if (clip == null) return;
@@ -136,7 +133,6 @@ public class BGMManager : MonoBehaviour
         isPaused = false;
     }
 
-    /// <summary>Stop playback with optional fade out. If fadeTime <= 0 -> immediate stop.</summary>
     public void StopBGM(float fadeTime = -1f)
     {
         if (fadeTime < 0f) fadeTime = defaultFadeTime;
@@ -152,28 +148,24 @@ public class BGMManager : MonoBehaviour
         isPaused = false;
     }
 
-    /// <summary>Pause current BGM (no fade).</summary>
     public void PauseBGM()
     {
         foreach (var a in audioSources) if (a.isPlaying) a.Pause();
         isPaused = true;
     }
 
-    /// <summary>Resume if paused.</summary>
     public void ResumeBGM()
     {
         foreach (var a in audioSources) if (a.clip != null) a.UnPause();
         isPaused = false;
     }
 
-    /// <summary>Set master volume (0..1).</summary>
     public void SetMasterVolume(float v)
     {
         masterVolume = Mathf.Clamp01(v);
         foreach (var a in audioSources) a.volume = masterVolume;
     }
 
-    /// <summary>Play playlist entry by index (crossfade).</summary>
     public void PlayPlaylistTrack(int index, float fadeTime = -1f)
     {
         if (playlist == null || playlist.Length == 0) return;
@@ -182,7 +174,6 @@ public class BGMManager : MonoBehaviour
         PlayBGM(playlist[playlistIndex], fadeTime, defaultLoopClip);
     }
 
-    /// <summary>Play next track in playlist (wraps if loopPlaylist true).</summary>
     public void PlayNextInPlaylist(float fadeTime = -1f)
     {
         if (playlist == null || playlist.Length == 0) return;
@@ -195,7 +186,6 @@ public class BGMManager : MonoBehaviour
         PlayPlaylistTrack(playlistIndex, fadeTime);
     }
 
-    /// <summary>Play previous track in playlist.</summary>
     public void PlayPrevInPlaylist(float fadeTime = -1f)
     {
         if (playlist == null || playlist.Length == 0) return;
@@ -208,7 +198,6 @@ public class BGMManager : MonoBehaviour
         PlayPlaylistTrack(playlistIndex, fadeTime);
     }
 
-    // --- Coroutines for crossfade / fades ---
     private IEnumerator CrossfadeCoroutine(int fromIndex, int toIndex, float duration)
     {
         AudioSource from = audioSources[fromIndex];
@@ -259,7 +248,6 @@ public class BGMManager : MonoBehaviour
         fadeCoroutine = null;
     }
 
-    // Optional: convenience to set playlist at runtime
     public void SetPlaylist(AudioClip[] newList, bool autoPlayFirst = false, bool loop = true)
     {
         playlist = newList;
