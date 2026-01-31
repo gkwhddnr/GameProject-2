@@ -22,6 +22,8 @@ public class ItemCollector : MonoBehaviour
     [Header("UI")]
     public TextMeshProUGUI uiText;
     public Transform playerTransform;
+    public GameObject navigationPointerPrefab;
+    public Canvas uiCanvas;
     private bool showUIImmediatelyIfNoBounds = false;
 
     [Header("Item fade options")]
@@ -55,6 +57,7 @@ public class ItemCollector : MonoBehaviour
     private int currentStageNextHiddenIndex = 0;
     private int currentStageTotalRevealedCount = 0;
     private int currentStageTotalItems = 0;
+    private GameObject activeNavGO = null;
 
     private List<SpriteRenderer>[] nextPointsSprs;
     private List<CanvasGroup>[] nextPointsCanvasGroups;
@@ -77,6 +80,23 @@ public class ItemCollector : MonoBehaviour
 
         // 장애물(레이어 == "Lock") 맵 구축
         BuildObstacleMap();
+
+        var stageController = FindAnyObjectByType<MapCameraStageController>();
+        if (stageController == null) Debug.LogError("MapCameraStageController를 씬에서 찾을 수 없습니다!");
+
+        // 2. 내비게이션 생성 및 초기화
+        if (navigationPointerPrefab != null && uiCanvas != null)
+        {
+            if (activeNavGO == null)
+            {
+                activeNavGO = Instantiate(navigationPointerPrefab, uiCanvas.transform);
+                var nav = activeNavGO.GetComponent<NavigationPointer>();
+                if (nav != null)
+                {
+                    nav.Initialize(playerTransform, uiCanvas, stageController);
+                }
+            }
+        }
 
         if (revealItemsSequentially && itemsList.Count > 0)
         {
@@ -202,6 +222,7 @@ public class ItemCollector : MonoBehaviour
         if (revealItemsSequentially && currentStageItems.Count > 0) HideItemsForList(currentStageItems, initialVisibleCount);
 
         UpdateUI();
+        RemoveActiveNavigationPointer();
     }
 
     void BuildItemsList()
@@ -642,8 +663,38 @@ public class ItemCollector : MonoBehaviour
     void RevealNextPointForStage(int stageIndex)
     {
         if (nextPoints == null || stageIndex < 0 || stageIndex >= nextPoints.Length || nextPoints[stageIndex] == null) return;
+
+        // 목적지 활성화(페이드 인 등)
         StartCoroutine(FadeInNextPointRoutine(nextPoints[stageIndex], nextPointsSprs[stageIndex], nextPointsCanvasGroups[stageIndex], nextPointsRenderers[stageIndex]));
+
+        // 내비게이션 화살표가 없으면 생성
+        if (navigationPointerPrefab != null)
+        {
+            if (uiCanvas == null)
+                uiCanvas = (FloatingTextSpawner.Instance != null) ? FloatingTextSpawner.Instance.canvas : FindFirstObjectByType<Canvas>();
+
+            if (activeNavGO == null) // 하나만 있으면 됨
+            {
+                activeNavGO = Instantiate(navigationPointerPrefab, uiCanvas.transform);
+                var nav = activeNavGO.GetComponent<NavigationPointer>();
+                var stageController = FindAnyObjectByType<MapCameraStageController>();
+
+                // 타겟 안 넘겨줘도 됨! GameManager 바운드로 스스로 찾음.
+                nav.Initialize(playerTransform, uiCanvas, stageController);
+            }
+        }
     }
+
+
+    void RemoveActiveNavigationPointer()
+    {
+        if (activeNavGO != null)
+        {
+            Destroy(activeNavGO);
+            activeNavGO = null;
+        }
+    }
+
 
     IEnumerator FadeInNextPointRoutine(GameObject point, List<SpriteRenderer> sprs, List<CanvasGroup> canvasGroups, List<Renderer> renderers)
     {
