@@ -57,6 +57,8 @@ public class LevelTransition : MonoBehaviour
                     rb.angularVelocity = 0f;
                 }
             }
+
+            if (GameManager.Instance != null) GameManager.Instance.RefreshPlayerStage();
         }
 
         // 카메라 전환
@@ -73,6 +75,8 @@ public class LevelTransition : MonoBehaviour
         {
             backgroundManager.AdvanceToNextStage(previousDeactivateDelay: fadeDuration);
         }
+
+        SoundManager.Instance?.PlayDestination();
     }
 
     // playerObject 또는 tag로 플레이어 찾기
