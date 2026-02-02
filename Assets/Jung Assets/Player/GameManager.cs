@@ -18,9 +18,8 @@ public class GameManager : MonoBehaviour
     public GameObject[] itemSlots;
     public int[] itemSlotExtraTurns;
 
-    [Header("Key Slot Settings")]
-    public GameObject[] keySlots;
 
+    private GameObject[] keySlots;
     private bool[] keySlotConsumeOnCollect;
     private bool[] itemSlotConsumeOnCollect;
     private int MoveCount = 0;

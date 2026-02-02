@@ -1,64 +1,112 @@
 ﻿using UnityEngine;
 using TMPro;
 
+[DisallowMultipleComponent]
 public class NavigationPointer : MonoBehaviour
 {
     [Header("UI references")]
     public GameObject arrowVisual;
     public TextMeshProUGUI distanceText;
 
+    [Header("Smoothing")]
+    public float positionSmoothTime = 0.06f;
+    public float rotationSmoothTime = 0.08f;
+
+    [Header("Layout")]
+    public float edgePadding = 50f;
+    public float onScreenOffsetPixels = 60f;
+
+    [Header("Optimization")]
+    [Tooltip("목적지를 다시 검색하는 간격 (초). 너무 자주하면 성능 저하.")]
+    public float targetRefreshInterval = 0.5f;
+
+    private RectTransform selfRect;
+    private RectTransform arrowRect; // 캐싱
     private Transform playerTransform;
     private RectTransform canvasRect;
     private Camera uiCamera;
     private Camera mainCamera;
     private MapCameraStageController stageController;
+
+    private Transform explicitTarget;
     private Transform targetTransform;
 
-    private float edgePadding = 50f;
+    private Vector2 velocityPos = Vector2.zero;
+    private float velocityAngle = 0f;
+    private float currentAngle = 0f;
+
+    private int lastStageIdx = -2;
+    private float nextRefreshTime = 0f;
     private bool initialized = false;
 
-    public void Initialize(Transform player, Canvas canvasRoot, MapCameraStageController stageControl)
+    public void Initialize(Transform player, Canvas canvasRoot, MapCameraStageController stageControl,
+                           Transform explicitTarget = null, float padding = 50f, float offset = 60f)
     {
         playerTransform = player;
         stageController = stageControl;
-        canvasRect = canvasRoot.GetComponent<RectTransform>();
-        uiCamera = (canvasRoot.worldCamera != null) ? canvasRoot.worldCamera : Camera.main;
-        mainCamera = Camera.main;
+        this.explicitTarget = explicitTarget;
+        edgePadding = padding;
+        onScreenOffsetPixels = offset;
 
-        initialized = true;
+        selfRect = GetComponent<RectTransform>();
+        if (arrowVisual != null) arrowRect = arrowVisual.GetComponent<RectTransform>();
+
+        if (canvasRoot != null)
+        {
+            canvasRect = canvasRoot.GetComponent<RectTransform>();
+            uiCamera = (canvasRoot.worldCamera != null) ? canvasRoot.worldCamera : Camera.main;
+        }
+
+        mainCamera = Camera.main;
+        targetTransform = explicitTarget;
+
+        initialized = (selfRect != null && canvasRect != null && playerTransform != null && mainCamera != null);
     }
 
     void LateUpdate()
     {
-        if (!initialized || playerTransform == null || GameManager.Instance == null) return;
-
-        // 1. 현재 스테이지 인덱스 (Z축 무시 판정)
-        int currentIdx = GetCurrentStageIndexXY();
-
-        // 2. 목적지 검색 (Z축 무시하고 X, Y 평면상에 있는지 체크)
-        FindTargetXY(currentIdx);
-
-        // 3. 조건 검사
-        bool isAutoScale = IsAutoScaleOnly(currentIdx);
-        bool hasTarget = targetTransform != null && targetTransform.gameObject.activeInHierarchy;
-
-        if (currentIdx != -1 && isAutoScale && hasTarget)
+        if (!initialized || playerTransform == null || stageController == null)
         {
-            // 4. 시야 체크 (X, Y 좌표 기준 화면 밖인지)
-            Vector3 viewportPos = mainCamera.WorldToViewportPoint(targetTransform.position);
+            SetUIActive(false);
+            return;
+        }
 
-            // 화면 밖 조건: X나 Y가 0~1 범위를 벗어남 (Z값은 무시하기 위해 판정 제외)
-            bool isOffScreen = (viewportPos.x < 0f || viewportPos.x > 1f || viewportPos.y < 0f || viewportPos.y > 1f);
+        int currentIdx = GetCurrentStageIndexXY();
+        if (currentIdx < 0)
+        {
+            SetUIActive(false);
+            return;
+        }
 
-            if (isOffScreen)
-            {
-                SetUIActive(true);
-                UpdateVisuals();
-            }
-            else
-            {
-                SetUIActive(false);
-            }
+        // 1. 카메라 모드 체크 (AutoScaleOnly 인지 확인)
+        if (!IsAutoScaleOnly(currentIdx))
+        {
+            SetUIActive(false);
+            return;
+        }
+
+        // 2. 최적화된 타겟 검색 (스테이지 변경 시 또는 일정 주기마다)
+        if (currentIdx != lastStageIdx || Time.time >= nextRefreshTime)
+        {
+            RefreshTarget(currentIdx);
+            lastStageIdx = currentIdx;
+            nextRefreshTime = Time.time + targetRefreshInterval;
+        }
+
+        if (targetTransform == null || !targetTransform.gameObject.activeInHierarchy)
+        {
+            SetUIActive(false);
+            return;
+        }
+
+        // 3. 시야 체크 및 시각화 업데이트
+        Vector3 vp = mainCamera.WorldToViewportPoint(targetTransform.position);
+        bool isOffScreen = (vp.z < 0f || vp.x < 0f || vp.x > 1f || vp.y < 0f || vp.y > 1f);
+
+        if (isOffScreen)
+        {
+            SetUIActive(true);
+            UpdateVisualsSmooth();
         }
         else
         {
@@ -66,100 +114,88 @@ public class NavigationPointer : MonoBehaviour
         }
     }
 
-    // [수정] Z축 무시하고 X, Y로만 스테이지 바운드 판정
-    int GetCurrentStageIndexXY()
+    private bool IsAutoScaleOnly(int idx)
     {
-        var bounds = GameManager.Instance.stageBounds;
+        if (stageController.perStageModes == null || idx >= stageController.perStageModes.Length) return false;
+        return stageController.perStageModes[idx] == MapCameraStageController.StageCameraMode.AutoScaleOnly;
+    }
+
+    private int GetCurrentStageIndexXY()
+    {
+        var bounds = GameManager.Instance?.stageBounds;
         if (bounds == null) return -1;
 
-        Vector2 playerPos2D = new Vector2(playerTransform.position.x, playerTransform.position.y);
-
-        for (int i = 0; i < bounds.Length; i++)
+        Vector2 p = playerTransform.position;
+        for (int i = 0; i < bounds.Length; ++i)
         {
             if (bounds[i] == null) continue;
-
-            Bounds b = bounds[i].bounds;
-            // X, Y 범위만 체크
-            if (playerPos2D.x >= b.min.x && playerPos2D.x <= b.max.x &&
-                playerPos2D.y >= b.min.y && playerPos2D.y <= b.max.y)
-            {
-                return i;
-            }
+            Bounds bb = bounds[i].bounds;
+            if (p.x >= bb.min.x && p.x <= bb.max.x && p.y >= bb.min.y && p.y <= bb.max.y) return i;
         }
         return -1;
     }
 
-    // [수정] Z축 무시하고 X, Y로만 목적지 검색
-    void FindTargetXY(int stageIdx)
+    private void RefreshTarget(int stageIdx)
     {
-        if (stageIdx == -1) { targetTransform = null; return; }
-
-        Bounds b = GameManager.Instance.stageBounds[stageIdx].bounds;
-        var targets = FindObjectsByType<DestinationPoint>(FindObjectsSortMode.None);
-
-        targetTransform = null;
-        foreach (var t in targets)
+        if (explicitTarget != null)
         {
-            if (!t.gameObject.activeInHierarchy) continue;
+            targetTransform = explicitTarget;
+            return;
+        }
 
-            Vector2 targetPos2D = new Vector2(t.transform.position.x, t.transform.position.y);
+        var bounds = GameManager.Instance.stageBounds;
+        if (stageIdx < 0 || stageIdx >= bounds.Length) return;
+        Bounds b = bounds[stageIdx].bounds;
 
-            // 목적지의 X, Y 좌표가 현재 스테이지 바운드 박스 안에 있는지 확인
-            if (targetPos2D.x >= b.min.x && targetPos2D.x <= b.max.x &&
-                targetPos2D.y >= b.min.y && targetPos2D.y <= b.max.y)
+        // FindObjectsByType은 여전히 무겁지만, 호출 빈도를 줄여 과부하 방지
+        var allPoints = FindObjectsByType<DestinationPoint>(FindObjectsSortMode.None);
+        targetTransform = null;
+
+        foreach (var dp in allPoints)
+        {
+            if (dp == null || !dp.gameObject.activeInHierarchy) continue;
+            Vector2 pos = dp.transform.position;
+            if (pos.x >= b.min.x && pos.x <= b.max.x && pos.y >= b.min.y && pos.y <= b.max.y)
             {
-                targetTransform = t.transform;
+                targetTransform = dp.transform;
                 break;
             }
         }
     }
 
-    bool IsAutoScaleOnly(int stageIdx)
+    void UpdateVisualsSmooth()
     {
-        if (stageController == null || stageIdx < 0 || stageIdx >= stageController.perStageModes.Length) return false;
-        return stageController.perStageModes[stageIdx] == MapCameraStageController.StageCameraMode.AutoScaleOnly;
-    }
+        // 2D 거리 계산
+        float dist = Vector2.Distance(playerTransform.position, targetTransform.position);
+        if (distanceText != null) distanceText.text = Mathf.RoundToInt(dist).ToString();
 
-    void UpdateVisuals()
-    {
-        if (!targetTransform) return;
+        Vector3 screen3 = mainCamera.WorldToScreenPoint(targetTransform.position);
+        if (screen3.z < 0f) screen3 *= -1f;
+        Vector2 screenPx = new Vector2(screen3.x, screen3.y);
 
-        // 거리 계산도 Vector2로 (Z차이 무시)
-        float dist = Vector2.Distance(
-            new Vector2(playerTransform.position.x, playerTransform.position.y),
-            new Vector2(targetTransform.position.x, targetTransform.position.y)
+        Vector2 clamped = new Vector2(
+            Mathf.Clamp(screenPx.x, edgePadding, Screen.width - edgePadding),
+            Mathf.Clamp(screenPx.y, edgePadding, Screen.height - edgePadding)
         );
 
-        if (distanceText) distanceText.text = Mathf.RoundToInt(dist).ToString();
-
-        // UI 위치는 카메라 투영을 따름
-        Vector3 screenPos = mainCamera.WorldToScreenPoint(targetTransform.position);
-        if (screenPos.z < 0) screenPos *= -1;
-
-        Vector2 clampedPos = new Vector2(
-            Mathf.Clamp(screenPos.x, edgePadding, Screen.width - edgePadding),
-            Mathf.Clamp(screenPos.y, edgePadding, Screen.height - edgePadding)
-        );
-
-        if (RectTransformUtility.ScreenPointToLocalPointInRectangle(canvasRect, clampedPos, uiCamera, out Vector2 localPoint))
+        if (RectTransformUtility.ScreenPointToLocalPointInRectangle(canvasRect, clamped, uiCamera, out Vector2 localPoint))
         {
-            ((RectTransform)transform).anchoredPosition = localPoint;
+            selfRect.anchoredPosition = Vector2.SmoothDamp(selfRect.anchoredPosition, localPoint, ref velocityPos, positionSmoothTime, Mathf.Infinity, Time.unscaledDeltaTime);
         }
 
-        if (arrowVisual)
-        {
-            Vector2 dir = (Vector2)screenPos - clampedPos;
-            if (dir.sqrMagnitude > 0.1f)
-            {
-                float angle = Mathf.Atan2(dir.y, dir.x) * Mathf.Rad2Deg;
-                arrowVisual.transform.localRotation = Quaternion.Euler(0, 0, angle - 90f);
-            }
-        }
+        Vector2 toTarget = screenPx - clamped;
+        if (toTarget.sqrMagnitude < 0.01f) toTarget = new Vector2(Screen.width * 0.5f, Screen.height * 0.5f) - clamped;
+        
+
+        float desiredAngle = Mathf.Atan2(toTarget.y, toTarget.x) * Mathf.Rad2Deg - 90f;
+        currentAngle = Mathf.SmoothDampAngle(currentAngle, desiredAngle, ref velocityAngle, rotationSmoothTime, Mathf.Infinity, Time.unscaledDeltaTime);
+
+        if (arrowRect != null) arrowRect.localRotation = Quaternion.Euler(0f, 0f, currentAngle);
     }
 
-    void SetUIActive(bool active)
+    void SetUIActive(bool on)
     {
-        if (arrowVisual && arrowVisual.activeSelf != active) arrowVisual.SetActive(active);
-        if (distanceText && distanceText.gameObject.activeSelf != active) distanceText.gameObject.SetActive(active);
+        if (arrowVisual != null && arrowVisual.activeSelf != on) arrowVisual.SetActive(on);
+        if (distanceText != null && distanceText.gameObject.activeSelf != on) distanceText.gameObject.SetActive(on);
     }
 }

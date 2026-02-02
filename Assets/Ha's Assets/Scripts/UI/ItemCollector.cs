@@ -63,20 +63,34 @@ public class ItemCollector : MonoBehaviour
     private List<CanvasGroup>[] nextPointsCanvasGroups;
     private List<Renderer>[] nextPointsRenderers;
     private List<GameObject>[] stageObstacleMap = null;
+    private List<GameObject> itemLayerItemsList = new List<GameObject>();
 
     private Dictionary<int, Collider2D[]> _colliderCache = new Dictionary<int, Collider2D[]>();
 
     // 레이어 인덱스 캐시
     private int keyLayerIndex = -1;
     private int lockLayerIndex = -1;
+    private int itemLayerIndex = -1;
 
     void Start()
     {
         keyLayerIndex = LayerMask.NameToLayer("Key");
         lockLayerIndex = LayerMask.NameToLayer("Lock");
+        itemLayerIndex = LayerMask.NameToLayer("Item");
+
 
         InitializeNextPoints();
         BuildItemsList();
+
+        itemLayerItemsList.Clear();
+        for (int i = 0; i < itemsList.Count; ++i)
+        {
+            var it = itemsList[i];
+            if (it != null && it.layer == itemLayerIndex) itemLayerItemsList.Add(it);
+        }
+
+        nextHiddenIndex = Mathf.Clamp(initialVisibleCount, 0, itemLayerItemsList.Count);
+        totalRevealedCount = nextHiddenIndex;
 
         // 장애물(레이어 == "Lock") 맵 구축
         BuildObstacleMap();
@@ -244,6 +258,8 @@ public class ItemCollector : MonoBehaviour
             foreach (var item in itemsList)
             {
                 if (item == null) continue;
+                if (item.layer != itemLayerIndex) continue;
+
                 Vector3 pos = item.transform.position;
                 for (int i = 0; i < stageBoundsArray.Length; ++i)
                 {
@@ -254,6 +270,7 @@ public class ItemCollector : MonoBehaviour
                     }
                 }
             }
+
         }
     }
 
@@ -335,7 +352,8 @@ public class ItemCollector : MonoBehaviour
         return cols;
     }
 
-    void HideItemsInitially_Global() => HideItemsForList(itemsList, initialVisibleCount);
+    void HideItemsInitially_Global() => HideItemsForList(itemLayerItemsList, initialVisibleCount);
+
 
     void HideItemsNotInAnyStage()
     {
@@ -346,7 +364,7 @@ public class ItemCollector : MonoBehaviour
                 if (list != null) foreach (var it in list) if (it != null) anySet.Add(it);
         }
 
-        foreach (var item in itemsList)
+        foreach (var item in itemLayerItemsList)
         {
             if (item == null || anySet.Contains(item)) continue;
             ApplyInitialHide(item);
@@ -363,7 +381,6 @@ public class ItemCollector : MonoBehaviour
         }
     }
 
-    // --- 중복 코드 최적화 ---
     void ApplyInitialHide(GameObject item)
     {
         if (item == null) return;
@@ -391,7 +408,7 @@ public class ItemCollector : MonoBehaviour
     {
         if (!revealItemsSequentially) return;
         bool isStage = stageBoundsArray != null && stageBoundsArray.Length > 0;
-        var list = isStage ? currentStageItems : itemsList;
+        var list = isStage ? currentStageItems : itemLayerItemsList;
         int idx = isStage ? currentStageNextHiddenIndex : nextHiddenIndex;
         int toReveal = Mathf.Max(1, count);
         int revealed = 0;
@@ -405,6 +422,7 @@ public class ItemCollector : MonoBehaviour
         if (isStage) { currentStageNextHiddenIndex = idx; currentStageTotalRevealedCount += revealed; }
         else { nextHiddenIndex = idx; totalRevealedCount += revealed; }
     }
+
 
     IEnumerator FadeInItemRoutine(GameObject item, float duration)
     {
@@ -491,7 +509,9 @@ public class ItemCollector : MonoBehaviour
         if (collectedInstanceIds.Contains(id)) return;
 
         collectedInstanceIds.Add(id);
-        collected++;
+        bool isCountedAsItem = (candidate.layer == itemLayerIndex);
+        if (isCountedAsItem) collected++;
+        
 
         // 3. UI 및 공통 이펙트 처리
         if (FloatingTextSpawner.Instance != null) FloatingTextSpawner.Instance.ShowForCollectedItem(candidate);
@@ -534,10 +554,14 @@ public class ItemCollector : MonoBehaviour
         }
 
         // 6. 다음 아이템 노출 및 목적지 활성화 로직
-        if (revealItemsSequentially)
+        if (isCountedAsItem)
         {
-            int currentTotal = (stageBoundsArray != null && stageBoundsArray.Length > 0) ? currentStageTotalRevealedCount : totalRevealedCount;
-            if (collected >= currentTotal) RevealNextHiddenBatch(subsequentRevealCount);
+            if (revealItemsSequentially)
+            {
+                int currentTotal = (stageBoundsArray != null && stageBoundsArray.Length > 0) ? currentStageTotalRevealedCount : totalRevealedCount;
+                if (collected >= currentTotal) RevealNextHiddenBatch(subsequentRevealCount);
+            }
+            if (collected >= currentStageTotalItems) RevealNextPointForStage(currentStageIndex);
         }
 
         // 스테이지 모든 아이템 수집 시 목적지 오픈
@@ -680,7 +704,7 @@ public class ItemCollector : MonoBehaviour
                 var stageController = FindAnyObjectByType<MapCameraStageController>();
 
                 // 타겟 안 넘겨줘도 됨! GameManager 바운드로 스스로 찾음.
-                nav.Initialize(playerTransform, uiCanvas, stageController);
+                nav.Initialize(playerTransform, uiCanvas, stageController, nextPoints[stageIndex].transform, 50f, 60f);
             }
         }
     }

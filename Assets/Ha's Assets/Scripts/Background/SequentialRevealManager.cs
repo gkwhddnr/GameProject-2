@@ -151,12 +151,34 @@ public class SequentialRevealManager : MonoBehaviour
         // 현재 단계 켜기
         if (currentGroup.objectsToActivate != null)
         {
+            int keyLayer = LayerMask.NameToLayer("Key");
+
             foreach (var obj in currentGroup.objectsToActivate)
             {
-                if (obj != null) obj.SetActive(true);
+                if (obj == null) continue;
+
+                // 1) 기본 활성화 (원래 방식 유지)
+                obj.SetActive(true);
+
+                // 2) 'Key'로 간주되는 경우(레이어 또는 태그 또는 이름)엔 콜라이더를 강제 활성화
+                bool looksLikeKey = (obj.layer == keyLayer) || obj.CompareTag("Key") || string.Equals(obj.name, "Key", System.StringComparison.OrdinalIgnoreCase);
+
+                // 3) 또는 해당 오브젝트(또는 자식)에 ItemPickup 등의 수집 스크립트가 붙어있으면 콜라이더 활성화
+                bool hasPickupScript = obj.GetComponentInChildren<ItemPickup>(true) != null
+                                       || obj.GetComponent<ItemPickup>() != null;
+
+                if (looksLikeKey || hasPickupScript)
+                {
+                    var cols = obj.GetComponentsInChildren<Collider2D>(true);
+                    foreach (var c in cols)
+                    {
+                        if (c != null) c.enabled = true;
+                    }
+                }
             }
         }
     }
+
 
     private void DeactivateGroup(BatchRevealGroup group)
     {
