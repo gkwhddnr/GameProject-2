@@ -19,10 +19,10 @@ public class SequentialRevealManager : MonoBehaviour
         public GameObject[] objectsToActivate;
 
         [Tooltip("체크 시: 다음 단계가 시작될 때 '이전' 단계들의 오브젝트를 모두 비활성화합니다.")]
-        public bool deactivatePrevious;
+        public bool Previous;
 
         [Tooltip("체크 시: '현재' 오브젝트들을 비활성화합니다.")]
-        public bool deactivateOnComplete;
+        public bool Present;
     }
 
     [System.Serializable]
@@ -111,7 +111,7 @@ public class SequentialRevealManager : MonoBehaviour
         if (activeIdx >= 0 && activeIdx < config.batchGroups.Length)
         {
             var activeGroup = config.batchGroups[activeIdx];
-            if (activeGroup.deactivateOnComplete)
+            if (activeGroup.Present)
             {
                 // 현재 배치의 완료 기준값 계산
                 int completeThreshold = initial + (subsequent * activeIdx);
@@ -143,7 +143,7 @@ public class SequentialRevealManager : MonoBehaviour
         var currentGroup = config.batchGroups[batchIdx];
 
         // deactivatePrevious: 이전 단계들 싹 다 끄기
-        if (currentGroup.deactivatePrevious)
+        if (currentGroup.Previous)
         {
             for (int i = 0; i < batchIdx; i++) DeactivateGroup(config.batchGroups[i]);
         }
