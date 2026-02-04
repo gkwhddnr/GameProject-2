@@ -122,14 +122,14 @@ public class NavigationPointer : MonoBehaviour
 
     private int GetCurrentStageIndexXY()
     {
-        var bounds = GameManager.Instance?.stageBounds;
-        if (bounds == null) return -1;
+        var settings = GameManager.Instance?.stageSettings; // 수정됨
+        if (settings == null) return -1;
 
         Vector2 p = playerTransform.position;
-        for (int i = 0; i < bounds.Length; ++i)
+        for (int i = 0; i < settings.Length; ++i)
         {
-            if (bounds[i] == null) continue;
-            Bounds bb = bounds[i].bounds;
+            if (settings[i] == null || settings[i].bounds == null) continue;
+            Bounds bb = settings[i].bounds.bounds;
             if (p.x >= bb.min.x && p.x <= bb.max.x && p.y >= bb.min.y && p.y <= bb.max.y) return i;
         }
         return -1;
@@ -143,11 +143,11 @@ public class NavigationPointer : MonoBehaviour
             return;
         }
 
-        var bounds = GameManager.Instance.stageBounds;
-        if (stageIdx < 0 || stageIdx >= bounds.Length) return;
-        Bounds b = bounds[stageIdx].bounds;
+        var settings = GameManager.Instance.stageSettings; // 수정됨
+        if (stageIdx < 0 || stageIdx >= settings.Length || settings[stageIdx].bounds == null) return;
 
-        // FindObjectsByType은 여전히 무겁지만, 호출 빈도를 줄여 과부하 방지
+        Bounds b = settings[stageIdx].bounds.bounds;
+
         var allPoints = FindObjectsByType<DestinationPoint>(FindObjectsSortMode.None);
         targetTransform = null;
 

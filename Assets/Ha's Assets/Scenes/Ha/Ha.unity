@@ -186,7 +186,7 @@ GameObject:
   - component: {fileID: 16776351}
   - component: {fileID: 16776350}
   - component: {fileID: 16776349}
-  m_Layer: 7
+  m_Layer: 9
   m_Name: cloud-2-extra-large_0 (3)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -471,7 +471,7 @@ SpriteRenderer:
   m_AutoUVMaxAngle: 89
   m_LightmapParameters: {fileID: 0}
   m_GlobalIlluminationMeshLod: 0
-  m_SortingLayerID: 1840987721
+  m_SortingLayerID: 644732309
   m_SortingLayer: 1
   m_SortingOrder: 99
   m_MaskInteraction: 0
@@ -713,7 +713,7 @@ MonoBehaviour:
   m_Intensity: 3
   m_LightVolumeIntensity: 0
   m_LightVolumeEnabled: 0
-  m_ApplyToSortingLayers: 00000000493ebb6d3502d46e
+  m_ApplyToSortingLayers: 00000000493ebb6d3502d46e95d56d26
   m_LightCookieSprite: {fileID: -2095271772990059563, guid: 182bfe09bb6b1f1479bd2fc33c71f13e, type: 3}
   m_DeprecatedPointLightCookieSprite: {fileID: 0}
   m_LightOrder: 0
@@ -809,7 +809,7 @@ SpriteRenderer:
   m_LightmapParameters: {fileID: 0}
   m_GlobalIlluminationMeshLod: 0
   m_SortingLayerID: 1840987721
-  m_SortingLayer: 1
+  m_SortingLayer: 0
   m_SortingOrder: 100
   m_MaskInteraction: 0
   m_Sprite: {fileID: 21300000, guid: a3fe0ec7e65c2bc43a6e5470f89fcf89, type: 3}
@@ -849,7 +849,7 @@ GameObject:
   - component: {fileID: 56100278}
   - component: {fileID: 56100277}
   - component: {fileID: 56100276}
-  m_Layer: 7
+  m_Layer: 9
   m_Name: cloud-1-extra-large_0 (14)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -1129,7 +1129,7 @@ SpriteRenderer:
   m_AutoUVMaxAngle: 89
   m_LightmapParameters: {fileID: 0}
   m_GlobalIlluminationMeshLod: 0
-  m_SortingLayerID: 1840987721
+  m_SortingLayerID: 644732309
   m_SortingLayer: 1
   m_SortingOrder: 99
   m_MaskInteraction: 0
@@ -1156,7 +1156,7 @@ GameObject:
   - component: {fileID: 67362096}
   - component: {fileID: 67362097}
   - component: {fileID: 67362098}
-  m_Layer: 10
+  m_Layer: 7
   m_Name: star-64 (2)
   m_TagString: item
   m_Icon: {fileID: 0}
@@ -1186,7 +1186,7 @@ SpriteRenderer:
   m_SmallMeshCulling: 1
   m_ForceMeshLod: -1
   m_MeshLodSelectionBias: 0
-  m_RenderingLayerMask: 1
+  m_RenderingLayerMask: 4294967295
   m_RendererPriority: 0
   m_Materials:
   - {fileID: 2100000, guid: a97c105638bdf8b4a8650670310a4cd3, type: 2}
@@ -1208,7 +1208,7 @@ SpriteRenderer:
   m_AutoUVMaxAngle: 89
   m_LightmapParameters: {fileID: 0}
   m_GlobalIlluminationMeshLod: 0
-  m_SortingLayerID: 1840987721
+  m_SortingLayerID: 644732309
   m_SortingLayer: 1
   m_SortingOrder: 100
   m_MaskInteraction: 0
@@ -1389,7 +1389,7 @@ SpriteRenderer:
   m_LightmapParameters: {fileID: 0}
   m_GlobalIlluminationMeshLod: 0
   m_SortingLayerID: 1840987721
-  m_SortingLayer: 1
+  m_SortingLayer: 0
   m_SortingOrder: 100
   m_MaskInteraction: 0
   m_Sprite: {fileID: 21300000, guid: 3451ececccaf0504984136a7c098aeb2, type: 3}
@@ -1435,7 +1435,7 @@ GameObject:
   - component: {fileID: 113221687}
   - component: {fileID: 113221686}
   - component: {fileID: 113221689}
-  m_Layer: 9
+  m_Layer: 10
   m_Name: NextPoint (2)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -1517,7 +1517,7 @@ SpriteRenderer:
   m_AutoUVMaxAngle: 89
   m_LightmapParameters: {fileID: 0}
   m_GlobalIlluminationMeshLod: 0
-  m_SortingLayerID: 1840987721
+  m_SortingLayerID: 644732309
   m_SortingLayer: 1
   m_SortingOrder: 100
   m_MaskInteraction: 0
@@ -1546,7 +1546,7 @@ MonoBehaviour:
   mapCamera: {fileID: 1293367448}
   nextBounds: {fileID: 449652801}
   nextPoint: {fileID: 113221685}
-  playerObject: {fileID: 0}
+  playerObject: {fileID: 7286279630889454185}
   snapCameraToBounds: 1
   fitViewToBounds: 1
   backgroundManager: {fileID: 8673004}
@@ -1724,7 +1724,7 @@ GameObject:
   - component: {fileID: 229073581}
   - component: {fileID: 229073580}
   - component: {fileID: 229073579}
-  m_Layer: 10
+  m_Layer: 7
   m_Name: star-64 (10)
   m_TagString: item
   m_Icon: {fileID: 0}
@@ -1875,7 +1875,7 @@ SpriteRenderer:
   m_AutoUVMaxAngle: 89
   m_LightmapParameters: {fileID: 0}
   m_GlobalIlluminationMeshLod: 0
-  m_SortingLayerID: 1840987721
+  m_SortingLayerID: 644732309
   m_SortingLayer: 1
   m_SortingOrder: 100
   m_MaskInteraction: 0
@@ -1901,7 +1901,7 @@ GameObject:
   - component: {fileID: 229214315}
   - component: {fileID: 229214314}
   - component: {fileID: 229214313}
-  m_Layer: 7
+  m_Layer: 9
   m_Name: cloud-1-extra-large_0 (11)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -2181,7 +2181,7 @@ SpriteRenderer:
   m_AutoUVMaxAngle: 89
   m_LightmapParameters: {fileID: 0}
   m_GlobalIlluminationMeshLod: 0
-  m_SortingLayerID: 1840987721
+  m_SortingLayerID: 644732309
   m_SortingLayer: 1
   m_SortingOrder: 99
   m_MaskInteraction: 0
@@ -2247,7 +2247,7 @@ MonoBehaviour:
   m_Intensity: 2
   m_LightVolumeIntensity: 0
   m_LightVolumeEnabled: 0
-  m_ApplyToSortingLayers: 00000000493ebb6d3502d46e
+  m_ApplyToSortingLayers: 00000000493ebb6d3502d46e95d56d26
   m_LightCookieSprite: {fileID: -2095271772990059563, guid: 182bfe09bb6b1f1479bd2fc33c71f13e, type: 3}
   m_DeprecatedPointLightCookieSprite: {fileID: 0}
   m_LightOrder: 0
@@ -2497,7 +2497,7 @@ MonoBehaviour:
   m_Intensity: 3
   m_LightVolumeIntensity: 0
   m_LightVolumeEnabled: 0
-  m_ApplyToSortingLayers: 00000000493ebb6d3502d46e
+  m_ApplyToSortingLayers: 00000000493ebb6d3502d46e95d56d26
   m_LightCookieSprite: {fileID: -2095271772990059563, guid: 182bfe09bb6b1f1479bd2fc33c71f13e, type: 3}
   m_DeprecatedPointLightCookieSprite: {fileID: 0}
   m_LightOrder: 0
@@ -2609,7 +2609,7 @@ Canvas:
   m_VertexColorAlwaysGammaSpace: 0
   m_AdditionalShaderChannelsFlag: 25
   m_UpdateRectTransformForStandalone: 0
-  m_SortingLayerID: 1840987721
+  m_SortingLayerID: 644732309
   m_SortingOrder: 100
   m_TargetDisplay: 0
 --- !u!224 &255009831
@@ -2624,8 +2624,8 @@ RectTransform:
   m_LocalScale: {x: 0, y: 0, z: 0}
   m_ConstrainProportionsScale: 0
   m_Children:
-  - {fileID: 666451191}
   - {fileID: 410023623}
+  - {fileID: 666451191}
   - {fileID: 743607132}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
@@ -2647,7 +2647,7 @@ GameObject:
   - component: {fileID: 268001620}
   - component: {fileID: 268001619}
   - component: {fileID: 268001622}
-  m_Layer: 10
+  m_Layer: 7
   m_Name: star-64 (7)
   m_TagString: item
   m_Icon: {fileID: 0}
@@ -2773,7 +2773,7 @@ SpriteRenderer:
   m_AutoUVMaxAngle: 89
   m_LightmapParameters: {fileID: 0}
   m_GlobalIlluminationMeshLod: 0
-  m_SortingLayerID: 1840987721
+  m_SortingLayerID: 644732309
   m_SortingLayer: 1
   m_SortingOrder: 100
   m_MaskInteraction: 0
@@ -2825,7 +2825,7 @@ GameObject:
   - component: {fileID: 309253257}
   - component: {fileID: 309253256}
   - component: {fileID: 309253255}
-  m_Layer: 11
+  m_Layer: 8
   m_Name: Key (1)
   m_TagString: Key
   m_Icon: {fileID: 0}
@@ -2975,7 +2975,7 @@ SpriteRenderer:
   m_AutoUVMaxAngle: 89
   m_LightmapParameters: {fileID: 0}
   m_GlobalIlluminationMeshLod: 0
-  m_SortingLayerID: 1840987721
+  m_SortingLayerID: 644732309
   m_SortingLayer: 1
   m_SortingOrder: 100
   m_MaskInteraction: 0
@@ -3001,7 +3001,7 @@ GameObject:
   - component: {fileID: 314129517}
   - component: {fileID: 314129516}
   - component: {fileID: 314129515}
-  m_Layer: 7
+  m_Layer: 9
   m_Name: cloud-2-extra-large_0 (11)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -3286,7 +3286,7 @@ SpriteRenderer:
   m_AutoUVMaxAngle: 89
   m_LightmapParameters: {fileID: 0}
   m_GlobalIlluminationMeshLod: 0
-  m_SortingLayerID: 1840987721
+  m_SortingLayerID: 644732309
   m_SortingLayer: 1
   m_SortingOrder: 99
   m_MaskInteraction: 0
@@ -3318,7 +3318,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1902093319853160379, guid: a979ebe4a74f0e04295019fa6aed1704, type: 3}
       propertyPath: m_SortingLayerID
-      value: 1840987721
+      value: 644732309
       objectReference: {fileID: 0}
     - target: {fileID: 6510928075006587518, guid: a979ebe4a74f0e04295019fa6aed1704, type: 3}
       propertyPath: m_Name
@@ -3326,7 +3326,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 6510928075006587518, guid: a979ebe4a74f0e04295019fa6aed1704, type: 3}
       propertyPath: m_Layer
-      value: 7
+      value: 9
       objectReference: {fileID: 0}
     - target: {fileID: 9108086370530475514, guid: a979ebe4a74f0e04295019fa6aed1704, type: 3}
       propertyPath: m_LocalScale.x
@@ -3393,7 +3393,7 @@ GameObject:
   - component: {fileID: 329292273}
   - component: {fileID: 329292272}
   - component: {fileID: 329292271}
-  m_Layer: 7
+  m_Layer: 9
   m_Name: cloud-2-extra-large_0 (4)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -3678,7 +3678,7 @@ SpriteRenderer:
   m_AutoUVMaxAngle: 89
   m_LightmapParameters: {fileID: 0}
   m_GlobalIlluminationMeshLod: 0
-  m_SortingLayerID: 1840987721
+  m_SortingLayerID: 644732309
   m_SortingLayer: 1
   m_SortingOrder: 99
   m_MaskInteraction: 0
@@ -3703,7 +3703,7 @@ GameObject:
   - component: {fileID: 353453647}
   - component: {fileID: 353453649}
   - component: {fileID: 353453648}
-  m_Layer: 7
+  m_Layer: 9
   m_Name: cloud-1-extra-large_0
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -3895,7 +3895,7 @@ SpriteRenderer:
   m_AutoUVMaxAngle: 89
   m_LightmapParameters: {fileID: 0}
   m_GlobalIlluminationMeshLod: 0
-  m_SortingLayerID: 1840987721
+  m_SortingLayerID: 644732309
   m_SortingLayer: 1
   m_SortingOrder: 99
   m_MaskInteraction: 0
@@ -3919,7 +3919,7 @@ GameObject:
   m_Component:
   - component: {fileID: 358969954}
   - component: {fileID: 358969955}
-  m_Layer: 0
+  m_Layer: 10
   m_Name: Global Light 2D (5)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -3961,7 +3961,7 @@ MonoBehaviour:
   m_Intensity: 3
   m_LightVolumeIntensity: 0
   m_LightVolumeEnabled: 0
-  m_ApplyToSortingLayers: 00000000493ebb6d3502d46e
+  m_ApplyToSortingLayers: 00000000493ebb6d3502d46e95d56d26
   m_LightCookieSprite: {fileID: -2095271772990059563, guid: 182bfe09bb6b1f1479bd2fc33c71f13e, type: 3}
   m_DeprecatedPointLightCookieSprite: {fileID: 0}
   m_LightOrder: 0
@@ -4328,7 +4328,7 @@ SpriteRenderer:
   m_LightmapParameters: {fileID: 0}
   m_GlobalIlluminationMeshLod: 0
   m_SortingLayerID: 1840987721
-  m_SortingLayer: 1
+  m_SortingLayer: 0
   m_SortingOrder: 100
   m_MaskInteraction: 0
   m_Sprite: {fileID: 21300000, guid: 5b879b946247b9d459acc50eacefed22, type: 3}
@@ -4608,7 +4608,7 @@ SpriteRenderer:
   m_AutoUVMaxAngle: 89
   m_LightmapParameters: {fileID: 0}
   m_GlobalIlluminationMeshLod: 0
-  m_SortingLayerID: 1840987721
+  m_SortingLayerID: 644732309
   m_SortingLayer: 1
   m_SortingOrder: 100
   m_MaskInteraction: 0
@@ -4725,7 +4725,7 @@ GameObject:
   - component: {fileID: 455161891}
   - component: {fileID: 455161890}
   - component: {fileID: 455161889}
-  m_Layer: 7
+  m_Layer: 9
   m_Name: cloud-1-extra-large_0 (3)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -5005,7 +5005,7 @@ SpriteRenderer:
   m_AutoUVMaxAngle: 89
   m_LightmapParameters: {fileID: 0}
   m_GlobalIlluminationMeshLod: 0
-  m_SortingLayerID: 1840987721
+  m_SortingLayerID: 644732309
   m_SortingLayer: 1
   m_SortingOrder: 99
   m_MaskInteraction: 0
@@ -5132,7 +5132,7 @@ GameObject:
   - component: {fileID: 498051207}
   - component: {fileID: 498051206}
   - component: {fileID: 498051205}
-  m_Layer: 7
+  m_Layer: 9
   m_Name: cloud-1-extra-large_0 (13)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -5412,7 +5412,7 @@ SpriteRenderer:
   m_AutoUVMaxAngle: 89
   m_LightmapParameters: {fileID: 0}
   m_GlobalIlluminationMeshLod: 0
-  m_SortingLayerID: 1840987721
+  m_SortingLayerID: 644732309
   m_SortingLayer: 1
   m_SortingOrder: 99
   m_MaskInteraction: 0
@@ -5490,7 +5490,7 @@ GameObject:
   - component: {fileID: 516163368}
   - component: {fileID: 516163367}
   - component: {fileID: 516163366}
-  m_Layer: 7
+  m_Layer: 9
   m_Name: cloud-2-extra-large_0 (8)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -5775,7 +5775,7 @@ SpriteRenderer:
   m_AutoUVMaxAngle: 89
   m_LightmapParameters: {fileID: 0}
   m_GlobalIlluminationMeshLod: 0
-  m_SortingLayerID: 1840987721
+  m_SortingLayerID: 644732309
   m_SortingLayer: 1
   m_SortingOrder: 99
   m_MaskInteraction: 0
@@ -5802,7 +5802,7 @@ GameObject:
   - component: {fileID: 520448295}
   - component: {fileID: 520448294}
   - component: {fileID: 520448298}
-  m_Layer: 8
+  m_Layer: 11
   m_Name: DestinationPoint (1)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -5900,7 +5900,7 @@ SpriteRenderer:
   m_AutoUVMaxAngle: 89
   m_LightmapParameters: {fileID: 0}
   m_GlobalIlluminationMeshLod: 0
-  m_SortingLayerID: 1840987721
+  m_SortingLayerID: 644732309
   m_SortingLayer: 1
   m_SortingOrder: 100
   m_MaskInteraction: 0
@@ -5995,7 +5995,7 @@ GameObject:
   - component: {fileID: 524942545}
   - component: {fileID: 524942546}
   - component: {fileID: 524942548}
-  m_Layer: 11
+  m_Layer: 8
   m_Name: Key
   m_TagString: Key
   m_Icon: {fileID: 0}
@@ -6133,7 +6133,7 @@ SpriteRenderer:
   m_AutoUVMaxAngle: 89
   m_LightmapParameters: {fileID: 0}
   m_GlobalIlluminationMeshLod: 0
-  m_SortingLayerID: 1840987721
+  m_SortingLayerID: 644732309
   m_SortingLayer: 1
   m_SortingOrder: 100
   m_MaskInteraction: 0
@@ -6211,7 +6211,7 @@ MonoBehaviour:
   m_Intensity: 3
   m_LightVolumeIntensity: 0
   m_LightVolumeEnabled: 0
-  m_ApplyToSortingLayers: 00000000493ebb6d3502d46e
+  m_ApplyToSortingLayers: 00000000493ebb6d3502d46e95d56d26
   m_LightCookieSprite: {fileID: -2095271772990059563, guid: 182bfe09bb6b1f1479bd2fc33c71f13e, type: 3}
   m_DeprecatedPointLightCookieSprite: {fileID: 0}
   m_LightOrder: 0
@@ -6296,7 +6296,7 @@ MonoBehaviour:
   m_Intensity: 3
   m_LightVolumeIntensity: 0
   m_LightVolumeEnabled: 0
-  m_ApplyToSortingLayers: 00000000493ebb6d3502d46e
+  m_ApplyToSortingLayers: 00000000493ebb6d3502d46e95d56d26
   m_LightCookieSprite: {fileID: -2095271772990059563, guid: 182bfe09bb6b1f1479bd2fc33c71f13e, type: 3}
   m_DeprecatedPointLightCookieSprite: {fileID: 0}
   m_LightOrder: 0
@@ -6346,7 +6346,7 @@ GameObject:
   - component: {fileID: 558106058}
   - component: {fileID: 558106057}
   - component: {fileID: 558106056}
-  m_Layer: 7
+  m_Layer: 9
   m_Name: cloud-1-extra-large_0 (6)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -6626,7 +6626,7 @@ SpriteRenderer:
   m_AutoUVMaxAngle: 89
   m_LightmapParameters: {fileID: 0}
   m_GlobalIlluminationMeshLod: 0
-  m_SortingLayerID: 1840987721
+  m_SortingLayerID: 644732309
   m_SortingLayer: 1
   m_SortingOrder: 99
   m_MaskInteraction: 0
@@ -6658,7 +6658,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1062715341053413619, guid: 1337d84d7f52ec64c916628a1be706c5, type: 3}
       propertyPath: m_SortingLayerID
-      value: 1840987721
+      value: 644732309
       objectReference: {fileID: 0}
     - target: {fileID: 5532897498581168808, guid: 1337d84d7f52ec64c916628a1be706c5, type: 3}
       propertyPath: m_LocalScale.x
@@ -6714,7 +6714,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 6314218138152279433, guid: 1337d84d7f52ec64c916628a1be706c5, type: 3}
       propertyPath: m_Layer
-      value: 7
+      value: 9
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -6734,7 +6734,7 @@ GameObject:
   - component: {fileID: 587273918}
   - component: {fileID: 587273917}
   - component: {fileID: 587273920}
-  m_Layer: 8
+  m_Layer: 11
   m_Name: DestinationPoint (2)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -6848,7 +6848,7 @@ SpriteRenderer:
   m_AutoUVMaxAngle: 89
   m_LightmapParameters: {fileID: 0}
   m_GlobalIlluminationMeshLod: 0
-  m_SortingLayerID: 1840987721
+  m_SortingLayerID: 644732309
   m_SortingLayer: 1
   m_SortingOrder: 100
   m_MaskInteraction: 0
@@ -6927,7 +6927,7 @@ GameObject:
   - component: {fileID: 588871626}
   - component: {fileID: 588871625}
   - component: {fileID: 588871624}
-  m_Layer: 7
+  m_Layer: 9
   m_Name: cloud-1-extra-large_0
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -7207,7 +7207,7 @@ SpriteRenderer:
   m_AutoUVMaxAngle: 89
   m_LightmapParameters: {fileID: 0}
   m_GlobalIlluminationMeshLod: 0
-  m_SortingLayerID: 1840987721
+  m_SortingLayerID: 644732309
   m_SortingLayer: 1
   m_SortingOrder: 99
   m_MaskInteraction: 0
@@ -7233,7 +7233,7 @@ GameObject:
   - component: {fileID: 593884733}
   - component: {fileID: 593884732}
   - component: {fileID: 593884735}
-  m_Layer: 7
+  m_Layer: 9
   m_Name: cloud-2-extra-large_0 (1)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -7488,7 +7488,7 @@ SpriteRenderer:
   m_AutoUVMaxAngle: 89
   m_LightmapParameters: {fileID: 0}
   m_GlobalIlluminationMeshLod: 0
-  m_SortingLayerID: 1840987721
+  m_SortingLayerID: 644732309
   m_SortingLayer: 1
   m_SortingOrder: 99
   m_MaskInteraction: 0
@@ -7727,7 +7727,7 @@ GameObject:
   - component: {fileID: 653532010}
   - component: {fileID: 653532009}
   - component: {fileID: 653532013}
-  m_Layer: 10
+  m_Layer: 7
   m_Name: star-64 (5)
   m_TagString: item
   m_Icon: {fileID: 0}
@@ -7837,7 +7837,7 @@ SpriteRenderer:
   m_AutoUVMaxAngle: 89
   m_LightmapParameters: {fileID: 0}
   m_GlobalIlluminationMeshLod: 0
-  m_SortingLayerID: 1840987721
+  m_SortingLayerID: 644732309
   m_SortingLayer: 1
   m_SortingOrder: 100
   m_MaskInteraction: 0
@@ -7905,7 +7905,7 @@ GameObject:
   - component: {fileID: 655414132}
   - component: {fileID: 655414131}
   - component: {fileID: 655414134}
-  m_Layer: 8
+  m_Layer: 11
   m_Name: DestinationPoint (3)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -8019,7 +8019,7 @@ SpriteRenderer:
   m_AutoUVMaxAngle: 89
   m_LightmapParameters: {fileID: 0}
   m_GlobalIlluminationMeshLod: 0
-  m_SortingLayerID: 1840987721
+  m_SortingLayerID: 644732309
   m_SortingLayer: 1
   m_SortingOrder: 100
   m_MaskInteraction: 0
@@ -8288,7 +8288,7 @@ SpriteRenderer:
   m_LightmapParameters: {fileID: 0}
   m_GlobalIlluminationMeshLod: 0
   m_SortingLayerID: 1840987721
-  m_SortingLayer: 1
+  m_SortingLayer: 0
   m_SortingOrder: 100
   m_MaskInteraction: 0
   m_Sprite: {fileID: 21300000, guid: 97032638d6195ca4691d1b79887c54d9, type: 3}
@@ -8420,7 +8420,7 @@ GameObject:
   - component: {fileID: 703136171}
   - component: {fileID: 703136169}
   - component: {fileID: 703136168}
-  m_Layer: 10
+  m_Layer: 7
   m_Name: star-64 (8)
   m_TagString: item
   m_Icon: {fileID: 0}
@@ -8525,7 +8525,7 @@ SpriteRenderer:
   m_AutoUVMaxAngle: 89
   m_LightmapParameters: {fileID: 0}
   m_GlobalIlluminationMeshLod: 0
-  m_SortingLayerID: 1840987721
+  m_SortingLayerID: 644732309
   m_SortingLayer: 1
   m_SortingOrder: 100
   m_MaskInteraction: 0
@@ -9008,7 +9008,7 @@ GameObject:
   - component: {fileID: 765016073}
   - component: {fileID: 765016072}
   - component: {fileID: 765016076}
-  m_Layer: 0
+  m_Layer: 10
   m_Name: NextPoint (1)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -9074,7 +9074,7 @@ SpriteRenderer:
   m_AutoUVMaxAngle: 89
   m_LightmapParameters: {fileID: 0}
   m_GlobalIlluminationMeshLod: 0
-  m_SortingLayerID: 1840987721
+  m_SortingLayerID: 644732309
   m_SortingLayer: 1
   m_SortingOrder: 100
   m_MaskInteraction: 0
@@ -9103,7 +9103,7 @@ MonoBehaviour:
   mapCamera: {fileID: 1293367448}
   nextBounds: {fileID: 36376981}
   nextPoint: {fileID: 765016075}
-  playerObject: {fileID: 0}
+  playerObject: {fileID: 7286279630889454185}
   snapCameraToBounds: 1
   fitViewToBounds: 1
   backgroundManager: {fileID: 8673004}
@@ -9251,7 +9251,7 @@ GameObject:
   - component: {fileID: 780650281}
   - component: {fileID: 780650280}
   - component: {fileID: 780650279}
-  m_Layer: 7
+  m_Layer: 9
   m_Name: cloud-1-extra-large_0 (4)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -9534,7 +9534,7 @@ SpriteRenderer:
   m_AutoUVMaxAngle: 89
   m_LightmapParameters: {fileID: 0}
   m_GlobalIlluminationMeshLod: 0
-  m_SortingLayerID: 1840987721
+  m_SortingLayerID: 644732309
   m_SortingLayer: 1
   m_SortingOrder: 99
   m_MaskInteraction: 0
@@ -9612,7 +9612,7 @@ SpriteRenderer:
   m_LightmapParameters: {fileID: 0}
   m_GlobalIlluminationMeshLod: 0
   m_SortingLayerID: 1840987721
-  m_SortingLayer: 1
+  m_SortingLayer: 0
   m_SortingOrder: 100
   m_MaskInteraction: 0
   m_Sprite: {fileID: 21300000, guid: 038e40b8fd184df4f8ec1b8ab7c1f5af, type: 3}
@@ -9770,7 +9770,7 @@ GameObject:
   - component: {fileID: 802035154}
   - component: {fileID: 802035153}
   - component: {fileID: 802035152}
-  m_Layer: 10
+  m_Layer: 7
   m_Name: star-64 (9)
   m_TagString: item
   m_Icon: {fileID: 0}
@@ -9921,7 +9921,7 @@ SpriteRenderer:
   m_AutoUVMaxAngle: 89
   m_LightmapParameters: {fileID: 0}
   m_GlobalIlluminationMeshLod: 0
-  m_SortingLayerID: 1840987721
+  m_SortingLayerID: 644732309
   m_SortingLayer: 1
   m_SortingOrder: 100
   m_MaskInteraction: 0
@@ -10038,7 +10038,7 @@ GameObject:
   - component: {fileID: 837439528}
   - component: {fileID: 837439527}
   - component: {fileID: 837439526}
-  m_Layer: 7
+  m_Layer: 9
   m_Name: cloud-1-extra-large_0 (5)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -10318,7 +10318,7 @@ SpriteRenderer:
   m_AutoUVMaxAngle: 89
   m_LightmapParameters: {fileID: 0}
   m_GlobalIlluminationMeshLod: 0
-  m_SortingLayerID: 1840987721
+  m_SortingLayerID: 644732309
   m_SortingLayer: 1
   m_SortingOrder: 99
   m_MaskInteraction: 0
@@ -10435,7 +10435,7 @@ GameObject:
   - component: {fileID: 860624187}
   - component: {fileID: 860624186}
   - component: {fileID: 860624185}
-  m_Layer: 7
+  m_Layer: 9
   m_Name: cloud-2-extra-large_0 (15)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -10720,7 +10720,7 @@ SpriteRenderer:
   m_AutoUVMaxAngle: 89
   m_LightmapParameters: {fileID: 0}
   m_GlobalIlluminationMeshLod: 0
-  m_SortingLayerID: 1840987721
+  m_SortingLayerID: 644732309
   m_SortingLayer: 1
   m_SortingOrder: 99
   m_MaskInteraction: 0
@@ -10747,7 +10747,7 @@ GameObject:
   - component: {fileID: 870165776}
   - component: {fileID: 870165775}
   - component: {fileID: 870165778}
-  m_Layer: 10
+  m_Layer: 7
   m_Name: star-64 (6)
   m_TagString: item
   m_Icon: {fileID: 0}
@@ -10873,7 +10873,7 @@ SpriteRenderer:
   m_AutoUVMaxAngle: 89
   m_LightmapParameters: {fileID: 0}
   m_GlobalIlluminationMeshLod: 0
-  m_SortingLayerID: 1840987721
+  m_SortingLayerID: 644732309
   m_SortingLayer: 1
   m_SortingOrder: 100
   m_MaskInteraction: 0
@@ -11158,7 +11158,7 @@ SpriteRenderer:
   m_LightmapParameters: {fileID: 0}
   m_GlobalIlluminationMeshLod: 0
   m_SortingLayerID: 1840987721
-  m_SortingLayer: 1
+  m_SortingLayer: 0
   m_SortingOrder: 100
   m_MaskInteraction: 0
   m_Sprite: {fileID: 21300000, guid: 0334e95c5992ab8448ffea7c8be1c179, type: 3}
@@ -11224,7 +11224,7 @@ GameObject:
   - component: {fileID: 945120045}
   - component: {fileID: 945120044}
   - component: {fileID: 945120043}
-  m_Layer: 7
+  m_Layer: 9
   m_Name: cloud-2-extra-large_0 (5)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -11509,7 +11509,7 @@ SpriteRenderer:
   m_AutoUVMaxAngle: 89
   m_LightmapParameters: {fileID: 0}
   m_GlobalIlluminationMeshLod: 0
-  m_SortingLayerID: 1840987721
+  m_SortingLayerID: 644732309
   m_SortingLayer: 1
   m_SortingOrder: 99
   m_MaskInteraction: 0
@@ -11535,7 +11535,7 @@ GameObject:
   - component: {fileID: 989121522}
   - component: {fileID: 989121524}
   - component: {fileID: 989121525}
-  m_Layer: 7
+  m_Layer: 9
   m_Name: cloud-2-extra-large_0
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -11587,7 +11587,7 @@ SpriteRenderer:
   m_AutoUVMaxAngle: 89
   m_LightmapParameters: {fileID: 0}
   m_GlobalIlluminationMeshLod: 0
-  m_SortingLayerID: 1840987721
+  m_SortingLayerID: 644732309
   m_SortingLayer: 1
   m_SortingOrder: 99
   m_MaskInteraction: 0
@@ -11935,7 +11935,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1029600964}
   - component: {fileID: 1029600965}
-  m_Layer: 0
+  m_Layer: 10
   m_Name: Global Light 2D (4)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -11974,10 +11974,10 @@ MonoBehaviour:
   m_BlendStyleIndex: 0
   m_FalloffIntensity: 0.5
   m_Color: {r: 1, g: 1, b: 1, a: 1}
-  m_Intensity: 3
+  m_Intensity: 1
   m_LightVolumeIntensity: 0
   m_LightVolumeEnabled: 0
-  m_ApplyToSortingLayers: 00000000493ebb6d3502d46e
+  m_ApplyToSortingLayers: 00000000493ebb6d3502d46e95d56d26
   m_LightCookieSprite: {fileID: -2095271772990059563, guid: 182bfe09bb6b1f1479bd2fc33c71f13e, type: 3}
   m_DeprecatedPointLightCookieSprite: {fileID: 0}
   m_LightOrder: 0
@@ -11998,7 +11998,7 @@ MonoBehaviour:
   m_PointLightInnerAngle: 360
   m_PointLightOuterAngle: 360
   m_PointLightInnerRadius: 0
-  m_PointLightOuterRadius: 2
+  m_PointLightOuterRadius: 1
   m_ShapeLightParametricSides: 5
   m_ShapeLightParametricAngleOffset: 0
   m_ShapeLightParametricRadius: 1
@@ -12022,7 +12022,7 @@ GameObject:
   - component: {fileID: 1045226039}
   - component: {fileID: 1045226038}
   - component: {fileID: 1045226037}
-  m_Layer: 7
+  m_Layer: 9
   m_Name: cloud-2-extra-large_0 (7)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -12307,7 +12307,7 @@ SpriteRenderer:
   m_AutoUVMaxAngle: 89
   m_LightmapParameters: {fileID: 0}
   m_GlobalIlluminationMeshLod: 0
-  m_SortingLayerID: 1840987721
+  m_SortingLayerID: 644732309
   m_SortingLayer: 1
   m_SortingOrder: 99
   m_MaskInteraction: 0
@@ -12475,7 +12475,7 @@ SpriteRenderer:
   m_LightmapParameters: {fileID: 0}
   m_GlobalIlluminationMeshLod: 0
   m_SortingLayerID: 1840987721
-  m_SortingLayer: 1
+  m_SortingLayer: 0
   m_SortingOrder: 100
   m_MaskInteraction: 0
   m_Sprite: {fileID: 21300000, guid: 1d943d8a087fcc842bd4ab77c8edfbf5, type: 3}
@@ -12555,7 +12555,7 @@ MonoBehaviour:
   m_Intensity: 3
   m_LightVolumeIntensity: 0
   m_LightVolumeEnabled: 0
-  m_ApplyToSortingLayers: 00000000493ebb6d3502d46e
+  m_ApplyToSortingLayers: 00000000493ebb6d3502d46e95d56d26
   m_LightCookieSprite: {fileID: -2095271772990059563, guid: 182bfe09bb6b1f1479bd2fc33c71f13e, type: 3}
   m_DeprecatedPointLightCookieSprite: {fileID: 0}
   m_LightOrder: 0
@@ -12605,7 +12605,7 @@ GameObject:
   - component: {fileID: 1117537925}
   - component: {fileID: 1117537924}
   - component: {fileID: 1117537923}
-  m_Layer: 7
+  m_Layer: 9
   m_Name: cloud-2-extra-large_0 (10)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -12890,7 +12890,7 @@ SpriteRenderer:
   m_AutoUVMaxAngle: 89
   m_LightmapParameters: {fileID: 0}
   m_GlobalIlluminationMeshLod: 0
-  m_SortingLayerID: 1840987721
+  m_SortingLayerID: 644732309
   m_SortingLayer: 1
   m_SortingOrder: 99
   m_MaskInteraction: 0
@@ -13028,11 +13028,11 @@ MonoBehaviour:
   m_LightType: 4
   m_BlendStyleIndex: 0
   m_FalloffIntensity: 0.5
-  m_Color: {r: 0.02745098, g: 0.02745098, b: 0.02745098, a: 1}
+  m_Color: {r: 0.1764706, g: 0.1764706, b: 0.1764706, a: 1}
   m_Intensity: 1
   m_LightVolumeIntensity: 1
   m_LightVolumeEnabled: 0
-  m_ApplyToSortingLayers: 00000000493ebb6d3502d46e
+  m_ApplyToSortingLayers: 00000000493ebb6d3502d46e95d56d26
   m_LightCookieSprite: {fileID: 0}
   m_DeprecatedPointLightCookieSprite: {fileID: 0}
   m_LightOrder: 0
@@ -13359,7 +13359,7 @@ GameObject:
   - component: {fileID: 1166695802}
   - component: {fileID: 1166695804}
   - component: {fileID: 1166695803}
-  m_Layer: 7
+  m_Layer: 9
   m_Name: cloud-2-extra-large_0 (1)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -13517,7 +13517,7 @@ SpriteRenderer:
   m_AutoUVMaxAngle: 89
   m_LightmapParameters: {fileID: 0}
   m_GlobalIlluminationMeshLod: 0
-  m_SortingLayerID: 1840987721
+  m_SortingLayerID: 644732309
   m_SortingLayer: 1
   m_SortingOrder: 99
   m_MaskInteraction: 0
@@ -13542,7 +13542,7 @@ GameObject:
   - component: {fileID: 1173251513}
   - component: {fileID: 1173251515}
   - component: {fileID: 1173251514}
-  m_Layer: 7
+  m_Layer: 9
   m_Name: cloud-1-extra-large_0 (1)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -13734,7 +13734,7 @@ SpriteRenderer:
   m_AutoUVMaxAngle: 89
   m_LightmapParameters: {fileID: 0}
   m_GlobalIlluminationMeshLod: 0
-  m_SortingLayerID: 1840987721
+  m_SortingLayerID: 644732309
   m_SortingLayer: 1
   m_SortingOrder: 99
   m_MaskInteraction: 0
@@ -14039,7 +14039,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1902093319853160379, guid: a979ebe4a74f0e04295019fa6aed1704, type: 3}
       propertyPath: m_SortingLayerID
-      value: 1840987721
+      value: 644732309
       objectReference: {fileID: 0}
     - target: {fileID: 6510928075006587518, guid: a979ebe4a74f0e04295019fa6aed1704, type: 3}
       propertyPath: m_Name
@@ -14047,7 +14047,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 6510928075006587518, guid: a979ebe4a74f0e04295019fa6aed1704, type: 3}
       propertyPath: m_Layer
-      value: 7
+      value: 9
       objectReference: {fileID: 0}
     - target: {fileID: 9108086370530475514, guid: a979ebe4a74f0e04295019fa6aed1704, type: 3}
       propertyPath: m_LocalScale.x
@@ -14168,7 +14168,7 @@ MonoBehaviour:
   m_Intensity: 3
   m_LightVolumeIntensity: 0
   m_LightVolumeEnabled: 0
-  m_ApplyToSortingLayers: 00000000493ebb6d3502d46e
+  m_ApplyToSortingLayers: 00000000493ebb6d3502d46e95d56d26
   m_LightCookieSprite: {fileID: -2095271772990059563, guid: 182bfe09bb6b1f1479bd2fc33c71f13e, type: 3}
   m_DeprecatedPointLightCookieSprite: {fileID: 0}
   m_LightOrder: 0
@@ -14393,7 +14393,7 @@ GameObject:
   - component: {fileID: 1310683527}
   - component: {fileID: 1310683526}
   - component: {fileID: 1310683525}
-  m_Layer: 7
+  m_Layer: 9
   m_Name: cloud-1-extra-large_0 (7)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -14673,7 +14673,7 @@ SpriteRenderer:
   m_AutoUVMaxAngle: 89
   m_LightmapParameters: {fileID: 0}
   m_GlobalIlluminationMeshLod: 0
-  m_SortingLayerID: 1840987721
+  m_SortingLayerID: 644732309
   m_SortingLayer: 1
   m_SortingOrder: 99
   m_MaskInteraction: 0
@@ -14695,6 +14695,18 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 8673005}
     m_Modifications:
+    - target: {fileID: 668921880161030457, guid: 9151d40ad0bc77c4cb037c138c685235, type: 3}
+      propertyPath: m_Layer
+      value: 10
+      objectReference: {fileID: 0}
+    - target: {fileID: 5083545438893694873, guid: 9151d40ad0bc77c4cb037c138c685235, type: 3}
+      propertyPath: m_SortingLayer
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 5083545438893694873, guid: 9151d40ad0bc77c4cb037c138c685235, type: 3}
+      propertyPath: m_SortingLayerID
+      value: 644732309
+      objectReference: {fileID: 0}
     - target: {fileID: 5406497697801823653, guid: 9151d40ad0bc77c4cb037c138c685235, type: 3}
       propertyPath: mapCamera
       value: 
@@ -14779,7 +14791,7 @@ GameObject:
   - component: {fileID: 1346966949}
   - component: {fileID: 1346966951}
   - component: {fileID: 1346966950}
-  m_Layer: 7
+  m_Layer: 9
   m_Name: cloud-2-extra-large_0
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -14937,7 +14949,7 @@ SpriteRenderer:
   m_AutoUVMaxAngle: 89
   m_LightmapParameters: {fileID: 0}
   m_GlobalIlluminationMeshLod: 0
-  m_SortingLayerID: 1840987721
+  m_SortingLayerID: 644732309
   m_SortingLayer: 1
   m_SortingOrder: 99
   m_MaskInteraction: 0
@@ -14964,7 +14976,7 @@ GameObject:
   - component: {fileID: 1354718035}
   - component: {fileID: 1354718034}
   - component: {fileID: 1354718038}
-  m_Layer: 10
+  m_Layer: 7
   m_Name: star-64 (4)
   m_TagString: item
   m_Icon: {fileID: 0}
@@ -15074,7 +15086,7 @@ SpriteRenderer:
   m_AutoUVMaxAngle: 89
   m_LightmapParameters: {fileID: 0}
   m_GlobalIlluminationMeshLod: 0
-  m_SortingLayerID: 1840987721
+  m_SortingLayerID: 644732309
   m_SortingLayer: 1
   m_SortingOrder: 100
   m_MaskInteraction: 0
@@ -15142,7 +15154,7 @@ GameObject:
   - component: {fileID: 1369998134}
   - component: {fileID: 1369998133}
   - component: {fileID: 1369998136}
-  m_Layer: 9
+  m_Layer: 10
   m_Name: NextPoint (3)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -15224,7 +15236,7 @@ SpriteRenderer:
   m_AutoUVMaxAngle: 89
   m_LightmapParameters: {fileID: 0}
   m_GlobalIlluminationMeshLod: 0
-  m_SortingLayerID: 1840987721
+  m_SortingLayerID: 644732309
   m_SortingLayer: 1
   m_SortingOrder: 100
   m_MaskInteraction: 0
@@ -15253,7 +15265,7 @@ MonoBehaviour:
   mapCamera: {fileID: 1293367448}
   nextBounds: {fileID: 1944182047}
   nextPoint: {fileID: 1369998132}
-  playerObject: {fileID: 0}
+  playerObject: {fileID: 7286279630889454185}
   snapCameraToBounds: 1
   fitViewToBounds: 1
   backgroundManager: {fileID: 8673004}
@@ -15385,7 +15397,7 @@ GameObject:
   - component: {fileID: 1397339170}
   - component: {fileID: 1397339169}
   - component: {fileID: 1397339168}
-  m_Layer: 7
+  m_Layer: 9
   m_Name: cloud-1-extra-large_0 (10)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -15665,7 +15677,7 @@ SpriteRenderer:
   m_AutoUVMaxAngle: 89
   m_LightmapParameters: {fileID: 0}
   m_GlobalIlluminationMeshLod: 0
-  m_SortingLayerID: 1840987721
+  m_SortingLayerID: 644732309
   m_SortingLayer: 1
   m_SortingOrder: 99
   m_MaskInteraction: 0
@@ -15691,7 +15703,7 @@ GameObject:
   - component: {fileID: 1402080930}
   - component: {fileID: 1402080929}
   - component: {fileID: 1402080928}
-  m_Layer: 7
+  m_Layer: 9
   m_Name: cloud-1-extra-large_0 (12)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -15971,7 +15983,7 @@ SpriteRenderer:
   m_AutoUVMaxAngle: 89
   m_LightmapParameters: {fileID: 0}
   m_GlobalIlluminationMeshLod: 0
-  m_SortingLayerID: 1840987721
+  m_SortingLayerID: 644732309
   m_SortingLayer: 1
   m_SortingOrder: 99
   m_MaskInteraction: 0
@@ -16164,7 +16176,6 @@ MonoBehaviour:
     fontSize: 36
     fontStyle: 1
     textColor: {r: 0.4980392, g: 1, b: 0.8313726, a: 1}
-  edgePadding: 1
 --- !u!4 &1429023081
 Transform:
   m_ObjectHideFlags: 0
@@ -16198,7 +16209,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1902093319853160379, guid: a979ebe4a74f0e04295019fa6aed1704, type: 3}
       propertyPath: m_SortingLayerID
-      value: 1840987721
+      value: 644732309
       objectReference: {fileID: 0}
     - target: {fileID: 6510928075006587518, guid: a979ebe4a74f0e04295019fa6aed1704, type: 3}
       propertyPath: m_Name
@@ -16206,7 +16217,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 6510928075006587518, guid: a979ebe4a74f0e04295019fa6aed1704, type: 3}
       propertyPath: m_Layer
-      value: 7
+      value: 9
       objectReference: {fileID: 0}
     - target: {fileID: 9108086370530475514, guid: a979ebe4a74f0e04295019fa6aed1704, type: 3}
       propertyPath: m_LocalScale.x
@@ -16271,7 +16282,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1455362371}
   - component: {fileID: 1455362372}
-  m_Layer: 0
+  m_Layer: 11
   m_Name: Global Light 2D (5)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -16310,10 +16321,10 @@ MonoBehaviour:
   m_BlendStyleIndex: 0
   m_FalloffIntensity: 0.5
   m_Color: {r: 1, g: 1, b: 1, a: 1}
-  m_Intensity: 3
+  m_Intensity: 1
   m_LightVolumeIntensity: 0
   m_LightVolumeEnabled: 0
-  m_ApplyToSortingLayers: 00000000493ebb6d3502d46e
+  m_ApplyToSortingLayers: 00000000493ebb6d3502d46e95d56d26
   m_LightCookieSprite: {fileID: -2095271772990059563, guid: 182bfe09bb6b1f1479bd2fc33c71f13e, type: 3}
   m_DeprecatedPointLightCookieSprite: {fileID: 0}
   m_LightOrder: 0
@@ -16334,7 +16345,7 @@ MonoBehaviour:
   m_PointLightInnerAngle: 360
   m_PointLightOuterAngle: 360
   m_PointLightInnerRadius: 0
-  m_PointLightOuterRadius: 2
+  m_PointLightOuterRadius: 1
   m_ShapeLightParametricSides: 5
   m_ShapeLightParametricAngleOffset: 0
   m_ShapeLightParametricRadius: 1
@@ -16642,7 +16653,7 @@ GameObject:
   - component: {fileID: 1519018415}
   - component: {fileID: 1519018414}
   - component: {fileID: 1519018417}
-  m_Layer: 7
+  m_Layer: 9
   m_Name: cloud-1-extra-large_0 (1)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -16922,7 +16933,7 @@ SpriteRenderer:
   m_AutoUVMaxAngle: 89
   m_LightmapParameters: {fileID: 0}
   m_GlobalIlluminationMeshLod: 0
-  m_SortingLayerID: 1840987721
+  m_SortingLayerID: 644732309
   m_SortingLayer: 1
   m_SortingOrder: 99
   m_MaskInteraction: 0
@@ -17013,7 +17024,7 @@ MonoBehaviour:
   m_Intensity: 3
   m_LightVolumeIntensity: 0
   m_LightVolumeEnabled: 0
-  m_ApplyToSortingLayers: 00000000493ebb6d3502d46e
+  m_ApplyToSortingLayers: 00000000493ebb6d3502d46e95d56d26
   m_LightCookieSprite: {fileID: -2095271772990059563, guid: 182bfe09bb6b1f1479bd2fc33c71f13e, type: 3}
   m_DeprecatedPointLightCookieSprite: {fileID: 0}
   m_LightOrder: 0
@@ -17168,7 +17179,7 @@ GameObject:
   - component: {fileID: 1570417382}
   - component: {fileID: 1570417384}
   - component: {fileID: 1570417383}
-  m_Layer: 7
+  m_Layer: 9
   m_Name: cloud-2-extra-large_0
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -17326,7 +17337,7 @@ SpriteRenderer:
   m_AutoUVMaxAngle: 89
   m_LightmapParameters: {fileID: 0}
   m_GlobalIlluminationMeshLod: 0
-  m_SortingLayerID: 1840987721
+  m_SortingLayerID: 644732309
   m_SortingLayer: 1
   m_SortingOrder: 99
   m_MaskInteraction: 0
@@ -17442,7 +17453,7 @@ GameObject:
   - component: {fileID: 1603443135}
   - component: {fileID: 1603443134}
   - component: {fileID: 1603443133}
-  m_Layer: 7
+  m_Layer: 9
   m_Name: cloud-2-extra-large_0 (13)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -17727,7 +17738,7 @@ SpriteRenderer:
   m_AutoUVMaxAngle: 89
   m_LightmapParameters: {fileID: 0}
   m_GlobalIlluminationMeshLod: 0
-  m_SortingLayerID: 1840987721
+  m_SortingLayerID: 644732309
   m_SortingLayer: 1
   m_SortingOrder: 99
   m_MaskInteraction: 0
@@ -17759,7 +17770,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1062715341053413619, guid: 1337d84d7f52ec64c916628a1be706c5, type: 3}
       propertyPath: m_SortingLayerID
-      value: 1840987721
+      value: 644732309
       objectReference: {fileID: 0}
     - target: {fileID: 5532897498581168808, guid: 1337d84d7f52ec64c916628a1be706c5, type: 3}
       propertyPath: m_LocalScale.x
@@ -17815,7 +17826,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 6314218138152279433, guid: 1337d84d7f52ec64c916628a1be706c5, type: 3}
       propertyPath: m_Layer
-      value: 7
+      value: 9
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -17840,7 +17851,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1902093319853160379, guid: a979ebe4a74f0e04295019fa6aed1704, type: 3}
       propertyPath: m_SortingLayerID
-      value: 1840987721
+      value: 644732309
       objectReference: {fileID: 0}
     - target: {fileID: 6510928075006587518, guid: a979ebe4a74f0e04295019fa6aed1704, type: 3}
       propertyPath: m_Name
@@ -17848,7 +17859,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 6510928075006587518, guid: a979ebe4a74f0e04295019fa6aed1704, type: 3}
       propertyPath: m_Layer
-      value: 7
+      value: 9
       objectReference: {fileID: 0}
     - target: {fileID: 9108086370530475514, guid: a979ebe4a74f0e04295019fa6aed1704, type: 3}
       propertyPath: m_LocalScale.x
@@ -17915,7 +17926,7 @@ GameObject:
   - component: {fileID: 1622891474}
   - component: {fileID: 1622891473}
   - component: {fileID: 1622891472}
-  m_Layer: 7
+  m_Layer: 9
   m_Name: cloud-2-extra-large_0 (9)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -18200,7 +18211,7 @@ SpriteRenderer:
   m_AutoUVMaxAngle: 89
   m_LightmapParameters: {fileID: 0}
   m_GlobalIlluminationMeshLod: 0
-  m_SortingLayerID: 1840987721
+  m_SortingLayerID: 644732309
   m_SortingLayer: 1
   m_SortingOrder: 99
   m_MaskInteraction: 0
@@ -18277,7 +18288,7 @@ SpriteRenderer:
   m_LightmapParameters: {fileID: 0}
   m_GlobalIlluminationMeshLod: 0
   m_SortingLayerID: 1840987721
-  m_SortingLayer: 1
+  m_SortingLayer: 0
   m_SortingOrder: 100
   m_MaskInteraction: 0
   m_Sprite: {fileID: 21300000, guid: 802d80146ee15d540b6d00866eb988a9, type: 3}
@@ -18317,7 +18328,7 @@ GameObject:
   - component: {fileID: 1632720974}
   - component: {fileID: 1632720973}
   - component: {fileID: 1632720972}
-  m_Layer: 7
+  m_Layer: 9
   m_Name: cloud-2-extra-large_0 (12)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -18602,7 +18613,7 @@ SpriteRenderer:
   m_AutoUVMaxAngle: 89
   m_LightmapParameters: {fileID: 0}
   m_GlobalIlluminationMeshLod: 0
-  m_SortingLayerID: 1840987721
+  m_SortingLayerID: 644732309
   m_SortingLayer: 1
   m_SortingOrder: 99
   m_MaskInteraction: 0
@@ -18624,6 +18635,14 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 1944182046}
     m_Modifications:
+    - target: {fileID: 24298345269679657, guid: 5dfc6862e4c27c846a48fb9ee9f38d71, type: 3}
+      propertyPath: m_SortingLayer
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 24298345269679657, guid: 5dfc6862e4c27c846a48fb9ee9f38d71, type: 3}
+      propertyPath: m_SortingLayerID
+      value: 644732309
+      objectReference: {fileID: 0}
     - target: {fileID: 4244781908979899649, guid: 5dfc6862e4c27c846a48fb9ee9f38d71, type: 3}
       propertyPath: onReached.m_PersistentCalls.m_Calls.Array.data[0].m_Target
       value: 
@@ -18631,6 +18650,10 @@ PrefabInstance:
     - target: {fileID: 4244781908979899649, guid: 5dfc6862e4c27c846a48fb9ee9f38d71, type: 3}
       propertyPath: onReached.m_PersistentCalls.m_Calls.Array.data[0].m_MethodName
       value: TeleportAndSwitch
+      objectReference: {fileID: 0}
+    - target: {fileID: 5055701974063105429, guid: 5dfc6862e4c27c846a48fb9ee9f38d71, type: 3}
+      propertyPath: m_Layer
+      value: 11
       objectReference: {fileID: 0}
     - target: {fileID: 5952457565502849268, guid: 5dfc6862e4c27c846a48fb9ee9f38d71, type: 3}
       propertyPath: m_LocalScale.x
@@ -18683,6 +18706,10 @@ PrefabInstance:
     - target: {fileID: 6225121592023017419, guid: 5dfc6862e4c27c846a48fb9ee9f38d71, type: 3}
       propertyPath: m_Name
       value: DestinationPoint
+      objectReference: {fileID: 0}
+    - target: {fileID: 6225121592023017419, guid: 5dfc6862e4c27c846a48fb9ee9f38d71, type: 3}
+      propertyPath: m_Layer
+      value: 11
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -18825,7 +18852,7 @@ GameObject:
   - component: {fileID: 1707985899}
   - component: {fileID: 1707985898}
   - component: {fileID: 1707985897}
-  m_Layer: 7
+  m_Layer: 9
   m_Name: cloud-2-extra-large_0 (6)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -19110,7 +19137,7 @@ SpriteRenderer:
   m_AutoUVMaxAngle: 89
   m_LightmapParameters: {fileID: 0}
   m_GlobalIlluminationMeshLod: 0
-  m_SortingLayerID: 1840987721
+  m_SortingLayerID: 644732309
   m_SortingLayer: 1
   m_SortingOrder: 99
   m_MaskInteraction: 0
@@ -19321,7 +19348,7 @@ SpriteRenderer:
   m_LightmapParameters: {fileID: 0}
   m_GlobalIlluminationMeshLod: 0
   m_SortingLayerID: 1840987721
-  m_SortingLayer: 1
+  m_SortingLayer: 0
   m_SortingOrder: 100
   m_MaskInteraction: 0
   m_Sprite: {fileID: 21300000, guid: 5b879b946247b9d459acc50eacefed22, type: 3}
@@ -19352,7 +19379,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1062715341053413619, guid: 1337d84d7f52ec64c916628a1be706c5, type: 3}
       propertyPath: m_SortingLayerID
-      value: 1840987721
+      value: 644732309
       objectReference: {fileID: 0}
     - target: {fileID: 5532897498581168808, guid: 1337d84d7f52ec64c916628a1be706c5, type: 3}
       propertyPath: m_LocalScale.x
@@ -19408,7 +19435,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 6314218138152279433, guid: 1337d84d7f52ec64c916628a1be706c5, type: 3}
       propertyPath: m_Layer
-      value: 7
+      value: 9
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -19464,10 +19491,10 @@ MonoBehaviour:
   m_BlendStyleIndex: 0
   m_FalloffIntensity: 0.5
   m_Color: {r: 1, g: 1, b: 1, a: 1}
-  m_Intensity: 5
+  m_Intensity: 2
   m_LightVolumeIntensity: 1
   m_LightVolumeEnabled: 0
-  m_ApplyToSortingLayers: 00000000493ebb6d3502d46e
+  m_ApplyToSortingLayers: 00000000493ebb6d3502d46e95d56d26
   m_LightCookieSprite: {fileID: 0}
   m_DeprecatedPointLightCookieSprite: {fileID: 0}
   m_LightOrder: 0
@@ -19552,7 +19579,7 @@ MonoBehaviour:
   m_Intensity: 2
   m_LightVolumeIntensity: 0
   m_LightVolumeEnabled: 0
-  m_ApplyToSortingLayers: 00000000493ebb6d3502d46e
+  m_ApplyToSortingLayers: 00000000493ebb6d3502d46e95d56d26
   m_LightCookieSprite: {fileID: -2095271772990059563, guid: 182bfe09bb6b1f1479bd2fc33c71f13e, type: 3}
   m_DeprecatedPointLightCookieSprite: {fileID: 0}
   m_LightOrder: 0
@@ -19634,10 +19661,10 @@ MonoBehaviour:
   m_BlendStyleIndex: 0
   m_FalloffIntensity: 0.5
   m_Color: {r: 1, g: 1, b: 1, a: 1}
-  m_Intensity: 1
+  m_Intensity: 0.5
   m_LightVolumeIntensity: 0
   m_LightVolumeEnabled: 0
-  m_ApplyToSortingLayers: 00000000493ebb6d3502d46e
+  m_ApplyToSortingLayers: 00000000493ebb6d3502d46e95d56d26
   m_LightCookieSprite: {fileID: -2095271772990059563, guid: 182bfe09bb6b1f1479bd2fc33c71f13e, type: 3}
   m_DeprecatedPointLightCookieSprite: {fileID: 0}
   m_LightOrder: 0
@@ -19683,7 +19710,7 @@ GameObject:
   - component: {fileID: 1799727266}
   - component: {fileID: 1799727265}
   - component: {fileID: 1799727264}
-  m_Layer: 11
+  m_Layer: 8
   m_Name: Key (2)
   m_TagString: Key
   m_Icon: {fileID: 0}
@@ -19833,7 +19860,7 @@ SpriteRenderer:
   m_AutoUVMaxAngle: 89
   m_LightmapParameters: {fileID: 0}
   m_GlobalIlluminationMeshLod: 0
-  m_SortingLayerID: 1840987721
+  m_SortingLayerID: 644732309
   m_SortingLayer: 1
   m_SortingOrder: 100
   m_MaskInteraction: 0
@@ -19859,7 +19886,7 @@ GameObject:
   - component: {fileID: 1808049922}
   - component: {fileID: 1808049921}
   - component: {fileID: 1808049920}
-  m_Layer: 7
+  m_Layer: 9
   m_Name: cloud-1-extra-large_0 (9)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -20139,7 +20166,7 @@ SpriteRenderer:
   m_AutoUVMaxAngle: 89
   m_LightmapParameters: {fileID: 0}
   m_GlobalIlluminationMeshLod: 0
-  m_SortingLayerID: 1840987721
+  m_SortingLayerID: 644732309
   m_SortingLayer: 1
   m_SortingOrder: 99
   m_MaskInteraction: 0
@@ -20216,7 +20243,7 @@ SpriteRenderer:
   m_LightmapParameters: {fileID: 0}
   m_GlobalIlluminationMeshLod: 0
   m_SortingLayerID: 1840987721
-  m_SortingLayer: 1
+  m_SortingLayer: 0
   m_SortingOrder: 100
   m_MaskInteraction: 0
   m_Sprite: {fileID: 21300000, guid: e38da7f623068e7449aace371f1d310e, type: 3}
@@ -20256,7 +20283,7 @@ GameObject:
   - component: {fileID: 1815732028}
   - component: {fileID: 1815732027}
   - component: {fileID: 1815732030}
-  m_Layer: 7
+  m_Layer: 9
   m_Name: cloud-2-extra-large_0 (2)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -20511,7 +20538,7 @@ SpriteRenderer:
   m_AutoUVMaxAngle: 89
   m_LightmapParameters: {fileID: 0}
   m_GlobalIlluminationMeshLod: 0
-  m_SortingLayerID: 1840987721
+  m_SortingLayerID: 644732309
   m_SortingLayer: 1
   m_SortingOrder: 99
   m_MaskInteraction: 0
@@ -20567,7 +20594,7 @@ GameObject:
   - component: {fileID: 1830998757}
   - component: {fileID: 1830998756}
   - component: {fileID: 1830998755}
-  m_Layer: 7
+  m_Layer: 9
   m_Name: cloud-1-extra-large_0 (2)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -20847,7 +20874,7 @@ SpriteRenderer:
   m_AutoUVMaxAngle: 89
   m_LightmapParameters: {fileID: 0}
   m_GlobalIlluminationMeshLod: 0
-  m_SortingLayerID: 1840987721
+  m_SortingLayerID: 644732309
   m_SortingLayer: 1
   m_SortingOrder: 99
   m_MaskInteraction: 0
@@ -20913,7 +20940,7 @@ MonoBehaviour:
   m_Intensity: 3
   m_LightVolumeIntensity: 0
   m_LightVolumeEnabled: 0
-  m_ApplyToSortingLayers: 00000000493ebb6d3502d46e
+  m_ApplyToSortingLayers: 00000000493ebb6d3502d46e95d56d26
   m_LightCookieSprite: {fileID: -2095271772990059563, guid: 182bfe09bb6b1f1479bd2fc33c71f13e, type: 3}
   m_DeprecatedPointLightCookieSprite: {fileID: 0}
   m_LightOrder: 0
@@ -21143,7 +21170,7 @@ SpriteRenderer:
   m_LightmapParameters: {fileID: 0}
   m_GlobalIlluminationMeshLod: 0
   m_SortingLayerID: 1840987721
-  m_SortingLayer: 1
+  m_SortingLayer: 0
   m_SortingOrder: 100
   m_MaskInteraction: 0
   m_Sprite: {fileID: 21300000, guid: 5b879b946247b9d459acc50eacefed22, type: 3}
@@ -21166,7 +21193,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1895005986}
   - component: {fileID: 1895005987}
-  m_Layer: 0
+  m_Layer: 10
   m_Name: Global Light 2D (4)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -21208,7 +21235,7 @@ MonoBehaviour:
   m_Intensity: 3
   m_LightVolumeIntensity: 0
   m_LightVolumeEnabled: 0
-  m_ApplyToSortingLayers: 00000000493ebb6d3502d46e
+  m_ApplyToSortingLayers: 00000000493ebb6d3502d46e95d56d26
   m_LightCookieSprite: {fileID: -2095271772990059563, guid: 182bfe09bb6b1f1479bd2fc33c71f13e, type: 3}
   m_DeprecatedPointLightCookieSprite: {fileID: 0}
   m_LightOrder: 0
@@ -21254,7 +21281,7 @@ GameObject:
   - component: {fileID: 1895091035}
   - component: {fileID: 1895091034}
   - component: {fileID: 1895091037}
-  m_Layer: 10
+  m_Layer: 7
   m_Name: star-64 (3)
   m_TagString: item
   m_Icon: {fileID: 0}
@@ -21380,7 +21407,7 @@ SpriteRenderer:
   m_AutoUVMaxAngle: 89
   m_LightmapParameters: {fileID: 0}
   m_GlobalIlluminationMeshLod: 0
-  m_SortingLayerID: 1840987721
+  m_SortingLayerID: 644732309
   m_SortingLayer: 1
   m_SortingOrder: 100
   m_MaskInteraction: 0
@@ -21429,7 +21456,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1909734755}
   - component: {fileID: 1909734756}
-  m_Layer: 0
+  m_Layer: 11
   m_Name: Global Light 2D (4)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -21468,10 +21495,10 @@ MonoBehaviour:
   m_BlendStyleIndex: 0
   m_FalloffIntensity: 0.5
   m_Color: {r: 1, g: 1, b: 1, a: 1}
-  m_Intensity: 3
+  m_Intensity: 1
   m_LightVolumeIntensity: 0
   m_LightVolumeEnabled: 0
-  m_ApplyToSortingLayers: 00000000493ebb6d3502d46e
+  m_ApplyToSortingLayers: 00000000493ebb6d3502d46e95d56d26
   m_LightCookieSprite: {fileID: -2095271772990059563, guid: 182bfe09bb6b1f1479bd2fc33c71f13e, type: 3}
   m_DeprecatedPointLightCookieSprite: {fileID: 0}
   m_LightOrder: 0
@@ -21875,7 +21902,7 @@ GameObject:
   - component: {fileID: 2019036584}
   - component: {fileID: 2019036583}
   - component: {fileID: 2019036582}
-  m_Layer: 7
+  m_Layer: 9
   m_Name: cloud-2-extra-large_0 (14)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -22160,7 +22187,7 @@ SpriteRenderer:
   m_AutoUVMaxAngle: 89
   m_LightmapParameters: {fileID: 0}
   m_GlobalIlluminationMeshLod: 0
-  m_SortingLayerID: 1840987721
+  m_SortingLayerID: 644732309
   m_SortingLayer: 1
   m_SortingOrder: 99
   m_MaskInteraction: 0
@@ -22226,7 +22253,7 @@ MonoBehaviour:
   m_Intensity: 3
   m_LightVolumeIntensity: 0
   m_LightVolumeEnabled: 0
-  m_ApplyToSortingLayers: 00000000493ebb6d3502d46e
+  m_ApplyToSortingLayers: 00000000493ebb6d3502d46e95d56d26
   m_LightCookieSprite: {fileID: -2095271772990059563, guid: 182bfe09bb6b1f1479bd2fc33c71f13e, type: 3}
   m_DeprecatedPointLightCookieSprite: {fileID: 0}
   m_LightOrder: 0
@@ -22362,7 +22389,7 @@ GameObject:
   - component: {fileID: 2092705182}
   - component: {fileID: 2092705181}
   - component: {fileID: 2092705180}
-  m_Layer: 7
+  m_Layer: 9
   m_Name: cloud-1-extra-large_0 (8)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -22642,7 +22669,7 @@ SpriteRenderer:
   m_AutoUVMaxAngle: 89
   m_LightmapParameters: {fileID: 0}
   m_GlobalIlluminationMeshLod: 0
-  m_SortingLayerID: 1840987721
+  m_SortingLayerID: 644732309
   m_SortingLayer: 1
   m_SortingOrder: 99
   m_MaskInteraction: 0
@@ -22797,26 +22824,49 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::GameManager
   countText: {fileID: 666451192}
   playerTransform: {fileID: 5071571796672704658}
-  stageBounds:
-  - {fileID: 235279391}
-  - {fileID: 1159171097}
-  - {fileID: 36376981}
-  - {fileID: 449652801}
-  - {fileID: 1944182047}
-  - {fileID: 6268623738190300034}
-  - {fileID: 474788802}
-  stageAssignedCounts: 3200000032000000320000003200000032000000
-  itemSlots:
-  - {fileID: 67362093}
-  - {fileID: 1895091032}
-  - {fileID: 1354718033}
-  - {fileID: 653532008}
-  - {fileID: 870165773}
-  - {fileID: 268001617}
-  - {fileID: 703136166}
-  - {fileID: 802035150}
-  - {fileID: 229073577}
-  itemSlotExtraTurns: 190000000a00000000000000000000000000000005000000
+  stageSettings:
+  - bounds: {fileID: 235279391}
+    assignedCount: 50
+  - bounds: {fileID: 1159171097}
+    assignedCount: 50
+  - bounds: {fileID: 36376981}
+    assignedCount: 50
+  - bounds: {fileID: 449652801}
+    assignedCount: 50
+  - bounds: {fileID: 1944182047}
+    assignedCount: 50
+  - bounds: {fileID: 6268623738190300034}
+    assignedCount: 0
+  - bounds: {fileID: 474788802}
+    assignedCount: 0
+  itemSlotSettings:
+  - slotPrefab: {fileID: 67362093}
+    extraTurns: 25
+    consumeOnCollect: 1
+  - slotPrefab: {fileID: 1895091032}
+    extraTurns: 0
+    consumeOnCollect: 1
+  - slotPrefab: {fileID: 1354718033}
+    extraTurns: 0
+    consumeOnCollect: 1
+  - slotPrefab: {fileID: 653532008}
+    extraTurns: 0
+    consumeOnCollect: 1
+  - slotPrefab: {fileID: 870165773}
+    extraTurns: 0
+    consumeOnCollect: 1
+  - slotPrefab: {fileID: 268001617}
+    extraTurns: 5
+    consumeOnCollect: 1
+  - slotPrefab: {fileID: 703136166}
+    extraTurns: 0
+    consumeOnCollect: 1
+  - slotPrefab: {fileID: 802035150}
+    extraTurns: 0
+    consumeOnCollect: 1
+  - slotPrefab: {fileID: 229073577}
+    extraTurns: 0
+    consumeOnCollect: 1
 --- !u!114 &2128370992
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -22830,28 +22880,26 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ItemCollector
   stageSettings:
-  - stageName: "\uC554\uD751\uC73C\uB85C \uB36E\uC5B4\uC9C4 \uAD6C\uB984"
+  - stageName: "\uC5B4\uB460\uC73C\uB85C \uB36E\uC5B4\uC9C4 \uAD6C\uB984"
     stageBounds: {fileID: 36376981}
-    uiTextMessage: "\uC783\uC5B4\uBC84\uB9B0 \uBCC4 \uCC3E\uAE30: {collected} / 1"
+    uiTextMessage: "\uC783\uC5B4\uBC84\uB9B0 \uBCC4 \uCC3E\uAE30: {collected} / {total}"
     nextPoint: {fileID: 587273915}
   - stageName: "\uBCC4\uB4E4\uC774 \uC18D\uC0AD\uC774\uB294 \uBC24"
     stageBounds: {fileID: 449652801}
     uiTextMessage: "\uC783\uC5B4\uBC84\uB9B0 \uBCC4 \uCC3E\uAE30: {collected} / ??"
     nextPoint: {fileID: 655414129}
-  - stageName: "\uBD80\uB044\uB7EC\uC6CC\uD558\uB294 \uBCC4\uACFC \uAD6C\uB984\uB4E4"
+  - stageName: "\uAE38\uC744 \uC783\uC740 \uAD6C\uB984\uB4E4"
     stageBounds: {fileID: 6268623738190300034}
     uiTextMessage: "\uAE38\uC744 \uC783\uC740 \uBCC4 \uCC3E\uAE30: {collected} /
-      2"
+      {total}"
     nextPoint: {fileID: 6225121593278159522}
   itemLayerMask:
     serializedVersion: 2
-    m_Bits: 1024
+    m_Bits: 128
   uiText: {fileID: 743607133}
   playerTransform: {fileID: 5071571796672704658}
   navigationPointerPrefab: {fileID: 8900878108313239149, guid: c0b0597004fda98408f3f622934708be, type: 3}
   uiCanvas: {fileID: 255009830}
-  itemFadeDuration: 0.6
-  revealItemsSequentially: 1
 --- !u!114 &2128370993
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -22880,8 +22928,6 @@ MonoBehaviour:
     message: "\uAE38\uC744 \uC783\uC740 \uAD6C\uB984\uB4E4"
   playerTransform: {fileID: 5071571796672704658}
   uiText: {fileID: 410023621}
-  pollInterval: 0.15
-  fadeDuration: 0.5
 --- !u!114 &2128370995
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -22896,7 +22942,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::SequentialRevealManager
   itemLayerMask:
     serializedVersion: 2
-    m_Bits: 1024
+    m_Bits: 128
   stageConfigs:
   - bound: {fileID: 449652801}
     batchGroups:
@@ -22990,7 +23036,7 @@ SpriteRenderer:
   m_AutoUVMaxAngle: 89
   m_LightmapParameters: {fileID: 0}
   m_GlobalIlluminationMeshLod: 0
-  m_SortingLayerID: 1840987721
+  m_SortingLayerID: 644732309
   m_SortingLayer: 1
   m_SortingOrder: 100
   m_MaskInteraction: 0
@@ -23022,7 +23068,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1062715341053413619, guid: 1337d84d7f52ec64c916628a1be706c5, type: 3}
       propertyPath: m_SortingLayerID
-      value: 1840987721
+      value: 644732309
       objectReference: {fileID: 0}
     - target: {fileID: 5532897498581168808, guid: 1337d84d7f52ec64c916628a1be706c5, type: 3}
       propertyPath: m_LocalScale.x
@@ -23078,7 +23124,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 6314218138152279433, guid: 1337d84d7f52ec64c916628a1be706c5, type: 3}
       propertyPath: m_Layer
-      value: 7
+      value: 9
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -23427,14 +23473,26 @@ PrefabInstance:
     - target: {fileID: 2445940918857527409, guid: c94c77c6282ac6a43922c3fc8f5da3c0, type: 3}
       propertyPath: playerObject
       value: 
-      objectReference: {fileID: 0}
+      objectReference: {fileID: 7286279630889454185}
     - target: {fileID: 2445940918857527409, guid: c94c77c6282ac6a43922c3fc8f5da3c0, type: 3}
       propertyPath: backgroundManager
       value: 
       objectReference: {fileID: 8673004}
+    - target: {fileID: 3204987231625890381, guid: c94c77c6282ac6a43922c3fc8f5da3c0, type: 3}
+      propertyPath: m_SortingLayer
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 3204987231625890381, guid: c94c77c6282ac6a43922c3fc8f5da3c0, type: 3}
+      propertyPath: m_SortingLayerID
+      value: 644732309
+      objectReference: {fileID: 0}
     - target: {fileID: 7187318031697413357, guid: c94c77c6282ac6a43922c3fc8f5da3c0, type: 3}
       propertyPath: m_Name
       value: NextPoint
+      objectReference: {fileID: 0}
+    - target: {fileID: 7187318031697413357, guid: c94c77c6282ac6a43922c3fc8f5da3c0, type: 3}
+      propertyPath: m_Layer
+      value: 10
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -23468,7 +23526,7 @@ GameObject:
   m_Component:
   - component: {fileID: 2091332231646683728}
   - component: {fileID: 7018205438513289492}
-  m_Layer: 0
+  m_Layer: 11
   m_Name: Global Light 2D (5)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -23567,7 +23625,7 @@ GameObject:
   - component: {fileID: 24298344301849408}
   - component: {fileID: 2186399345210542730}
   - component: {fileID: 2813059209308584622}
-  m_Layer: 8
+  m_Layer: 11
   m_Name: DestinationPoint
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -23642,7 +23700,7 @@ MonoBehaviour:
   gridSize: 1
   obstacleLayer:
     serializedVersion: 2
-    m_Bits: 128
+    m_Bits: 512
   moveCount: 0
 --- !u!114 &7018205438513289492
 MonoBehaviour:
@@ -23664,7 +23722,7 @@ MonoBehaviour:
   m_Intensity: 3
   m_LightVolumeIntensity: 0
   m_LightVolumeEnabled: 0
-  m_ApplyToSortingLayers: 00000000493ebb6d3502d46e
+  m_ApplyToSortingLayers: 00000000493ebb6d3502d46e95d56d26
   m_LightCookieSprite: {fileID: -2095271772990059563, guid: 182bfe09bb6b1f1479bd2fc33c71f13e, type: 3}
   m_DeprecatedPointLightCookieSprite: {fileID: 0}
   m_LightOrder: 0
@@ -23705,10 +23763,22 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 235279393}
     m_Modifications:
+    - target: {fileID: 24298345269679657, guid: 5dfc6862e4c27c846a48fb9ee9f38d71, type: 3}
+      propertyPath: m_SortingLayer
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 24298345269679657, guid: 5dfc6862e4c27c846a48fb9ee9f38d71, type: 3}
+      propertyPath: m_SortingLayerID
+      value: 644732309
+      objectReference: {fileID: 0}
     - target: {fileID: 4244781908979899649, guid: 5dfc6862e4c27c846a48fb9ee9f38d71, type: 3}
       propertyPath: onReached.m_PersistentCalls.m_Calls.Array.data[0].m_Target
       value: 
       objectReference: {fileID: 1754606108279857255}
+    - target: {fileID: 5055701974063105429, guid: 5dfc6862e4c27c846a48fb9ee9f38d71, type: 3}
+      propertyPath: m_Layer
+      value: 11
+      objectReference: {fileID: 0}
     - target: {fileID: 5952457565502849268, guid: 5dfc6862e4c27c846a48fb9ee9f38d71, type: 3}
       propertyPath: m_LocalScale.x
       value: 0.75
@@ -23760,6 +23830,42 @@ PrefabInstance:
     - target: {fileID: 6225121592023017419, guid: 5dfc6862e4c27c846a48fb9ee9f38d71, type: 3}
       propertyPath: m_Name
       value: DestinationPoint
+      objectReference: {fileID: 0}
+    - target: {fileID: 6225121592023017419, guid: 5dfc6862e4c27c846a48fb9ee9f38d71, type: 3}
+      propertyPath: m_Layer
+      value: 11
+      objectReference: {fileID: 0}
+    - target: {fileID: 7018205440229811325, guid: 5dfc6862e4c27c846a48fb9ee9f38d71, type: 3}
+      propertyPath: m_Intensity
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 7018205440229811325, guid: 5dfc6862e4c27c846a48fb9ee9f38d71, type: 3}
+      propertyPath: m_LightType
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 7018205440229811325, guid: 5dfc6862e4c27c846a48fb9ee9f38d71, type: 3}
+      propertyPath: m_LocalBounds.m_Center.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7018205440229811325, guid: 5dfc6862e4c27c846a48fb9ee9f38d71, type: 3}
+      propertyPath: m_LocalBounds.m_Center.y
+      value: -0.00000011920929
+      objectReference: {fileID: 0}
+    - target: {fileID: 7018205440229811325, guid: 5dfc6862e4c27c846a48fb9ee9f38d71, type: 3}
+      propertyPath: m_LocalBounds.m_Extent.x
+      value: 0.9985302
+      objectReference: {fileID: 0}
+    - target: {fileID: 7018205440229811325, guid: 5dfc6862e4c27c846a48fb9ee9f38d71, type: 3}
+      propertyPath: m_LocalBounds.m_Extent.y
+      value: 0.99853027
+      objectReference: {fileID: 0}
+    - target: {fileID: 7018205440229811325, guid: 5dfc6862e4c27c846a48fb9ee9f38d71, type: 3}
+      propertyPath: m_ApplyToSortingLayers.Array.size
+      value: 2
+      objectReference: {fileID: 0}
+    - target: {fileID: 7018205440229811325, guid: 5dfc6862e4c27c846a48fb9ee9f38d71, type: 3}
+      propertyPath: 'm_ApplyToSortingLayers.Array.data[1]'
+      value: 644732309
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -23814,7 +23920,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1902093319853160379, guid: a979ebe4a74f0e04295019fa6aed1704, type: 3}
       propertyPath: m_SortingLayerID
-      value: 1840987721
+      value: 644732309
       objectReference: {fileID: 0}
     - target: {fileID: 6510928075006587518, guid: a979ebe4a74f0e04295019fa6aed1704, type: 3}
       propertyPath: m_Name
@@ -23822,7 +23928,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 6510928075006587518, guid: a979ebe4a74f0e04295019fa6aed1704, type: 3}
       propertyPath: m_Layer
-      value: 7
+      value: 9
       objectReference: {fileID: 0}
     - target: {fileID: 9108086370530475514, guid: a979ebe4a74f0e04295019fa6aed1704, type: 3}
       propertyPath: m_LocalScale.x
@@ -23968,9 +24074,21 @@ PrefabInstance:
       propertyPath: backgroundManager
       value: 
       objectReference: {fileID: 8673004}
+    - target: {fileID: 3204987231625890381, guid: c94c77c6282ac6a43922c3fc8f5da3c0, type: 3}
+      propertyPath: m_SortingLayer
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 3204987231625890381, guid: c94c77c6282ac6a43922c3fc8f5da3c0, type: 3}
+      propertyPath: m_SortingLayerID
+      value: 644732309
+      objectReference: {fileID: 0}
     - target: {fileID: 7187318031697413357, guid: c94c77c6282ac6a43922c3fc8f5da3c0, type: 3}
       propertyPath: m_Name
       value: NextPoint
+      objectReference: {fileID: 0}
+    - target: {fileID: 7187318031697413357, guid: c94c77c6282ac6a43922c3fc8f5da3c0, type: 3}
+      propertyPath: m_Layer
+      value: 10
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -24009,10 +24127,10 @@ MonoBehaviour:
   m_BlendStyleIndex: 0
   m_FalloffIntensity: 0.5
   m_Color: {r: 1, g: 1, b: 1, a: 1}
-  m_Intensity: 3
+  m_Intensity: 2
   m_LightVolumeIntensity: 0
   m_LightVolumeEnabled: 0
-  m_ApplyToSortingLayers: 00000000493ebb6d3502d46e
+  m_ApplyToSortingLayers: 00000000493ebb6d3502d46e95d56d26
   m_LightCookieSprite: {fileID: -2095271772990059563, guid: 182bfe09bb6b1f1479bd2fc33c71f13e, type: 3}
   m_DeprecatedPointLightCookieSprite: {fileID: 0}
   m_LightOrder: 0

@@ -33,53 +33,57 @@ public class ItemCollector : MonoBehaviour
     public Canvas uiCanvas;
     private bool showUIImmediatelyIfNoBounds = false;
 
-    [Header("아이템 페이드 옵션")]
-    public float itemFadeDuration = 0.6f;
-    private bool fadeOutItems = true;
-    private bool disableColliderDuringItemFade = true;
-    private bool destroyItemAfterFade = true;
-
-    [Header("연속으로 아이템 드러내기")]
-    public bool revealItemsSequentially = true;
+    [Tooltip("연속으로 아이템 드러내기")]
+    private bool revealItemsSequentially = true;
     private float itemFadeInDuration = 0.6f;
     private int initialVisibleCount = 1;
     private int subsequentRevealCount = 2;
+
+    [Tooltip("아이템 페이드 옵션")]
+    private float itemFadeDuration = 0.6f;
+    private bool fadeOutItems = true;
+    private bool disableColliderDuringItemFade = true;
+    private bool destroyItemAfterFade = true;
 
     [Tooltip("플레이어가 다른 스테이지로 들어갈 때 collected와 수거 이력 초기화 여부")]
     private bool resetCollectedOnStageEnter = true;
     private float obstacleFadeDuration = 1.5f;
 
     // --- 내부 상태 유지 ---
-    private int collected = 0;
     private HashSet<int> collectedInstanceIds = new HashSet<int>();
     private bool uiShown = false;
-    private List<GameObject> itemsList = new List<GameObject>();
+
+    private int collected = 0;
     private int nextHiddenIndex = 0;
-    private Dictionary<SpriteRenderer, Color> origSpriteColors = new Dictionary<SpriteRenderer, Color>();
-    private Dictionary<Renderer, Color> origRendererColors = new Dictionary<Renderer, Color>();
     private int totalRevealedCount = 0;
-    private int currentStageIndex = -1;
-    private List<GameObject>[] stageItemsMap = null;
-    private List<GameObject> currentStageItems = new List<GameObject>();
     private int currentStageNextHiddenIndex = 0;
     private int currentStageTotalRevealedCount = 0;
     private int currentStageTotalItems = 0;
     private GameObject activeNavGO = null;
+    private StageBoundsUIUpdater uiUpdater;
 
     private List<SpriteRenderer>[] nextPointsSprs;
     private List<CanvasGroup>[] nextPointsCanvasGroups;
     private List<Renderer>[] nextPointsRenderers;
     private List<GameObject>[] stageObstacleMap = null;
+    private List<GameObject>[] stageItemsMap = null;
     private List<GameObject> itemLayerItemsList = new List<GameObject>();
+    private List<GameObject> currentStageItems = new List<GameObject>();
+    private List<GameObject> itemsList = new List<GameObject>();
 
     private Dictionary<int, Collider2D[]> _colliderCache = new Dictionary<int, Collider2D[]>();
+    private Dictionary<SpriteRenderer, Color> origSpriteColors = new Dictionary<SpriteRenderer, Color>();
+    private Dictionary<Renderer, Color> origRendererColors = new Dictionary<Renderer, Color>();
 
     private int keyLayerIndex = -1;
     private int lockLayerIndex = -1;
     private int itemLayerIndex = -1;
+    private int currentStageIndex = -1;
 
     void Start()
     {
+        uiUpdater = FindAnyObjectByType<StageBoundsUIUpdater>();
+
         keyLayerIndex = LayerMask.NameToLayer("Key");
         lockLayerIndex = LayerMask.NameToLayer("Lock");
         itemLayerIndex = LayerMask.NameToLayer("Item");
@@ -635,19 +639,68 @@ public class ItemCollector : MonoBehaviour
 
     void UpdateUI()
     {
-        if (uiText != null)
+        if (uiText == null) return;
+
+        if (currentStageIndex >= 0 && currentStageIndex < stageSettings.Length)
         {
-            if (currentStageIndex >= 0 && stageSettings != null && currentStageIndex < stageSettings.Length)
-                uiText.text = ResolveUITextTemplate(stageSettings[currentStageIndex].uiTextMessage);
-            else
-                uiText.text = $"잃어버린 별 찾기: {collected} / {currentStageTotalItems}";
+            // 1. 현재 스테이지의 메시지 템플릿을 가져옴
+            string template = stageSettings[currentStageIndex].uiTextMessage;
+
+            // 2. 템플릿 안의 내용을 치환하여 최종 텍스트 결정
+            uiText.text = ResolveUITextTemplate(template);
         }
+        else
+        {
+            // 스테이지 외부일 때의 기본 표시
+            uiText.text = $"잃어버린 별 찾기: {collected} / {currentStageTotalItems}";
+        }
+    }
+
+    private string GetDynamicStageName(int stageIdx)
+    {
+        // 인덱스 범위 확인
+        if (stageIdx < 0 || stageIdx >= stageSettings.Length) return "알 수 없는 구역";
+
+        var currentSettings = stageSettings[stageIdx];
+        BoxCollider2D currentBounds = currentSettings.stageBounds;
+
+        // 1순위: StageBoundsUIUpdater에서 동일한 Bounds를 사용하는지 확인
+        if (uiUpdater != null && uiUpdater.stageEntries != null)
+        {
+            foreach (var entry in uiUpdater.stageEntries)
+            {
+                if (entry.bounds == null) continue;
+
+                // 리스트 내부를 순회하며 참조(Reference)가 같은 콜라이더인지 비교
+                foreach (var b in entry.bounds)
+                {
+                    if (b != null && b == currentBounds)
+                    {
+                        // 일치하는 것을 찾았다면 UIUpdater의 message를 반환
+                        // (만약 message가 비어있다면 stageName으로 대체)
+                        return !string.IsNullOrEmpty(entry.message) ? entry.message : currentSettings.stageName;
+                    }
+                }
+            }
+        }
+
+        // 2순위: 일치하는 Bounds가 없거나 UIUpdater가 없다면 
+        // ItemCollector 인스펙터에서 직접 수정한 stageName을 반환
+        return currentSettings.stageName;
     }
 
     string ResolveUITextTemplate(string template)
     {
-        if (string.IsNullOrEmpty(template)) return $"잃어버린 별 찾기: {collected} / {currentStageTotalItems}";
-        return template.Replace("{collected}", collected.ToString()).Replace("{total}", currentStageTotalItems.ToString());
+        if (string.IsNullOrEmpty(template))
+            template = "{stageName}: {collected} / {total}";
+
+        // 여기서 GetDynamicStageName을 호출하여 우선순위에 따른 이름을 가져옵니다.
+        string dynamicName = GetDynamicStageName(currentStageIndex);
+
+        return template
+            .Replace("{stageName}", dynamicName)
+            .Replace("{collected}", collected.ToString())
+            .Replace("{total}", currentStageTotalItems.ToString());
     }
 
     void ShowUIInstant() { if (uiText) uiText.gameObject.SetActive(true); UpdateUI(); }
@@ -684,8 +737,6 @@ public class ItemCollector : MonoBehaviour
         foreach (Transform child in parent.transform) if (child.gameObject.layer == lockLayerIndex) return true;
         return false;
     }
-
-    // --- 요청하신 보존 함수 3개 ---
     public int GetInitialVisibleCount() { return initialVisibleCount; }
     public int GetSubsequentRevealCount() { return subsequentRevealCount; }
     public void CollectBy(GameObject item) => TryCollect(item);

@@ -8,20 +8,33 @@ public class GameManager : MonoBehaviour
     public static GameManager Instance;
     public event Action OnPlayerTurnEnd;
 
+    [Serializable]
+    public class StageSettings
+    {
+        public BoxCollider2D bounds;
+        public int assignedCount; // 0이면 무한 스테이지
+    }
+
+    [Serializable]
+    public class ItemSlotSettings
+    {
+        public GameObject slotPrefab;
+        public int extraTurns;
+        public bool consumeOnCollect = true;
+    }
+
     [Header("UI & Stage Settings")]
     public TextMeshProUGUI countText;
     public Transform playerTransform;
-    public BoxCollider2D[] stageBounds;
-    public int[] stageAssignedCounts;
+    public StageSettings[] stageSettings;
 
     [Header("Item Slot Settings")]
-    public GameObject[] itemSlots;
-    public int[] itemSlotExtraTurns;
+    public ItemSlotSettings[] itemSlotSettings;
 
-
+    [Tooltip("Key Slot Settings")]
     private GameObject[] keySlots;
     private bool[] keySlotConsumeOnCollect;
-    private bool[] itemSlotConsumeOnCollect;
+
     private int MoveCount = 0;
     private int[] stageRemainingCounts;
     private int currentStageIndex = -1;
@@ -29,10 +42,19 @@ public class GameManager : MonoBehaviour
 
     void Awake()
     {
-        if (Instance == null) Instance = this; else Destroy(gameObject);
+        if (Instance == null) Instance = this;
+        else { Destroy(gameObject); return; }
 
-        // 할당된 카운트 복사 (LINQ보다 빠른 Clone 사용)
-        stageRemainingCounts = stageAssignedCounts?.Clone() as int[] ?? new int[0];
+        if (stageSettings != null)
+        {
+            stageRemainingCounts = new int[stageSettings.Length];
+            for (int i = 0; i < stageSettings.Length; i++)
+            {
+                stageRemainingCounts[i] = stageSettings[i].assignedCount;
+            }
+        }
+        else { stageRemainingCounts = new int[0]; }
+
         UpdateCurrentStage();
         UpdateUI();
     }
@@ -45,58 +67,91 @@ public class GameManager : MonoBehaviour
 
         if (IsValidStage(currentStageIndex))
         {
-            stageRemainingCounts[currentStageIndex] = Mathf.Max(0, stageRemainingCounts[currentStageIndex] - 1);
-            if (stageRemainingCounts[currentStageIndex] <= 0) HandleGameOver($"Stage {currentStageIndex} Empty");
+            // --- 추가된 조건: 할당된 카운트가 0보다 클 때만 차감 및 게임오버 체크 ---
+            if (stageSettings[currentStageIndex].assignedCount > 0)
+            {
+                stageRemainingCounts[currentStageIndex] = Mathf.Max(0, stageRemainingCounts[currentStageIndex] - 1);
+
+                if (stageRemainingCounts[currentStageIndex] <= 0)
+                    HandleGameOver($"Stage {currentStageIndex} Empty");
+            }
+            // assignedCount가 0이면 '무한'이므로 아무 작업도 하지 않음
         }
+
         UpdateUI();
         OnPlayerTurnEnd?.Invoke();
     }
 
     public void OnItemCollected(GameObject item)
     {
-        if (isGameOver || item == null || itemSlots == null) return;
+        if (isGameOver || item == null || itemSlotSettings == null) return;
         UpdateCurrentStage();
 
-        for (int i = 0; i < itemSlots.Length; i++)
+        for (int i = 0; i < itemSlotSettings.Length; i++)
         {
-            var slot = itemSlots[i];
-            if (slot == null) continue;
+            var setting = itemSlotSettings[i];
+            if (setting == null || setting.slotPrefab == null) continue;
 
-            // 1.참조, 2.태그, 3.이름(Clone포함) 매칭 로직 그대로 유지
-            bool matched = (item == slot) ||
-                           (!string.IsNullOrEmpty(slot.tag) && slot.tag != "Untagged" && item.CompareTag(slot.tag)) ||
-                           (item.name.Contains(slot.name) || slot.name.Contains(item.name));
+            bool matched = (item == setting.slotPrefab) ||
+                           (!string.IsNullOrEmpty(setting.slotPrefab.tag) && setting.slotPrefab.tag != "Untagged" && item.CompareTag(setting.slotPrefab.tag)) ||
+                           (item.name.Contains(setting.slotPrefab.name) || setting.slotPrefab.name.Contains(item.name));
 
             if (matched)
             {
-                int add = (itemSlotExtraTurns != null && i < itemSlotExtraTurns.Length) ? itemSlotExtraTurns[i] : 0;
+                int add = setting.extraTurns;
 
-                if (IsValidStage(currentStageIndex)) stageRemainingCounts[currentStageIndex] += add;
+                if (IsValidStage(currentStageIndex))
+                {
+                    // 무한 스테이지라도 일단 내부 값은 증가시키되 로직상 영향은 없음
+                    stageRemainingCounts[currentStageIndex] += add;
+                }
                 else MoveCount += add;
 
-                if (itemSlotConsumeOnCollect != null && i < itemSlotConsumeOnCollect.Length && itemSlotConsumeOnCollect[i])
-                    itemSlots[i] = null;
+                if (setting.consumeOnCollect) setting.slotPrefab = null;
 
                 UpdateUI();
                 return;
             }
         }
-
         FloatingTextSpawner.Instance?.ShowForCollectedItem(item);
     }
 
     private void UpdateCurrentStage()
     {
-        if (!playerTransform || stageBounds == null) return;
+        if (!playerTransform || stageSettings == null) return;
         Vector3 pos = playerTransform.position;
         currentStageIndex = -1;
-        for (int i = 0; i < stageBounds.Length; i++)
+        for (int i = 0; i < stageSettings.Length; i++)
         {
-            if (stageBounds[i] && stageBounds[i].bounds.Contains(pos)) { currentStageIndex = i; break; }
+            if (stageSettings[i].bounds != null && stageSettings[i].bounds.bounds.Contains(pos))
+            {
+                currentStageIndex = i;
+                break;
+            }
         }
     }
 
     private bool IsValidStage(int index) => index >= 0 && index < stageRemainingCounts.Length;
+
+    public void UpdateUI()
+    {
+        if (!countText) return;
+        if (isGameOver) { countText.text = "Game Over"; return; }
+
+        if (IsValidStage(currentStageIndex))
+        {
+            // --- UI 조건: 0(무한)일 때는 ∞ 표시, 아니면 숫자 표시 ---
+            string displayCount = (stageSettings[currentStageIndex].assignedCount == 0)
+                                  ? "∞"
+                                  : stageRemainingCounts[currentStageIndex].ToString();
+
+            countText.text = $"Stage {currentStageIndex} : {displayCount}";
+        }
+        else
+        {
+            countText.text = $"Count: {MoveCount}";
+        }
+    }
 
     private void HandleGameOver(string reason)
     {
@@ -116,51 +171,27 @@ public class GameManager : MonoBehaviour
 #endif
     }
 
-    public void UpdateUI()
-    {
-        if (!countText) return;
-        if (isGameOver) { countText.text = "Game Over"; return; }
-
-        countText.text = IsValidStage(currentStageIndex)
-            ? $"Stage {currentStageIndex} : {stageRemainingCounts[currentStageIndex]}"
-            : $"Count: {MoveCount}";
-    }
-
     public void RefreshPlayerStage()
     {
         if (isGameOver) return;
-
         UpdateCurrentStage();
         UpdateUI();
-        MapCameraStageController stageController = FindAnyObjectByType<MapCameraStageController>();
-        stageController?.ApplyCurrentStageSettingsImmediate();
-
-        // 필요하다면 스테이지가 바뀌었을 때 추가 로직을 여기에 넣을 수 있습니다.
-        Debug.Log($"Stage Refreshed: Current Index is {currentStageIndex}");
+        FindAnyObjectByType<MapCameraStageController>()?.ApplyCurrentStageSettingsImmediate();
     }
-
 
     public bool IsKeySlotMatch(GameObject item, out int slotIndex)
     {
         slotIndex = -1;
         if (item == null || keySlots == null) return false;
-
         for (int i = 0; i < keySlots.Length; ++i)
         {
             var slot = keySlots[i];
             if (slot == null) continue;
-
             bool matched = (item == slot) ||
                            (!string.IsNullOrEmpty(slot.tag) && slot.tag != "Untagged" && item.CompareTag(slot.tag)) ||
                            (item.name.Contains(slot.name) || slot.name.Contains(item.name));
-
-            if (matched)
-            {
-                slotIndex = i;
-                return true;
-            }
+            if (matched) { slotIndex = i; return true; }
         }
-
         return false;
     }
 

@@ -18,10 +18,10 @@ public class StageBoundsUIUpdater : MonoBehaviour
     public Transform playerTransform;
     public TextMeshProUGUI uiText;
 
-    [Header("Settings")]
-    public float pollInterval = 0.15f;
-    [Header("Fade")]
-    public float fadeDuration = 0.5f;
+    [Tooltip("Settings")]
+    private float pollInterval = 0.15f;
+    [Tooltip("Fade")]
+    private float fadeDuration = 0.5f;
 
     private float pollTimer = 0f;
     private int prevPlayerStageIndex = -2;

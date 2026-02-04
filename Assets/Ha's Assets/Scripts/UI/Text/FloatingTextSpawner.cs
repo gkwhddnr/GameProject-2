@@ -27,14 +27,13 @@ public class FloatingTextSpawner : MonoBehaviour
     public float defaultFadeIn = 0.25f;
     public float defaultHold = 1.0f;
     public float defaultFadeOut = 0.5f;
-    public Vector3 worldOffset = new Vector3(0, 1.5f, 0);
+    public Vector3 worldOffset = new Vector3(0, 0.5f, 0);
 
     [Header("Item -> Message Table")]
     public ItemMessageEntry[] itemMessageEntries;
 
-    [Header("Boundary Settings")]
-    public float edgePadding = 0.5f;
-
+    private bool autoPopulateFromGameManager = true;
+    private float edgePadding = 0.5f;
     private Camera canvasCamera;
     private RectTransform canvasRect;
     private WaitForEndOfFrame _waitForEndOfFrame = new WaitForEndOfFrame();
@@ -50,6 +49,67 @@ public class FloatingTextSpawner : MonoBehaviour
             canvasCamera = canvas.worldCamera ? canvas.worldCamera : Camera.main;
             canvasRect = canvas.GetComponent<RectTransform>();
         }
+
+        // 시도적으로 즉시 채우기(하지만 GameManager 인스턴스가 아직 없을 수 있음)
+        if (autoPopulateFromGameManager) TryPopulateFromGameManager();
+    }
+
+    void Start()
+    {
+        // Awake 시 GameManager가 없어서 실패했을 경우 재시도
+        if (autoPopulateFromGameManager) TryPopulateFromGameManager();
+    }
+
+    /// <summary>
+    /// 시도적으로 GameManager에서 slotPrefabs를 읽어 itemMessageEntries에 추가.
+    /// 중복(참조 또는 이름 포함)은 건너뜀.
+    /// </summary>
+    private void TryPopulateFromGameManager()
+    {
+        // 이미 수동으로 동일한 레퍼런스가 있으면 아무 작업 안함
+        if (!autoPopulateFromGameManager) return;
+
+        // 우선 찾기: GameManager.Instance 우선, 없으면 씬에서 검색
+        GameManager gm = GameManager.Instance;
+        if (gm == null) gm = FindAnyObjectByType<GameManager>();
+        if (gm == null || gm.itemSlotSettings == null || gm.itemSlotSettings.Length == 0) return;
+
+        // 기존 entries를 리스트로 복사 (null 필터링)
+        var existing = new List<ItemMessageEntry>();
+        if (itemMessageEntries != null)
+        {
+            foreach (var e in itemMessageEntries)
+                if (e != null && e.itemReference != null) existing.Add(e);
+        }
+
+        var existingRefs = new HashSet<GameObject>();
+        foreach (var e in existing) existingRefs.Add(e.itemReference);
+
+        var added = new List<ItemMessageEntry>(existing);
+
+        // itemSlotSettings에서 slotPrefab을 읽어 중복이 없으면 추가
+        foreach (var slot in gm.itemSlotSettings)
+        {
+            if (slot == null) continue;
+            var prefab = slot.slotPrefab;
+            if (prefab == null) continue;
+            if (existingRefs.Contains(prefab)) continue;
+
+            // 새 엔트리 생성 (기본 메시지/스타일 사용)
+            var entry = new ItemMessageEntry
+            {
+                itemReference = prefab,
+                fontSize = 36f,
+                fontStyle = FontStyles.Normal,
+                textColor = Color.white
+            };
+
+            added.Add(entry);
+            existingRefs.Add(prefab);
+        }
+
+        // 길이가 바뀌었으면 덮어쓰기
+        itemMessageEntries = added.ToArray();
     }
 
     public void ShowForCollectedItem(GameObject item)
@@ -60,11 +120,11 @@ public class FloatingTextSpawner : MonoBehaviour
         {
             if (entry == null || entry.itemReference == null) continue;
 
+            // 이름 기반 매칭: 기존 로직 유지 (포함 또는 포함당함)
             if (item.name.Contains(entry.itemReference.name) || entry.itemReference.name.Contains(item.name))
             {
                 if (!string.IsNullOrEmpty(entry.message))
                 {
-                    // 설정된 스타일 값을 함께 전달합니다.
                     ShowAtWorldPosition(
                         item.transform.position,
                         entry.message,
@@ -73,7 +133,18 @@ public class FloatingTextSpawner : MonoBehaviour
                         entry.textColor
                     );
                 }
-                break;
+                return; // 첫 매칭 항목만 사용
+            }
+        }
+
+        // (Fallback) 만약 매칭되는 항목이 없고 GameManager 슬롯과 매칭되면 기본 메시지로 띄움
+        GameManager gm = GameManager.Instance ?? FindAnyObjectByType<GameManager>();
+        if (gm != null && gm.itemSlotSettings != null)
+        {
+            foreach (var slot in gm.itemSlotSettings)
+            {
+                if (slot == null || slot.slotPrefab == null) continue;
+                if (item.name.Contains(slot.slotPrefab.name) || slot.slotPrefab.name.Contains(item.name)) return;
             }
         }
     }
@@ -195,7 +266,6 @@ public class FloatingTextSpawner : MonoBehaviour
             this.edgePadding = edgePadding;
             this.clampBounds = clampBounds;
             rt = GetComponent<RectTransform>();
-            // ensure we update in LateUpdate so camera moved already
             enabled = true;
         }
 
@@ -206,7 +276,6 @@ public class FloatingTextSpawner : MonoBehaviour
 
             Vector3 finalWorld = worldPosition; // already includes initial offset/clamp
 
-            // If clamp bounds provided, ensure finalWorld stays inside bounds (in case world pos changes externally)
             if (clampBounds.HasValue)
             {
                 var b = clampBounds.Value;

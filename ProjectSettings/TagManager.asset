@@ -14,11 +14,11 @@ TagManager:
   - Water
   - UI
   - Player
-  - Obstacle
-  - Destination
-  - next
   - Item
   - Key
+  - Obstacle
+  - nextPoint
+  - destination
   - Lock
   - 
   - 
@@ -44,10 +44,7 @@ TagManager:
     uniqueID: 0
     locked: 0
   - name: UI
-    uniqueID: 1840987721
-    locked: 0
-  - name: Player
-    uniqueID: 1859387957
+    uniqueID: 644732309
     locked: 0
   m_RenderingLayers:
   - Default

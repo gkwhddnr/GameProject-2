@@ -70,7 +70,7 @@ public class MapCameraStageController : MonoBehaviour
         Vector3 playerPos = gameManager.playerTransform.position;
         int idx = GetStageIndexForPosition(playerPos);
 
-        if (idx < 0 || idx >= gameManager.stageBounds.Length)
+        if (idx < 0 || idx >= gameManager.stageSettings.Length)
         {
             if (lastAppliedStage != -1)
             {
@@ -87,7 +87,7 @@ public class MapCameraStageController : MonoBehaviour
                                ? perStageModes[idx]
                                : StageCameraMode.None;
 
-        ApplyModeToCamera(mode, gameManager.stageBounds[idx], forceImmediate, idx);
+        ApplyModeToCamera(mode, gameManager.stageSettings[idx].bounds, forceImmediate, idx);
     }
 
     private void ApplyModeToCamera(StageCameraMode mode, BoxCollider2D bounds, bool forceImmediate, int stageIndex)
@@ -144,43 +144,41 @@ public class MapCameraStageController : MonoBehaviour
 
     private int GetStageIndexForPosition(Vector3 worldPos)
     {
-        var boundsArray = gameManager.stageBounds;
-        if (boundsArray == null) return -1;
-        for (int i = 0; i < boundsArray.Length; i++)
+        var settingsArray = gameManager.stageSettings; 
+        if (settingsArray == null) return -1;
+        for (int i = 0; i < settingsArray.Length; i++)
         {
-            if (boundsArray[i] != null && boundsArray[i].bounds.Contains(worldPos)) return i;
+            if (settingsArray[i] != null && settingsArray[i].bounds != null && settingsArray[i].bounds.bounds.Contains(worldPos)) return i;
         }
         return -1;
     }
 
-    private bool ValidateReferences() => gameManager != null && mapCamera != null && gameManager.stageBounds != null && gameManager.playerTransform != null;
+    private bool ValidateReferences() => gameManager != null && mapCamera != null && gameManager.stageSettings != null && gameManager.playerTransform != null;
 
 #if UNITY_EDITOR
     void OnValidate()
     {
         if (gameManager == null) gameManager = GetComponent<GameManager>();
-        if (gameManager != null && gameManager.stageBounds != null)
-        {
-            int stageCount = gameManager.stageBounds.Length;
 
-            // 1. 모드 배열 크기 조정
+        // --- 수정: stageSettings.Length를 기준으로 모든 배열 크기 조정 ---
+        if (gameManager != null && gameManager.stageSettings != null)
+        {
+            int stageCount = gameManager.stageSettings.Length;
+
             if (perStageModes == null || perStageModes.Length != stageCount)
                 Array.Resize(ref perStageModes, stageCount);
 
-            // 2. AutoScaleOnly 개수 파악
             int autoScaleCount = 0;
             for (int i = 0; i < stageCount; i++)
             {
                 if (perStageModes[i] == StageCameraMode.AutoScaleOnly) autoScaleCount++;
             }
 
-            // 3. 설정 배열 크기 조정 및 데이터 보존 시도
             if (autoScaleSettings == null || autoScaleSettings.Length != autoScaleCount)
             {
                 Array.Resize(ref autoScaleSettings, autoScaleCount);
             }
 
-            // 4. 인덱스 라벨 갱신 (사용자 편의용)
             int currentSettingsIdx = 0;
             for (int i = 0; i < stageCount; i++)
             {
@@ -189,7 +187,6 @@ public class MapCameraStageController : MonoBehaviour
                     if (autoScaleSettings[currentSettingsIdx] == null)
                         autoScaleSettings[currentSettingsIdx] = new AutoScaleSettings();
 
-                    autoScaleSettings[currentSettingsIdx].stageLabel = $"Stage {i} Settings";
                     currentSettingsIdx++;
                 }
             }

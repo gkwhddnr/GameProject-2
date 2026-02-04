@@ -142,7 +142,7 @@ public class SequentialRevealManager : MonoBehaviour
         var config = stageConfigs[stageIdx];
         var currentGroup = config.batchGroups[batchIdx];
 
-        // deactivatePrevious: 이전 단계들 싹 다 끄기
+        // Previous: 이전 단계들 싹 다 끄기
         if (currentGroup.Previous)
         {
             for (int i = 0; i < batchIdx; i++) DeactivateGroup(config.batchGroups[i]);
