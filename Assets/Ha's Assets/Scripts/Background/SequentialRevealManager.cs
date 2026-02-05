@@ -36,6 +36,10 @@ public class SequentialRevealManager : MonoBehaviour
     private int[] _stageCollectedCounts;
     private int[] _nextBatchToActivate;
     private ItemCollector _collector;
+    private int[] _collectorStageIdxForConfig;
+
+    // 중복 카운트 방지용 (SRM 레벨)
+    private HashSet<int> _countedItemIds = new HashSet<int>();
 
     void Awake()
     {
@@ -43,7 +47,7 @@ public class SequentialRevealManager : MonoBehaviour
         else { Destroy(gameObject); return; }
     }
 
-    void Start(){ InitManager(); }
+    void Start() { InitManager(); }
 
     private void InitManager()
     {
@@ -52,9 +56,30 @@ public class SequentialRevealManager : MonoBehaviour
         int stageCount = stageConfigs?.Length ?? 0;
         _stageCollectedCounts = new int[stageCount];
         _nextBatchToActivate = new int[stageCount];
+        _collectorStageIdxForConfig = new int[stageCount];
+
+        for (int i = 0; i < stageCount; ++i) _collectorStageIdxForConfig[i] = -1;
+        if (_collector != null && _collector.stageSettings != null)
+        {
+            for (int ci = 0; ci < stageCount; ++ci)
+            {
+                var cfgBound = stageConfigs[ci].bound;
+                if (cfgBound == null) continue;
+                for (int si = 0; si < _collector.stageSettings.Length; ++si)
+                {
+                    var colBound = _collector.stageSettings[si].stageBounds;
+                    if (colBound != null && colBound == cfgBound)
+                    {
+                        _collectorStageIdxForConfig[ci] = si;
+                        break;
+                    }
+                }
+            }
+        }
 
         BuildItemMap();
 
+        // 초기 상태: 모든 batch 객체는 비활성화
         foreach (var config in stageConfigs)
         {
             if (config.batchGroups == null) continue;
@@ -74,6 +99,7 @@ public class SequentialRevealManager : MonoBehaviour
         _itemToStageMap.Clear();
         if (stageConfigs == null) return;
 
+        // 씬 내 모든 Collider2D 검사해서 itemLayerMask에 속하는 게임오브젝트를 스테이지 인덱스로 맵핑
         Collider2D[] allColliders = FindObjectsByType<Collider2D>(FindObjectsSortMode.None);
         foreach (var col in allColliders)
         {
@@ -82,7 +108,8 @@ public class SequentialRevealManager : MonoBehaviour
                 GameObject itemGo = col.gameObject;
                 for (int i = 0; i < stageConfigs.Length; i++)
                 {
-                    if (stageConfigs[i].bound != null && stageConfigs[i].bound.bounds.Contains(itemGo.transform.position))
+                    var bound = stageConfigs[i].bound;
+                    if (bound != null && bound.bounds.Contains(itemGo.transform.position))
                     {
                         _itemToStageMap[itemGo.GetInstanceID()] = i;
                         break;
@@ -96,37 +123,67 @@ public class SequentialRevealManager : MonoBehaviour
     {
         if (item == null) return;
         int id = item.GetInstanceID();
+
+        if (_countedItemIds.Contains(id)) return;
         if (!_itemToStageMap.TryGetValue(id, out int stageIdx)) return;
 
+        // 카운트 증가
         _stageCollectedCounts[stageIdx]++;
+        _countedItemIds.Add(id);
 
-        int initial = _collector != null ? _collector.GetInitialVisibleCount() : 1;
-        int subsequent = _collector != null ? _collector.GetSubsequentRevealCount() : 1;
+        int collectorStageIdx = (_collectorStageIdxForConfig != null && stageIdx >= 0 && stageIdx < _collectorStageIdxForConfig.Length) ? _collectorStageIdxForConfig[stageIdx] : -1;
+
+        int initial = 1;
+        int subsequent = 1;
+        bool stageUsesSequential = true;
+
+        // 우선순위: ItemCollector의 스테이지값(매핑이 되어 있다면) -> 아니면 ItemCollector의 전역값 접근 (GetInitialVisibleCount(-1) 같은 오버로드가 없으므로 fallback) -> 최종 하드코딩 safe 값
+        if (_collector != null && collectorStageIdx >= 0)
+        {
+            initial = _collector.GetInitialVisibleCount(collectorStageIdx);
+            subsequent = _collector.GetSubsequentRevealCount(collectorStageIdx);
+            stageUsesSequential = _collector.GetRevealSequentially(collectorStageIdx);
+        }
+        else if (_collector != null)
+        {
+            initial = _collector.GetInitialVisibleCount(stageIdx);
+            subsequent = _collector.GetSubsequentRevealCount(stageIdx);
+            stageUsesSequential = _collector.GetRevealSequentially(stageIdx);
+        }
+
+        initial = Mathf.Max(0, initial);
+        subsequent = Mathf.Max(1, subsequent);
 
         var config = stageConfigs[stageIdx];
+        if (config == null || config.batchGroups == null) return;
 
-        // 1. [핵심 추가] 현재 진행 중인 배치의 완료 여부 체크 (deactivateOnComplete 처리)
-        // 현재 켜져 있는 배치가 있고, 그 배치의 목표치를 채웠다면 미리 끕니다.
+        // 1) 현재 활성화된 배치(이미 켜진 것)의 자동 비활성화 조건 처리 (Present 플래그)
         int activeIdx = _nextBatchToActivate[stageIdx] - 1;
         if (activeIdx >= 0 && activeIdx < config.batchGroups.Length)
         {
             var activeGroup = config.batchGroups[activeIdx];
             if (activeGroup.Present)
             {
-                // 현재 배치의 완료 기준값 계산
-                int completeThreshold = initial + (subsequent * activeIdx);
-                // 만약 현재 배치가 감당하는 아이템(subsequent 개수)을 다 먹었다면
+                int completeThreshold = (activeIdx == 0) ? initial : (initial + subsequent * activeIdx);
                 if (_stageCollectedCounts[stageIdx] >= completeThreshold + subsequent) DeactivateGroup(activeGroup);
             }
         }
 
-        // 2. 새로운 배치 활성화 체크 루프
+        // 2) 새로운 배치 활성화 (연속 노출 사용 시)
+        if (!stageUsesSequential)
+        {
+            // sequential 꺼져있으면 모든 배치 즉시 활성화 
+            ActivateAllBatchesImmediate(stageIdx);
+            return;
+        }
+
+        // while 루프로 여러 배치가 한 번에 활성화될 수 있도록 함
         while (true)
         {
             int nextIdx = _nextBatchToActivate[stageIdx];
             if (nextIdx >= config.batchGroups.Length) break;
 
-            int activationThreshold = initial + (subsequent * nextIdx);
+            int activationThreshold = (nextIdx == 0) ? initial : (initial + subsequent * nextIdx);
 
             if (_stageCollectedCounts[stageIdx] >= activationThreshold)
             {
@@ -137,12 +194,29 @@ public class SequentialRevealManager : MonoBehaviour
         }
     }
 
+    // 모든 배치 즉시 켜기 (sequential 비활성화 스테이지용)
+    private void ActivateAllBatchesImmediate(int stageIdx)
+    {
+        var config = stageConfigs[stageIdx];
+        if (config == null || config.batchGroups == null) return;
+        for (int i = 0; i < config.batchGroups.Length; ++i)
+        {
+            if (_nextBatchToActivate[stageIdx] <= i)
+            {
+                ActivateBatch(stageIdx, i);
+                _nextBatchToActivate[stageIdx] = i + 1;
+            }
+        }
+    }
+
     private void ActivateBatch(int stageIdx, int batchIdx)
     {
         var config = stageConfigs[stageIdx];
+        if (config == null || config.batchGroups == null || batchIdx < 0 || batchIdx >= config.batchGroups.Length) return;
+
         var currentGroup = config.batchGroups[batchIdx];
 
-        // Previous: 이전 단계들 싹 다 끄기
+        // Previous: 이전 단계들 끄기
         if (currentGroup.Previous)
         {
             for (int i = 0; i < batchIdx; i++) DeactivateGroup(config.batchGroups[i]);
@@ -157,37 +231,30 @@ public class SequentialRevealManager : MonoBehaviour
             {
                 if (obj == null) continue;
 
-                // 1) 기본 활성화 (원래 방식 유지)
                 obj.SetActive(true);
 
-                // 2) 'Key'로 간주되는 경우(레이어 또는 태그 또는 이름)엔 콜라이더를 강제 활성화
                 bool looksLikeKey = (obj.layer == keyLayer) || obj.CompareTag("Key") || string.Equals(obj.name, "Key", System.StringComparison.OrdinalIgnoreCase);
 
-                // 3) 또는 해당 오브젝트(또는 자식)에 ItemPickup 등의 수집 스크립트가 붙어있으면 콜라이더 활성화
                 bool hasPickupScript = obj.GetComponentInChildren<ItemPickup>(true) != null
                                        || obj.GetComponent<ItemPickup>() != null;
 
                 if (looksLikeKey || hasPickupScript)
                 {
                     var cols = obj.GetComponentsInChildren<Collider2D>(true);
-                    foreach (var c in cols)
-                    {
-                        if (c != null) c.enabled = true;
-                    }
+                    foreach (var c in cols) if (c != null) c.enabled = true;
                 }
             }
         }
     }
 
-
     private void DeactivateGroup(BatchRevealGroup group)
     {
-        if (group.objectsToActivate == null) return;
+        if (group == null || group.objectsToActivate == null) return;
         foreach (var obj in group.objectsToActivate)
         {
             if (obj != null) obj.SetActive(false);
         }
     }
 
-    private void OnDestroy(){ if (Instance == this) Instance = null; }
+    private void OnDestroy() { if (Instance == this) Instance = null; }
 }

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Text;
 using TMPro;
 using UnityEngine;
 using UnityEngine.SceneManagement;
@@ -8,15 +9,31 @@ using UnityEngine.SceneManagement;
 [DisallowMultipleComponent]
 public class ItemCollector : MonoBehaviour
 {
-    // --- 스테이지별 설정을 하나로 묶는 데이터 클래스 ---
+    // --- 최적화를 위한 내부 데이터 구조 ---
+    private class ObjectDataCache
+    {
+        public SpriteRenderer[] sprs;
+        public Renderer[] rends;
+        public CanvasGroup[] cgs;
+        public Collider2D[] colliders;
+        public Color[] origSprColors;
+        public Color[] origRendColors;
+        public ParticleSystem[] particles;
+    }
+
     [Serializable]
     public class StageItemSettings
     {
-        public string stageName; // 인스펙터 식별용 이름
+        public string stageName;
         public BoxCollider2D stageBounds;
         [TextArea(1, 3)]
         public string uiTextMessage = "잃어버린 별 찾기: {collected} / {total}";
         public GameObject nextPoint;
+
+        [Header("스테이지별 연속 노출 설정")]
+        public bool revealSequentially = true;
+        public int initialVisibleCount = 1;
+        public int subsequentRevealCount = 2;
     }
 
     [Header("스테이지별 통합 설정")]
@@ -36,8 +53,12 @@ public class ItemCollector : MonoBehaviour
     [Tooltip("연속으로 아이템 드러내기")]
     private bool revealItemsSequentially = true;
     private float itemFadeInDuration = 0.6f;
-    private int initialVisibleCount = 1;
-    private int subsequentRevealCount = 2;
+
+    [Tooltip("아이템 단계 노출: 스테이지에 설정이 없을 때의 초기값")]
+    private int defaultInitialVisibleCount = 1;
+
+    [Tooltip("아이템 단계 노출: 스테이지에 설정이 없을 때의 후속 노출 수")]
+    private int defaultSubsequentRevealCount = 1;
 
     [Tooltip("아이템 페이드 옵션")]
     private float itemFadeDuration = 0.6f;
@@ -49,10 +70,14 @@ public class ItemCollector : MonoBehaviour
     private bool resetCollectedOnStageEnter = true;
     private float obstacleFadeDuration = 1.5f;
 
-    // --- 내부 상태 유지 ---
+    // --- 내부 상태 및 최적화 필드 ---
     private HashSet<int> collectedInstanceIds = new HashSet<int>();
-    private bool uiShown = false;
+    private Dictionary<int, ObjectDataCache> _dataCache = new Dictionary<int, ObjectDataCache>();
+    private StringBuilder _sb = new StringBuilder(256);
+    private MaterialPropertyBlock _mpb;
+    private static readonly int _BaseColorID = Shader.PropertyToID("_Color");
 
+    private bool uiShown = false;
     private int collected = 0;
     private int nextHiddenIndex = 0;
     private int totalRevealedCount = 0;
@@ -71,14 +96,17 @@ public class ItemCollector : MonoBehaviour
     private List<GameObject> currentStageItems = new List<GameObject>();
     private List<GameObject> itemsList = new List<GameObject>();
 
-    private Dictionary<int, Collider2D[]> _colliderCache = new Dictionary<int, Collider2D[]>();
-    private Dictionary<SpriteRenderer, Color> origSpriteColors = new Dictionary<SpriteRenderer, Color>();
-    private Dictionary<Renderer, Color> origRendererColors = new Dictionary<Renderer, Color>();
-
     private int keyLayerIndex = -1;
     private int lockLayerIndex = -1;
     private int itemLayerIndex = -1;
     private int currentStageIndex = -1;
+
+    // --- 초기화 로직 ---
+
+    private void Awake()
+    {
+        _mpb = new MaterialPropertyBlock();
+    }
 
     void Start()
     {
@@ -97,14 +125,12 @@ public class ItemCollector : MonoBehaviour
             if (it != null && it.layer == itemLayerIndex) itemLayerItemsList.Add(it);
         }
 
-        nextHiddenIndex = Mathf.Clamp(initialVisibleCount, 0, itemLayerItemsList.Count);
+        nextHiddenIndex = Mathf.Clamp(defaultInitialVisibleCount, 0, itemLayerItemsList.Count);
         totalRevealedCount = nextHiddenIndex;
 
         BuildObstacleMap();
 
         var stageController = FindAnyObjectByType<MapCameraStageController>();
-        if (stageController == null) Debug.LogError("MapCameraStageController를 씬에서 찾을 수 없습니다!");
-
         InitializeNavigationPointer(stageController);
 
         if (revealItemsSequentially && itemsList.Count > 0)
@@ -123,15 +149,15 @@ public class ItemCollector : MonoBehaviour
     void Cleanup()
     {
         SceneManager.sceneLoaded -= OnSceneLoaded;
-        _colliderCache.Clear();
+        _dataCache.Clear();
         RemoveActiveNavigationPointer();
         itemsList.Clear();
         itemLayerItemsList.Clear();
         stageItemsMap = null;
         stageObstacleMap = null;
-        origSpriteColors.Clear();
-        origRendererColors.Clear();
     }
+
+    // --- 원본 함수 로직 유지 ---
 
     void InitializeNavigationPointer(MapCameraStageController stageController)
     {
@@ -158,7 +184,7 @@ public class ItemCollector : MonoBehaviour
                 ShowUIInstant();
                 uiShown = true;
                 currentStageIndex = -1;
-                nextHiddenIndex = Mathf.Clamp(initialVisibleCount, 0, itemsList.Count);
+                nextHiddenIndex = Mathf.Clamp(defaultInitialVisibleCount, 0, itemsList.Count);
                 totalRevealedCount = nextHiddenIndex;
             }
             else
@@ -188,9 +214,7 @@ public class ItemCollector : MonoBehaviour
         for (int i = 0; i < stageSettings.Length; ++i)
         {
             var bounds = stageSettings[i].stageBounds;
-            if (bounds == null) continue;
-
-            if (bounds.bounds.Contains(playerPosition))
+            if (bounds != null && bounds.bounds.Contains(playerPosition))
             {
                 foundIndex = i;
                 break;
@@ -250,10 +274,20 @@ public class ItemCollector : MonoBehaviour
         }
 
         currentStageTotalItems = currentStageItems.Count;
-        currentStageNextHiddenIndex = Mathf.Clamp(initialVisibleCount, 0, currentStageTotalItems);
+
+        int iniVisible = defaultInitialVisibleCount;
+        bool stageUsesSequential = revealItemsSequentially;
+        if (stageSettings != null && newStageIndex >= 0 && newStageIndex < stageSettings.Length)
+        {
+            iniVisible = Mathf.Clamp(stageSettings[newStageIndex].initialVisibleCount, 0, currentStageTotalItems);
+            stageUsesSequential = stageSettings[newStageIndex].revealSequentially;
+        }
+
+        currentStageNextHiddenIndex = Mathf.Clamp(iniVisible, 0, currentStageTotalItems);
         currentStageTotalRevealedCount = currentStageNextHiddenIndex;
 
-        if (revealItemsSequentially && currentStageItems.Count > 0) HideItemsForList(currentStageItems, initialVisibleCount);
+        if (stageUsesSequential && currentStageItems.Count > 0)
+            HideItemsForList(currentStageItems, iniVisible);
 
         UpdateUI();
         RemoveActiveNavigationPointer();
@@ -265,7 +299,7 @@ public class ItemCollector : MonoBehaviour
         var roots = SceneManager.GetActiveScene().GetRootGameObjects();
         foreach (var root in roots) RecursiveCollectItems(root.transform);
 
-        if (subsequentRevealCount < 1) subsequentRevealCount = 1;
+        if (defaultSubsequentRevealCount < 1) defaultSubsequentRevealCount = 1;
 
         if (stageSettings != null && stageSettings.Length > 0)
         {
@@ -334,18 +368,43 @@ public class ItemCollector : MonoBehaviour
         for (int i = 0; i < t.childCount; ++i) RecursiveCollectItems(t.GetChild(i));
     }
 
-    Collider2D[] GetCachedColliders(GameObject go)
+    // --- 캐싱 시스템 ---
+
+    private ObjectDataCache GetOrAddCache(GameObject go)
     {
         int id = go.GetInstanceID();
-        if (!_colliderCache.TryGetValue(id, out var cols))
+        if (_dataCache.TryGetValue(id, out var cache)) return cache;
+
+        var sprs = go.GetComponentsInChildren<SpriteRenderer>(true);
+        var rends = go.GetComponentsInChildren<Renderer>(true);
+        var rendList = new List<Renderer>();
+        var rendColors = new List<Color>();
+
+        foreach (var r in rends)
         {
-            cols = go.GetComponentsInChildren<Collider2D>(true);
-            _colliderCache[id] = cols;
+            if (r is SpriteRenderer) continue;
+            rendList.Add(r);
+            rendColors.Add(r.sharedMaterial.HasProperty(_BaseColorID) ? r.sharedMaterial.color : Color.white);
         }
-        return cols;
+
+        var sprColors = new Color[sprs.Length];
+        for (int i = 0; i < sprs.Length; i++) sprColors[i] = sprs[i].color;
+
+        cache = new ObjectDataCache
+        {
+            sprs = sprs,
+            rends = rendList.ToArray(),
+            cgs = go.GetComponentsInChildren<CanvasGroup>(true),
+            colliders = go.GetComponentsInChildren<Collider2D>(true),
+            origSprColors = sprColors,
+            origRendColors = rendColors.ToArray(),
+            particles = go.GetComponentsInChildren<ParticleSystem>(true)
+        };
+        _dataCache[id] = cache;
+        return cache;
     }
 
-    void HideItemsInitially_Global() => HideItemsForList(itemLayerItemsList, initialVisibleCount);
+    void HideItemsInitially_Global() => HideItemsForList(itemLayerItemsList, defaultInitialVisibleCount);
 
     void HideItemsNotInAnyStage()
     {
@@ -376,41 +435,42 @@ public class ItemCollector : MonoBehaviour
     void ApplyInitialHide(GameObject item)
     {
         if (item == null) return;
-        var sprs = item.GetComponentsInChildren<SpriteRenderer>(true);
-        foreach (var s in sprs)
+        var cache = GetOrAddCache(item);
+        UpdateItemAlphaInternal(cache, 0f);
+        foreach (var col in cache.colliders) col.enabled = false;
+
+        foreach (var ps in cache.particles)
         {
-            if (!origSpriteColors.ContainsKey(s)) origSpriteColors[s] = s.color;
-            Color c = s.color; c.a = 0f; s.color = c;
-        }
-        var rends = item.GetComponentsInChildren<Renderer>(true);
-        foreach (var r in rends)
-        {
-            if (r is SpriteRenderer || r == null) continue;
-            if (r.sharedMaterial != null && r.sharedMaterial.HasProperty("_Color"))
+            if (ps != null)
             {
-                if (!origRendererColors.ContainsKey(r)) origRendererColors[r] = r.sharedMaterial.color;
-                Color mc = r.sharedMaterial.color; mc.a = 0f; r.sharedMaterial.color = mc;
+                ps.Stop();
+                ps.Clear();
+                ps.gameObject.SetActive(false);
             }
         }
-        foreach (var col in GetCachedColliders(item)) col.enabled = false;
     }
 
     void RevealNextHiddenBatch(int count)
     {
-        if (!revealItemsSequentially) return;
-        bool isStage = stageSettings != null && stageSettings.Length > 0;
-        var list = isStage ? currentStageItems : itemLayerItemsList;
-        int idx = isStage ? currentStageNextHiddenIndex : nextHiddenIndex;
-        int toReveal = Mathf.Max(1, count);
+        bool isStageContext = stageSettings != null && stageSettings.Length > 0 && currentStageIndex >= 0;
+        int revealCount = count;
+        if (revealCount <= 0)
+        {
+            if (isStageContext) revealCount = Mathf.Max(1, stageSettings[currentStageIndex].subsequentRevealCount);
+            else revealCount = Mathf.Max(1, defaultSubsequentRevealCount);
+        }
+
+        var list = isStageContext ? currentStageItems : itemLayerItemsList;
+        int idx = isStageContext ? currentStageNextHiddenIndex : nextHiddenIndex;
         int revealed = 0;
 
-        for (int i = 0; i < toReveal && idx < list.Count; ++i)
+        for (int i = 0; i < revealCount && idx < list.Count; ++i)
         {
             StartCoroutine(FadeInItemRoutine(list[idx], itemFadeInDuration));
             idx++; revealed++;
         }
 
-        if (isStage) { currentStageNextHiddenIndex = idx; currentStageTotalRevealedCount += revealed; }
+        if (isStageContext) { currentStageNextHiddenIndex = idx; currentStageTotalRevealedCount += revealed; }
         else { nextHiddenIndex = idx; totalRevealedCount += revealed; }
     }
 
@@ -418,36 +478,43 @@ public class ItemCollector : MonoBehaviour
     {
         if (item == null) yield break;
         item.SetActive(true);
-        var sprs = item.GetComponentsInChildren<SpriteRenderer>(true);
-        var rends = item.GetComponentsInChildren<Renderer>(true);
-        var cols = GetCachedColliders(item);
+        var cache = GetOrAddCache(item);
         float t = 0f;
         while (t < duration)
         {
             t += Time.deltaTime;
-            UpdateItemAlpha(item, sprs, rends, Mathf.Clamp01(t / duration));
+            UpdateItemAlphaInternal(cache, Mathf.Clamp01(t / duration));
             yield return null;
         }
-        UpdateItemAlpha(item, sprs, rends, 1f);
-        foreach (var col in cols) col.enabled = true;
+        UpdateItemAlphaInternal(cache, 1f);
+        foreach (var col in cache.colliders) col.enabled = true;
+        foreach (var ps in cache.particles)
+        {
+            if (ps != null)
+            {
+                ps.gameObject.SetActive(true);
+                ps.Play();
+            }
+        }
     }
 
-    void UpdateItemAlpha(GameObject item, SpriteRenderer[] sprs, Renderer[] rends, float alpha)
+    void UpdateItemAlphaInternal(ObjectDataCache cache, float alpha)
     {
-        foreach (var s in sprs)
+        for (int i = 0; i < cache.sprs.Length; i++)
         {
-            if (s == null) continue;
-            Color orig = origSpriteColors.ContainsKey(s) ? origSpriteColors[s] : s.color;
-            Color c = s.color; c.a = orig.a * alpha; s.color = c;
+            if (!cache.sprs[i]) continue;
+            Color c = cache.origSprColors[i];
+            c.a *= alpha;
+            cache.sprs[i].color = c;
         }
-        foreach (var r in rends)
+        for (int i = 0; i < cache.rends.Length; i++)
         {
-            if (r == null || r is SpriteRenderer) continue;
-            if (r.sharedMaterial != null && r.sharedMaterial.HasProperty("_Color"))
-            {
-                Color orig = origRendererColors.ContainsKey(r) ? origRendererColors[r] : r.sharedMaterial.color;
-                Color mc = r.sharedMaterial.color; mc.a = orig.a * alpha; r.sharedMaterial.color = mc;
-            }
+            if (!cache.rends[i]) continue;
+            cache.rends[i].GetPropertyBlock(_mpb);
+            Color c = cache.origRendColors[i];
+            c.a *= alpha;
+            _mpb.SetColor(_BaseColorID, c);
+            cache.rends[i].SetPropertyBlock(_mpb);
         }
     }
 
@@ -466,7 +533,6 @@ public class ItemCollector : MonoBehaviour
 
     void OnCollisionEnter2D(Collision2D collision) { TryCollect(collision.collider.gameObject); }
 
-    // --- 수집 메인 로직 ---
     void TryCollect(GameObject candidate)
     {
         if (candidate == null) return;
@@ -493,7 +559,8 @@ public class ItemCollector : MonoBehaviour
         SequentialRevealManager.Instance?.NotifyCollected(candidate);
         if (GameManager.Instance != null) GameManager.Instance.OnItemCollected(candidate);
 
-        if (disableColliderDuringItemFade) foreach (var col in GetCachedColliders(candidate)) col.enabled = false;
+        var cache = GetOrAddCache(candidate);
+        if (disableColliderDuringItemFade) foreach (var col in cache.colliders) col.enabled = false;
 
         if (isAnyKey)
         {
@@ -515,7 +582,7 @@ public class ItemCollector : MonoBehaviour
             if (revealItemsSequentially)
             {
                 int currentTotal = (stageSettings != null && stageSettings.Length > 0) ? currentStageTotalRevealedCount : totalRevealedCount;
-                if (collected >= currentTotal) RevealNextHiddenBatch(subsequentRevealCount);
+                if (collected >= currentTotal) RevealNextHiddenBatch(0);
             }
             if (collected >= currentStageTotalItems) RevealNextPointForStage(currentStageIndex);
         }
@@ -530,8 +597,9 @@ public class ItemCollector : MonoBehaviour
         if (keyStageIndex >= 0 && stageObstacleMap != null && keyStageIndex < stageObstacleMap.Length)
         {
             var obstaclesInStage = stageObstacleMap[keyStageIndex];
-            foreach (var obst in obstaclesInStage)
+            for (int i = obstaclesInStage.Count - 1; i >= 0; i--)
             {
+                var obst = obstaclesInStage[i];
                 if (obst == null || !obst.activeInHierarchy) continue;
                 float distSqr = (obst.transform.position - keyPos).sqrMagnitude;
                 if (distSqr < closestDistSqr) { closestDistSqr = distSqr; targetObstacle = obst; }
@@ -540,7 +608,8 @@ public class ItemCollector : MonoBehaviour
 
         if (targetObstacle == null)
         {
-            foreach (var go in FindObjectsByType<GameObject>(FindObjectsSortMode.None))
+            GameObject[] allObjects = GameObject.FindObjectsByType<GameObject>(FindObjectsSortMode.None);
+            foreach (var go in allObjects)
             {
                 if (go.activeInHierarchy && (go.layer == lockLayerIndex || HasLockChild(go)))
                 {
@@ -560,25 +629,14 @@ public class ItemCollector : MonoBehaviour
     IEnumerator FadeOutObstacleRoutine(GameObject obstacle)
     {
         if (obstacle == null) yield break;
-        foreach (var c in GetCachedColliders(obstacle)) if (c) c.enabled = false;
-        var sprs = obstacle.GetComponentsInChildren<SpriteRenderer>(true);
-        var rends = obstacle.GetComponentsInChildren<Renderer>(true);
-        float elapsed = 0f;
-        MaterialPropertyBlock propBlock = new MaterialPropertyBlock();
-        int colorPropID = Shader.PropertyToID("_Color");
+        var cache = GetOrAddCache(obstacle);
+        foreach (var c in cache.colliders) if (c) c.enabled = false;
 
+        float elapsed = 0f;
         while (elapsed < obstacleFadeDuration)
         {
             elapsed += Time.deltaTime;
-            float alpha = Mathf.Clamp01(1f - (elapsed / obstacleFadeDuration));
-            foreach (var s in sprs) { if (s) { Color c = s.color; c.a = alpha; s.color = c; } }
-            foreach (var r in rends)
-            {
-                if (r == null || r is SpriteRenderer) continue;
-                r.GetPropertyBlock(propBlock);
-                Color currentC = r.sharedMaterial.HasProperty(colorPropID) ? r.sharedMaterial.color : Color.white;
-                currentC.a = alpha; propBlock.SetColor(colorPropID, currentC); r.SetPropertyBlock(propBlock);
-            }
+            UpdateItemAlphaInternal(cache, Mathf.Clamp01(1f - (elapsed / obstacleFadeDuration)));
             yield return null;
         }
         if (obstacle != null) { if (destroyItemAfterFade) Destroy(obstacle); else obstacle.SetActive(false); }
@@ -589,15 +647,12 @@ public class ItemCollector : MonoBehaviour
     IEnumerator FadeOutItemRoutine(GameObject target)
     {
         if (target == null) yield break;
-        var sprs = target.GetComponentsInChildren<SpriteRenderer>(true);
-        var origColors = new List<Color>();
-        foreach (var s in sprs) origColors.Add(s.color);
+        var cache = GetOrAddCache(target);
         float t = 0f;
         while (t < itemFadeDuration)
         {
             t += Time.deltaTime;
-            float alpha = Mathf.Clamp01(1f - (t / itemFadeDuration));
-            for (int i = 0; i < sprs.Length; ++i) { if (sprs[i]) { Color c = sprs[i].color; c.a = origColors[i].a * alpha; sprs[i].color = c; } }
+            UpdateItemAlphaInternal(cache, Mathf.Clamp01(1f - (t / itemFadeDuration)));
             yield return null;
         }
         if (target != null) { if (destroyItemAfterFade) Destroy(target); else target.SetActive(false); }
@@ -637,70 +692,61 @@ public class ItemCollector : MonoBehaviour
         ToggleNextPointCollider(true, point);
     }
 
+    // --- UI 및 문자열 최적화 ---
+
     void UpdateUI()
     {
         if (uiText == null) return;
 
         if (currentStageIndex >= 0 && currentStageIndex < stageSettings.Length)
         {
-            // 1. 현재 스테이지의 메시지 템플릿을 가져옴
             string template = stageSettings[currentStageIndex].uiTextMessage;
-
-            // 2. 템플릿 안의 내용을 치환하여 최종 텍스트 결정
             uiText.text = ResolveUITextTemplate(template);
         }
         else
         {
-            // 스테이지 외부일 때의 기본 표시
-            uiText.text = $"잃어버린 별 찾기: {collected} / {currentStageTotalItems}";
+            _sb.Clear();
+            _sb.Append("잃어버린 별 찾기: ").Append(collected).Append(" / ").Append(currentStageTotalItems);
+            uiText.text = _sb.ToString();
         }
     }
 
     private string GetDynamicStageName(int stageIdx)
     {
-        // 인덱스 범위 확인
         if (stageIdx < 0 || stageIdx >= stageSettings.Length) return "알 수 없는 구역";
 
         var currentSettings = stageSettings[stageIdx];
         BoxCollider2D currentBounds = currentSettings.stageBounds;
 
-        // 1순위: StageBoundsUIUpdater에서 동일한 Bounds를 사용하는지 확인
         if (uiUpdater != null && uiUpdater.stageEntries != null)
         {
             foreach (var entry in uiUpdater.stageEntries)
             {
                 if (entry.bounds == null) continue;
-
-                // 리스트 내부를 순회하며 참조(Reference)가 같은 콜라이더인지 비교
                 foreach (var b in entry.bounds)
                 {
                     if (b != null && b == currentBounds)
                     {
-                        // 일치하는 것을 찾았다면 UIUpdater의 message를 반환
-                        // (만약 message가 비어있다면 stageName으로 대체)
                         return !string.IsNullOrEmpty(entry.message) ? entry.message : currentSettings.stageName;
                     }
                 }
             }
         }
-
-        // 2순위: 일치하는 Bounds가 없거나 UIUpdater가 없다면 
-        // ItemCollector 인스펙터에서 직접 수정한 stageName을 반환
         return currentSettings.stageName;
     }
 
     string ResolveUITextTemplate(string template)
     {
-        if (string.IsNullOrEmpty(template))
-            template = "{stageName}: {collected} / {total}";
-
-        // 여기서 GetDynamicStageName을 호출하여 우선순위에 따른 이름을 가져옵니다.
+        if (string.IsNullOrEmpty(template)) template = "{stageName}: {collected} / {total}";
         string dynamicName = GetDynamicStageName(currentStageIndex);
 
-        return template
-            .Replace("{stageName}", dynamicName)
-            .Replace("{collected}", collected.ToString())
-            .Replace("{total}", currentStageTotalItems.ToString());
+        _sb.Clear();
+        _sb.Append(template);
+        _sb.Replace("{stageName}", dynamicName);
+        _sb.Replace("{collected}", collected.ToString());
+        _sb.Replace("{total}", currentStageTotalItems.ToString());
+
+        return _sb.ToString();
     }
 
     void ShowUIInstant() { if (uiText) uiText.gameObject.SetActive(true); UpdateUI(); }
@@ -718,9 +764,27 @@ public class ItemCollector : MonoBehaviour
     {
         foreach (var s in sprs) { if (s) { Color c = s.color; c.a = alpha; s.color = c; } }
         foreach (var cg in canvasGroups) { if (cg) { cg.alpha = alpha; cg.interactable = cg.blocksRaycasts = alpha > 0.9f; } }
-        foreach (var r in renderers) { if (r && r.sharedMaterial.HasProperty("_Color")) { Color c = r.sharedMaterial.color; c.a = alpha; r.sharedMaterial.color = c; } }
+        foreach (var r in renderers)
+        {
+            if (r)
+            {
+                r.GetPropertyBlock(_mpb);
+                Color c = r.sharedMaterial.HasProperty(_BaseColorID) ? r.sharedMaterial.color : Color.white;
+                c.a = alpha;
+                _mpb.SetColor(_BaseColorID, c);
+                r.SetPropertyBlock(_mpb);
+            }
+        }
     }
-    void ToggleNextPointCollider(bool enabled, GameObject point) { if (point) foreach (var col in GetCachedColliders(point)) col.enabled = enabled; }
+
+    void ToggleNextPointCollider(bool enabled, GameObject point)
+    {
+        if (point)
+        {
+            var cache = GetOrAddCache(point);
+            foreach (var col in cache.colliders) col.enabled = enabled;
+        }
+    }
 
     int GetStageIndexForPosition(Vector3 worldPos)
     {
@@ -737,7 +801,27 @@ public class ItemCollector : MonoBehaviour
         foreach (Transform child in parent.transform) if (child.gameObject.layer == lockLayerIndex) return true;
         return false;
     }
-    public int GetInitialVisibleCount() { return initialVisibleCount; }
-    public int GetSubsequentRevealCount() { return subsequentRevealCount; }
+
+    public int GetInitialVisibleCount(int stageIndex)
+    {
+        if (stageSettings != null && stageIndex >= 0 && stageIndex < stageSettings.Length)
+            return Mathf.Max(0, stageSettings[stageIndex].initialVisibleCount);
+        return Mathf.Max(0, defaultInitialVisibleCount);
+    }
+
+    public int GetSubsequentRevealCount(int stageIndex)
+    {
+        if (stageSettings != null && stageIndex >= 0 && stageIndex < stageSettings.Length)
+            return Mathf.Max(1, stageSettings[stageIndex].subsequentRevealCount);
+        return Mathf.Max(1, defaultSubsequentRevealCount);
+    }
+
+    public bool GetRevealSequentially(int stageIndex)
+    {
+        if (stageSettings != null && stageIndex >= 0 && stageIndex < stageSettings.Length)
+            return stageSettings[stageIndex].revealSequentially;
+        return revealItemsSequentially;
+    }
+
     public void CollectBy(GameObject item) => TryCollect(item);
 }
