@@ -90,6 +90,7 @@ public class ItemCollector : MonoBehaviour
     private List<SpriteRenderer>[] nextPointsSprs;
     private List<CanvasGroup>[] nextPointsCanvasGroups;
     private List<Renderer>[] nextPointsRenderers;
+    private List<ParticleSystem>[] nextPointsParticles;
     private List<GameObject>[] stageObstacleMap = null;
     private List<GameObject>[] stageItemsMap = null;
     private List<GameObject> itemLayerItemsList = new List<GameObject>();
@@ -245,6 +246,7 @@ public class ItemCollector : MonoBehaviour
         nextPointsSprs = new List<SpriteRenderer>[stageCount];
         nextPointsCanvasGroups = new List<CanvasGroup>[stageCount];
         nextPointsRenderers = new List<Renderer>[stageCount];
+        nextPointsParticles = new List<ParticleSystem>[stageCount];
 
         for (int i = 0; i < stageCount; i++)
         {
@@ -254,9 +256,21 @@ public class ItemCollector : MonoBehaviour
                 nextPointsSprs[i] = new List<SpriteRenderer>();
                 nextPointsCanvasGroups[i] = new List<CanvasGroup>();
                 nextPointsRenderers[i] = new List<Renderer>();
-                CollectNextPointRenderers(nPoint, nextPointsSprs[i], nextPointsCanvasGroups[i], nextPointsRenderers[i]);
+                nextPointsParticles[i] = new List<ParticleSystem>();
+                CollectNextPointRenderers(nPoint, nextPointsSprs[i], nextPointsCanvasGroups[i], nextPointsRenderers[i], nextPointsParticles[i]);
                 SetNextPointVisualAlpha(0f, nextPointsSprs[i], nextPointsCanvasGroups[i], nextPointsRenderers[i]);
                 ToggleNextPointCollider(false, nPoint);
+
+                // 파티클 초기 비활성화
+                foreach (var ps in nextPointsParticles[i])
+                {
+                    if (ps != null)
+                    {
+                        ps.Stop();
+                        ps.Clear();
+                        ps.gameObject.SetActive(false);
+                    }
+                }
             }
         }
     }
@@ -663,7 +677,7 @@ public class ItemCollector : MonoBehaviour
         if (stageSettings == null || stageIndex < 0 || stageIndex >= stageSettings.Length || stageSettings[stageIndex].nextPoint == null) return;
 
         GameObject nPoint = stageSettings[stageIndex].nextPoint;
-        StartCoroutine(FadeInNextPointRoutine(nPoint, nextPointsSprs[stageIndex], nextPointsCanvasGroups[stageIndex], nextPointsRenderers[stageIndex]));
+        StartCoroutine(FadeInNextPointRoutine(nPoint, nextPointsSprs[stageIndex], nextPointsCanvasGroups[stageIndex], nextPointsRenderers[stageIndex], nextPointsParticles[stageIndex]));
 
         if (navigationPointerPrefab != null && activeNavGO == null)
         {
@@ -677,7 +691,7 @@ public class ItemCollector : MonoBehaviour
 
     void RemoveActiveNavigationPointer() { if (activeNavGO) { Destroy(activeNavGO); activeNavGO = null; } }
 
-    IEnumerator FadeInNextPointRoutine(GameObject point, List<SpriteRenderer> sprs, List<CanvasGroup> canvasGroups, List<Renderer> renderers)
+    IEnumerator FadeInNextPointRoutine(GameObject point, List<SpriteRenderer> sprs, List<CanvasGroup> canvasGroups, List<Renderer> renderers, List<ParticleSystem> particles)
     {
         if (point == null) yield break;
         point.SetActive(true);
@@ -690,6 +704,16 @@ public class ItemCollector : MonoBehaviour
         }
         SetNextPointVisualAlpha(1f, sprs, canvasGroups, renderers);
         ToggleNextPointCollider(true, point);
+
+        // 페이드인 완료 후 파티클 활성화
+        foreach (var ps in particles)
+        {
+            if (ps != null)
+            {
+                ps.gameObject.SetActive(true);
+                ps.Play();
+            }
+        }
     }
 
     // --- UI 및 문자열 최적화 ---
@@ -753,11 +777,12 @@ public class ItemCollector : MonoBehaviour
     void HideUIInstant() { if (uiText) uiText.gameObject.SetActive(false); }
     void ShowUI() { ShowUIInstant(); uiShown = true; }
 
-    void CollectNextPointRenderers(GameObject go, List<SpriteRenderer> sprs, List<CanvasGroup> canvasGroups, List<Renderer> renderers)
+    void CollectNextPointRenderers(GameObject go, List<SpriteRenderer> sprs, List<CanvasGroup> canvasGroups, List<Renderer> renderers, List<ParticleSystem> particles)
     {
         sprs.AddRange(go.GetComponentsInChildren<SpriteRenderer>(true));
         canvasGroups.AddRange(go.GetComponentsInChildren<CanvasGroup>(true));
         foreach (var r in go.GetComponentsInChildren<Renderer>(true)) if (!(r is SpriteRenderer)) renderers.Add(r);
+        particles.AddRange(go.GetComponentsInChildren<ParticleSystem>(true));
     }
 
     void SetNextPointVisualAlpha(float alpha, List<SpriteRenderer> sprs, List<CanvasGroup> canvasGroups, List<Renderer> renderers)
