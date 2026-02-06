@@ -2,6 +2,7 @@ using UnityEngine;
 
 public class LevelTransition : MonoBehaviour
 {
+    private const bool V = true;
     [Header("References")]
     public MapCamera mapCamera;
 
@@ -18,7 +19,7 @@ public class LevelTransition : MonoBehaviour
     [Tooltip("BackgroundManager를 할당하면 전환 시 배경들도 newBounds로 갱신됩니다.")]
     public BackgroundManager backgroundManager;
 
-    private bool resetPlayerVelocity = true;
+    private readonly bool resetPlayerVelocity = V;
 
     /// <summary>
     /// DestinationPoint.onReached 에 연결
@@ -29,8 +30,7 @@ public class LevelTransition : MonoBehaviour
         if (player == null) return;
 
         // 1) 플레이어 멈춤 등 (기존 로직)
-        var moveSystem = player.GetComponent<GridMovementSystem>();
-        if (moveSystem != null) moveSystem.enabled = false;
+        if (player.TryGetComponent<GridMovementSystem>(out var moveSystem)) moveSystem.enabled = false;
 
         // 2) 페이드가 있는 경우 nextPoint의 fade 먼저 실행
         float fadeDuration = 0f;
@@ -50,8 +50,7 @@ public class LevelTransition : MonoBehaviour
             player.transform.position = nextPoint.position;
             if (resetPlayerVelocity)
             {
-                var rb = player.GetComponent<Rigidbody2D>();
-                if (rb != null)
+                if (player.TryGetComponent<Rigidbody2D>(out var rb))
                 {
                     rb.linearVelocity = Vector2.zero;
                     rb.angularVelocity = 0f;
@@ -75,8 +74,6 @@ public class LevelTransition : MonoBehaviour
         {
             backgroundManager.AdvanceToNextStage(previousDeactivateDelay: fadeDuration);
         }
-
-        SoundManager.Instance?.PlayDestination();
     }
 
     // playerObject 또는 tag로 플레이어 찾기
