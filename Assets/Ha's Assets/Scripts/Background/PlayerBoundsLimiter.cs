@@ -15,7 +15,7 @@ public class PlayerBoundsLimiter : MonoBehaviour
     public BoxCollider2D boundsCollider;
 
     [Tooltip("MapCamera가 사용하는 Bounds를 자동으로 따라갈지 여부")]
-    public bool autoSyncFromMapCamera = true;
+    private bool autoSyncFromMapCamera = true;
 
     [Tooltip("MapCamera 참조 (autoSyncFromMapCamera 사용 시 필요)")]
     public MapCamera mapCamera;

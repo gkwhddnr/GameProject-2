@@ -67,13 +67,12 @@ public class GameManager : MonoBehaviour
 
         if (IsValidStage(currentStageIndex))
         {
-            // --- 추가된 조건: 할당된 카운트가 0보다 클 때만 차감 및 게임오버 체크 ---
+            // 할당된 카운트가 0보다 클 때만 차감 및 게임오버 체크
             if (stageSettings[currentStageIndex].assignedCount > 0)
             {
                 stageRemainingCounts[currentStageIndex] = Mathf.Max(0, stageRemainingCounts[currentStageIndex] - 1);
 
-                if (stageRemainingCounts[currentStageIndex] <= 0)
-                    HandleGameOver($"Stage {currentStageIndex} Empty");
+                if (stageRemainingCounts[currentStageIndex] <= 0) HandleGameOver($"Stage {currentStageIndex} Empty");
             }
             // assignedCount가 0이면 '무한'이므로 아무 작업도 하지 않음
         }

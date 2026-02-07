@@ -30,7 +30,8 @@ public class LevelTransition : MonoBehaviour
         if (player == null) return;
 
         // 1) 플레이어 멈춤 등 (기존 로직)
-        if (player.TryGetComponent<GridMovementSystem>(out var moveSystem)) moveSystem.enabled = false;
+        var moveSystem = player.GetComponent<GridMovementSystem>();
+        if (moveSystem != null) moveSystem.enabled = false;
 
         // 2) 페이드가 있는 경우 nextPoint의 fade 먼저 실행
         float fadeDuration = 0f;
@@ -50,7 +51,8 @@ public class LevelTransition : MonoBehaviour
             player.transform.position = nextPoint.position;
             if (resetPlayerVelocity)
             {
-                if (player.TryGetComponent<Rigidbody2D>(out var rb))
+                var rb = player.GetComponent<Rigidbody2D>();
+                if (rb != null)
                 {
                     rb.linearVelocity = Vector2.zero;
                     rb.angularVelocity = 0f;
@@ -74,6 +76,8 @@ public class LevelTransition : MonoBehaviour
         {
             backgroundManager.AdvanceToNextStage(previousDeactivateDelay: fadeDuration);
         }
+
+        SoundManager.Instance?.PlayDestination();
     }
 
     // playerObject 또는 tag로 플레이어 찾기

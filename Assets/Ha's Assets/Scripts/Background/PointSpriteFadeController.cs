@@ -1,4 +1,4 @@
-using System.Collections;
+ï»¿using System.Collections;
 using UnityEngine;
 
 [RequireComponent(typeof(SpriteRenderer))]
@@ -16,7 +16,7 @@ public class PointSpriteFadeController : MonoBehaviour
     }
 
     /// <summary>
-    /// ¿ÜºÎ¿¡¼­ È£Ãâ
+    /// ì™¸ë¶€ì—ì„œ í˜¸ì¶œ
     /// </summary>
     public void FadeOut()
     {

@@ -98,6 +98,8 @@ public class GridMovementSystem : MonoBehaviour
                 isInputProcessed = true;
                 StartCoroutine(MoveRoutine(targetPosition));
             }
+
+            GameManager.Instance.NotifyTurnProcessed();
         }
     }
 

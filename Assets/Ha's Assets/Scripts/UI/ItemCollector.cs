@@ -72,6 +72,7 @@ public class ItemCollector : MonoBehaviour
 
     // --- 내부 상태 및 최적화 필드 ---
     private HashSet<int> collectedInstanceIds = new HashSet<int>();
+    private HashSet<int> _fadingObstacles = new HashSet<int>();
     private Dictionary<int, ObjectDataCache> _dataCache = new Dictionary<int, ObjectDataCache>();
     private StringBuilder _sb = new StringBuilder(256);
     private MaterialPropertyBlock _mpb;
@@ -550,9 +551,14 @@ public class ItemCollector : MonoBehaviour
     void TryCollect(GameObject candidate)
     {
         if (candidate == null) return;
+        KeyActivator keyActivator = candidate.GetComponent<KeyActivator>();
+
         bool isKeyByGameManager = false;
         int matchedKeySlotIndex = -1;
-        if (GameManager.Instance != null) isKeyByGameManager = GameManager.Instance.IsKeySlotMatch(candidate, out matchedKeySlotIndex);
+
+        // 우선순위: KeyActivator가 붙어 있으면 그 쪽을 우선 사용.
+        if (keyActivator == null && GameManager.Instance != null) isKeyByGameManager = GameManager.Instance.IsKeySlotMatch(candidate, out matchedKeySlotIndex);
+        
 
         bool isItemByMask = IsItemObject(candidate);
         bool isKeyByLayer = (candidate.layer == keyLayerIndex);
@@ -578,10 +584,19 @@ public class ItemCollector : MonoBehaviour
 
         if (isAnyKey)
         {
-            SoundManager.Instance?.PlayKey();
-            if (isKeyByGameManager) GameManager.Instance.ConsumeKeySlot(matchedKeySlotIndex);
-            int keyStageIndex = GetStageIndexForPosition(candidate.transform.position);
-            HandleKeyCollected(candidate, keyStageIndex >= 0 ? keyStageIndex : currentStageIndex);
+            if (keyActivator != null)
+            {
+                SoundManager.Instance?.PlayKey();
+                keyActivator.Activate(currentStageIndex);
+            }
+            else
+            {
+                // 기존 흐름(게임 매니저 기반)
+                SoundManager.Instance?.PlayKey();
+                if (isKeyByGameManager) GameManager.Instance.ConsumeKeySlot(matchedKeySlotIndex);
+                int keyStageIndex = GetStageIndexForPosition(candidate.transform.position);
+                HandleKeyCollected(candidate, keyStageIndex >= 0 ? keyStageIndex : currentStageIndex);
+            }
         }
         else SoundManager.Instance?.PlayCollect();
 
@@ -849,4 +864,9 @@ public class ItemCollector : MonoBehaviour
     }
 
     public void CollectBy(GameObject item) => TryCollect(item);
+    public void FadeOutTarget(GameObject obstacle)
+    {
+        if (obstacle == null) return;
+        StartCoroutine(FadeOutObstacleRoutine(obstacle));
+    }
 }

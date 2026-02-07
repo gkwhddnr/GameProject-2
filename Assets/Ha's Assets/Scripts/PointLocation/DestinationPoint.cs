@@ -29,8 +29,7 @@ public class DestinationPoint : MonoBehaviour
 
     void Reset()
     {
-        if (string.IsNullOrEmpty(gameObject.name) || gameObject.name.StartsWith("GameObject"))
-            gameObject.name = "Destination";
+        if (string.IsNullOrEmpty(gameObject.name) || gameObject.name.StartsWith("GameObject")) gameObject.name = "Destination";
 
         if (!TryGetComponent<BoxCollider2D>(out var bc)) bc = gameObject.AddComponent<BoxCollider2D>();
         bc.isTrigger = true; // 목적지는 보통 트리거로 설정
@@ -56,10 +55,7 @@ public class DestinationPoint : MonoBehaviour
         // 혹은 태그로 확인
         bool isPlayerTag = !string.IsNullOrEmpty(playerTag) && otherGO.CompareTag(playerTag);
 
-        if (gms != null || isPlayerTag)
-        {
-            HandleReached(otherGO, gms);
-        }
+        if (gms != null || isPlayerTag) HandleReached(otherGO, gms);   
     }
 
     void HandleReached(GameObject playerGO, GridMovementSystem gms)
@@ -76,42 +72,27 @@ public class DestinationPoint : MonoBehaviour
     {
         if (playerGO == null) yield break;
 
-        // 1. 현재 타일 이동이 끝날 때까지 대기 (중요: 중간에 끊기면 어색함)
-        if (gms != null)
-        {
-            float waitTimeout = 1.5f; // 무한 루프 방지 안전장치
-            float waited = 0f;
-
-            // GridMovementSystem의 public 메서드 활용
-            while (gms.GetMoving() && waited < waitTimeout)
-            {
-                waited += Time.deltaTime;
-                yield return null;
-            }
-        }
-
-        // 2. 이동 시스템 및 물리 비활성화
+        // 1. 즉시 이동 멈추기 (이동 코루틴 강제 중단)
         bool moveSysWasEnabled = false;
         bool rbSimulatedWas = true;
         Rigidbody2D rb = playerGO.GetComponent<Rigidbody2D>();
         Animator anim = playerGO.GetComponent<Animator>();
 
-        if (DisablePlayerMovementDuringDelay && gms != null)
+        if (gms != null)
         {
             moveSysWasEnabled = gms.enabled;
-            gms.StopAllCoroutines(); // 이동 코루틴 강제 종료
-            gms.enabled = false;     // Update 및 입력 차단
 
-            // 내부 상태 강제 리셋 (private 변수라 리플렉션 사용)
+            // 현재 실행 중인 모든 이동 코루틴 즉시 중단
+            gms.StopAllCoroutines();
+
+            // 내부 상태 강제 리셋
             ResetPrivateMovementFlags(gms);
+
+            if (DisablePlayerMovementDuringDelay) gms.enabled = false;     // Update 및 입력 차단
         }
 
         // 애니메이션 강제 Idle 전환 (걷는 모션으로 굳는 것 방지)
-        if (anim != null)
-        {
-            anim.SetBool("IsMoving", false);
-        }
-
+        if (anim != null) anim.SetBool("IsMoving", false);
         if (disableRigidbodySimulationDuringDelay && rb != null)
         {
             rbSimulatedWas = rb.simulated;
@@ -120,29 +101,16 @@ public class DestinationPoint : MonoBehaviour
             rb.simulated = false; // 물리 연산 중단 (미끄러짐 방지)
         }
 
-        // 3. 연출 대기
-        if (delaySeconds > 0f)
-            yield return new WaitForSecondsRealtime(delaySeconds);
+        // 2. 연출 대기
+        if (delaySeconds > 0f) yield return new WaitForSecondsRealtime(delaySeconds);
 
-        // 4. 이벤트 실행 (씬 전환 등)
-        try
-        {
-            onReached?.Invoke();
-        }
-        catch (Exception ex)
-        {
-            Debug.LogException(ex);
-        }
+        // 3. 이벤트 실행
+        try{ onReached?.Invoke(); }
+        catch (Exception ex){ Debug.LogException(ex); }
 
-        // 5. (옵션) 씬이 전환되지 않고 계속 진행될 경우를 대비한 복구 로직
-        // 만약 씬이 바뀌면 이 아래 코드는 실행되지 않거나 의미가 없습니다.
         if (playerGO != null)
         {
-            if (rb != null && disableRigidbodySimulationDuringDelay)
-            {
-                rb.simulated = rbSimulatedWas;
-            }
-
+            if (rb != null && disableRigidbodySimulationDuringDelay) rb.simulated = rbSimulatedWas;
             if (gms != null && DisablePlayerMovementDuringDelay)
             {
                 // 다시 켜기 전에 플래그 확실히 초기화
@@ -150,15 +118,9 @@ public class DestinationPoint : MonoBehaviour
                 gms.enabled = moveSysWasEnabled;
             }
         }
-
-        // 트리거 리셋 (재사용 가능하게 하려면)
-        // triggered = false; 
     }
 
-    /// <summary>
-    /// GridMovementSystem의 private 변수(isMoving, isInputProcessed)를 강제로 초기화합니다.
-    /// 스크립트를 껐다 켜도 내부 상태가 남아 입력이 먹통되는 것을 방지합니다.
-    /// </summary>
+
     void ResetPrivateMovementFlags(GridMovementSystem gms)
     {
         if (gms == null) return;
