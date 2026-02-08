@@ -13,6 +13,10 @@ public class GameManager : MonoBehaviour
     {
         public BoxCollider2D bounds;
         public int assignedCount; // 0이면 무한 스테이지
+
+        [Header("캐릭터 이동속도 및 픽셀 설정")]
+        public float moveSpeed = 0.15f;
+        public float gridSize = 1f;
     }
 
     [Serializable]
@@ -38,7 +42,13 @@ public class GameManager : MonoBehaviour
     private int MoveCount = 0;
     private int[] stageRemainingCounts;
     private int currentStageIndex = -1;
+    private int _prevStageIndex = -1;
     private bool isGameOver = false;
+
+    // --- Player GridMovementSystem 기본값 캐시 ---
+    private float _playerDefaultMoveSpeed = 0f;
+    private float _playerDefaultGridSize = 0f;
+    private bool _playerDefaultsCached = false;
 
     void Awake()
     {
@@ -56,6 +66,7 @@ public class GameManager : MonoBehaviour
         else { stageRemainingCounts = new int[0]; }
 
         UpdateCurrentStage();
+        ApplyMovementSettingsToPlayer(); // 초기 적용 (Awake 시)
         UpdateUI();
     }
 
@@ -128,6 +139,13 @@ public class GameManager : MonoBehaviour
                 break;
             }
         }
+
+        // 스테이지 변경 감지: 변경 시 플레이어 이동 설정 적용
+        if (currentStageIndex != _prevStageIndex)
+        {
+            _prevStageIndex = currentStageIndex;
+            ApplyMovementSettingsToPlayer();
+        }
     }
 
     private bool IsValidStage(int index) => index >= 0 && index < stageRemainingCounts.Length;
@@ -175,6 +193,7 @@ public class GameManager : MonoBehaviour
         if (isGameOver) return;
         UpdateCurrentStage();
         UpdateUI();
+        ApplyMovementSettingsToPlayer(); // 수동 갱신에서도 적용
         FindAnyObjectByType<MapCameraStageController>()?.ApplyCurrentStageSettingsImmediate();
     }
 
@@ -198,5 +217,41 @@ public class GameManager : MonoBehaviour
     {
         if (keySlots == null || slotIndex < 0 || slotIndex >= keySlots.Length) return;
         if (keySlotConsumeOnCollect != null && slotIndex < keySlotConsumeOnCollect.Length && keySlotConsumeOnCollect[slotIndex]) keySlots[slotIndex] = null;
+    }
+
+    // Movement settings helpers
+    public void ApplyMovementSettingsToPlayer()
+    {
+        if (playerTransform == null) return;
+
+        // GridMovementSystem은 보통 플레이어 오브젝트에 붙어있음
+        var gridComp = playerTransform.GetComponent<GridMovementSystem>();
+        if (gridComp == null) gridComp = playerTransform.GetComponentInChildren<GridMovementSystem>();
+
+        if (gridComp == null) return;
+
+        // 최초 발견 시 기본값 캐시
+        if (!_playerDefaultsCached)
+        {
+            _playerDefaultMoveSpeed = gridComp.moveSpeed;
+            _playerDefaultGridSize = gridComp.gridSize;
+            _playerDefaultsCached = true;
+        }
+
+        // 유효한 스테이지이면 해당 스테이지의 override 적용 (0 이하이면 무시)
+        if (IsValidStage(currentStageIndex))
+        {
+            var s = stageSettings[currentStageIndex];
+            if (s != null)
+            {
+                if (s.moveSpeed > 0f) gridComp.moveSpeed = s.moveSpeed; else gridComp.moveSpeed = _playerDefaultMoveSpeed;
+                if (s.gridSize > 0f) gridComp.gridSize = s.gridSize; else gridComp.gridSize = _playerDefaultGridSize;
+                return;
+            }
+        }
+
+        // 스테이지가 없거나 설정이 없으면 기본값 복원
+        gridComp.moveSpeed = _playerDefaultMoveSpeed;
+        gridComp.gridSize = _playerDefaultGridSize;
     }
 }

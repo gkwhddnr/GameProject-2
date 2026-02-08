@@ -1,31 +1,22 @@
 using UnityEngine;
 
-/// <summary>
-/// 플레이어가 지정된 Bounds(BoxCollider2D) 영역 안에서만
-/// 이동할 수 있도록 위치를 Clamp 하는 스크립트
-///
-/// - GridMovementSystem / InputAction 수정 불필요
-/// - Teleport / 카메라 전환 후에도 정상 동작
-/// </summary>
 [RequireComponent(typeof(Collider2D))]
 public class PlayerBoundsLimiter : MonoBehaviour
 {
     [Header("Bounds Reference")]
-    [Tooltip("플레이어 이동을 제한할 영역 (배경의 BoxCollider2D)")]
     public BoxCollider2D boundsCollider;
-
-    [Tooltip("MapCamera가 사용하는 Bounds를 자동으로 따라갈지 여부")]
+    public MapCamera mapCamera;
     private bool autoSyncFromMapCamera = true;
 
-    [Tooltip("MapCamera 참조 (autoSyncFromMapCamera 사용 시 필요)")]
-    public MapCamera mapCamera;
+    [Header("Visibility Settings")]
+    [Tooltip("캐릭터가 화면 끝에서 잘리지 않도록 추가적으로 주는 여백")]
+    private float extraPadding = 0.25f;
 
     Collider2D playerCollider;
 
     void Awake()
     {
         playerCollider = GetComponent<Collider2D>();
-
         if (autoSyncFromMapCamera && mapCamera == null) mapCamera = FindFirstObjectByType<MapCamera>();
     }
 
@@ -45,17 +36,23 @@ public class PlayerBoundsLimiter : MonoBehaviour
     void ClampPosition()
     {
         Bounds bounds = boundsCollider.bounds;
-        Bounds playerBounds = playerCollider.bounds;
+        // 캐릭터 콜라이더의 크기 반영
+        Vector3 playerExtents = playerCollider.bounds.extents;
 
         Vector3 pos = transform.position;
 
-        float minX = bounds.min.x + playerBounds.extents.x;
-        float maxX = bounds.max.x - playerBounds.extents.x;
-        float minY = bounds.min.y + playerBounds.extents.y;
-        float maxY = bounds.max.y - playerBounds.extents.y;
+        // 핵심: 맵 경계에서 캐릭터의 절반 크기 + 추가 여백만큼 안쪽으로 제한
+        float minX = bounds.min.x + playerExtents.x + extraPadding;
+        float maxX = bounds.max.x - playerExtents.x - extraPadding;
+        float minY = bounds.min.y + playerExtents.y + extraPadding;
+        float maxY = bounds.max.y - playerExtents.y - extraPadding;
 
-        pos.x = Mathf.Clamp(pos.x, minX, maxX);
-        pos.y = Mathf.Clamp(pos.y, minY, maxY);
+        // 맵이 캐릭터보다 작을 경우를 대비한 방어 코드
+        if (minX <= maxX) pos.x = Mathf.Clamp(pos.x, minX, maxX);
+        else pos.x = bounds.center.x;
+
+        if (minY <= maxY) pos.y = Mathf.Clamp(pos.y, minY, maxY);
+        else pos.y = bounds.center.y;
 
         transform.position = pos;
     }

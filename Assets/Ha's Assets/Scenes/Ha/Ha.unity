@@ -20738,6 +20738,8 @@ MonoBehaviour:
   boundsCollider: {fileID: 235279391}
   autoFitToBounds: 0
   forceFitIgnoreMaxOrtho: 0
+  keepPlayerInView: 1
+  playerPadding: 2
   minOrthoSize: 3
   maxOrthoSize: 20
   useFixedViewSize: 0
@@ -27994,6 +27996,7 @@ GameObject:
   - component: {fileID: 1429174021}
   - component: {fileID: 1429174020}
   - component: {fileID: 1429174019}
+  - component: {fileID: 1429174023}
   m_Layer: 8
   m_Name: Key (2)
   m_TagString: Key
@@ -28159,6 +28162,20 @@ SpriteRenderer:
   m_SpriteTileMode: 0
   m_WasSpriteAssigned: 1
   m_SpriteSortPoint: 0
+--- !u!114 &1429174023
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1429174017}
+  m_Enabled: 0
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8487bea4208f5d041bf547cab3a05626, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::KeyActivator
+  targets:
+  - {fileID: 1937396338}
 --- !u!1 &1439423684
 GameObject:
   m_ObjectHideFlags: 0
@@ -45801,18 +45818,32 @@ MonoBehaviour:
   stageSettings:
   - bounds: {fileID: 235279391}
     assignedCount: 50
+    moveSpeed: 0.2
+    gridSize: 1
   - bounds: {fileID: 1159171097}
     assignedCount: 50
+    moveSpeed: 0.15
+    gridSize: 1
   - bounds: {fileID: 36376981}
     assignedCount: 50
+    moveSpeed: 0.3
+    gridSize: 1
   - bounds: {fileID: 449652801}
     assignedCount: 50
+    moveSpeed: 0.2
+    gridSize: 1
   - bounds: {fileID: 1944182047}
     assignedCount: 50
+    moveSpeed: 0.3
+    gridSize: 1
   - bounds: {fileID: 6268623738190300034}
     assignedCount: 0
+    moveSpeed: 0.15
+    gridSize: 1
   - bounds: {fileID: 474788802}
     assignedCount: 0
+    moveSpeed: 0.5
+    gridSize: 1
   itemSlotSettings:
   - slotPrefab: {fileID: 67362093}
     extraTurns: 25

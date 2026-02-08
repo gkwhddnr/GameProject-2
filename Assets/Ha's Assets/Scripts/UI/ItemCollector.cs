@@ -9,7 +9,6 @@ using UnityEngine.SceneManagement;
 [DisallowMultipleComponent]
 public class ItemCollector : MonoBehaviour
 {
-    // --- 최적화를 위한 내부 데이터 구조 ---
     private class ObjectDataCache
     {
         public SpriteRenderer[] sprs;
@@ -19,6 +18,18 @@ public class ItemCollector : MonoBehaviour
         public Color[] origSprColors;
         public Color[] origRendColors;
         public ParticleSystem[] particles;
+
+        // 캐시 재사용을 위한 Clear 메서드
+        public void Clear()
+        {
+            sprs = null;
+            rends = null;
+            cgs = null;
+            colliders = null;
+            origSprColors = null;
+            origRendColors = null;
+            particles = null;
+        }
     }
 
     [Serializable]
@@ -70,13 +81,17 @@ public class ItemCollector : MonoBehaviour
     private bool resetCollectedOnStageEnter = true;
     private float obstacleFadeDuration = 1.5f;
 
-    // --- 내부 상태 및 최적화 필드 ---
-    private HashSet<int> collectedInstanceIds = new HashSet<int>();
-    private HashSet<int> _fadingObstacles = new HashSet<int>();
-    private Dictionary<int, ObjectDataCache> _dataCache = new Dictionary<int, ObjectDataCache>();
-    private StringBuilder _sb = new StringBuilder(256);
+    // --- 최적화된 내부 상태 필드 ---
+    private HashSet<int> collectedInstanceIds = new HashSet<int>(32); // 초기 용량 지정
+    private Dictionary<int, ObjectDataCache> _dataCache = new Dictionary<int, ObjectDataCache>(64); // 초기 용량 지정
+    private StringBuilder _sb = new StringBuilder(256); // 용량 증가 최소화
     private MaterialPropertyBlock _mpb;
     private static readonly int _BaseColorID = Shader.PropertyToID("_Color");
+
+    // 자주 사용되는 컴포넌트 배열 재사용
+    private static readonly List<SpriteRenderer> _tempSprList = new List<SpriteRenderer>(16);
+    private static readonly List<Renderer> _tempRendList = new List<Renderer>(16);
+    private static readonly List<Color> _tempColorList = new List<Color>(16);
 
     private bool uiShown = false;
     private int collected = 0;
@@ -88,26 +103,33 @@ public class ItemCollector : MonoBehaviour
     private GameObject activeNavGO = null;
     private StageBoundsUIUpdater uiUpdater;
 
+    // 배열 대신 리스트로 통일 (메모리 효율)
     private List<SpriteRenderer>[] nextPointsSprs;
     private List<CanvasGroup>[] nextPointsCanvasGroups;
     private List<Renderer>[] nextPointsRenderers;
     private List<ParticleSystem>[] nextPointsParticles;
     private List<GameObject>[] stageObstacleMap = null;
     private List<GameObject>[] stageItemsMap = null;
-    private List<GameObject> itemLayerItemsList = new List<GameObject>();
-    private List<GameObject> currentStageItems = new List<GameObject>();
-    private List<GameObject> itemsList = new List<GameObject>();
+
+    // 리스트 용량 최적화
+    private List<GameObject> itemLayerItemsList = new List<GameObject>(32);
+    private List<GameObject> currentStageItems = new List<GameObject>(32);
+    private List<GameObject> itemsList = new List<GameObject>(64);
 
     private int keyLayerIndex = -1;
     private int lockLayerIndex = -1;
     private int itemLayerIndex = -1;
     private int currentStageIndex = -1;
 
-    // --- 초기화 로직 ---
+    // 코루틴 캐싱
+    private WaitForEndOfFrame _waitForEndOfFrame;
+    private Dictionary<float, WaitForSeconds> _waitForSecondsCache = new Dictionary<float, WaitForSeconds>(8);
+
 
     private void Awake()
     {
         _mpb = new MaterialPropertyBlock();
+        _waitForEndOfFrame = new WaitForEndOfFrame();
     }
 
     void Start()
@@ -122,10 +144,11 @@ public class ItemCollector : MonoBehaviour
         BuildItemsList();
 
         itemLayerItemsList.Clear();
+        itemLayerItemsList.Capacity = Mathf.Max(itemLayerItemsList.Capacity, itemsList.Count / 2);
+
         foreach (var it in itemsList)
-        {
             if (it != null && it.layer == itemLayerIndex) itemLayerItemsList.Add(it);
-        }
+        
 
         nextHiddenIndex = Mathf.Clamp(defaultInitialVisibleCount, 0, itemLayerItemsList.Count);
         totalRevealedCount = nextHiddenIndex;
@@ -151,15 +174,23 @@ public class ItemCollector : MonoBehaviour
     void Cleanup()
     {
         SceneManager.sceneLoaded -= OnSceneLoaded;
+
+        // 캐시 명시적 해제
+        foreach (var cache in _dataCache.Values) cache.Clear();
         _dataCache.Clear();
+
         RemoveActiveNavigationPointer();
+
         itemsList.Clear();
         itemLayerItemsList.Clear();
+        currentStageItems.Clear();
+
         stageItemsMap = null;
         stageObstacleMap = null;
-    }
 
-    // --- 원본 함수 로직 유지 ---
+        // WaitForSeconds 캐시 정리
+        _waitForSecondsCache.Clear();
+    }
 
     void InitializeNavigationPointer(MapCameraStageController stageController)
     {
@@ -254,17 +285,19 @@ public class ItemCollector : MonoBehaviour
             GameObject nPoint = stageSettings[i].nextPoint;
             if (nPoint != null)
             {
-                nextPointsSprs[i] = new List<SpriteRenderer>();
-                nextPointsCanvasGroups[i] = new List<CanvasGroup>();
-                nextPointsRenderers[i] = new List<Renderer>();
-                nextPointsParticles[i] = new List<ParticleSystem>();
+                nextPointsSprs[i] = new List<SpriteRenderer>(4);
+                nextPointsCanvasGroups[i] = new List<CanvasGroup>(4);
+                nextPointsRenderers[i] = new List<Renderer>(4);
+                nextPointsParticles[i] = new List<ParticleSystem>(4);
+
                 CollectNextPointRenderers(nPoint, nextPointsSprs[i], nextPointsCanvasGroups[i], nextPointsRenderers[i], nextPointsParticles[i]);
                 SetNextPointVisualAlpha(0f, nextPointsSprs[i], nextPointsCanvasGroups[i], nextPointsRenderers[i]);
                 ToggleNextPointCollider(false, nPoint);
 
                 // 파티클 초기 비활성화
-                foreach (var ps in nextPointsParticles[i])
+                for (int j = 0; j < nextPointsParticles[i].Count; j++)
                 {
+                    var ps = nextPointsParticles[i][j];
                     if (ps != null)
                     {
                         ps.Stop();
@@ -285,7 +318,11 @@ public class ItemCollector : MonoBehaviour
         if (stageItemsMap != null && newStageIndex >= 0 && newStageIndex < stageItemsMap.Length)
         {
             var list = stageItemsMap[newStageIndex];
-            if (list != null) currentStageItems.AddRange(list);
+            if (list != null)
+            {
+                currentStageItems.Capacity = Mathf.Max(currentStageItems.Capacity, list.Count);
+                currentStageItems.AddRange(list);
+            }
         }
 
         currentStageTotalItems = currentStageItems.Count;
@@ -301,8 +338,7 @@ public class ItemCollector : MonoBehaviour
         currentStageNextHiddenIndex = Mathf.Clamp(iniVisible, 0, currentStageTotalItems);
         currentStageTotalRevealedCount = currentStageNextHiddenIndex;
 
-        if (stageUsesSequential && currentStageItems.Count > 0)
-            HideItemsForList(currentStageItems, iniVisible);
+        if (stageUsesSequential && currentStageItems.Count > 0) HideItemsForList(currentStageItems, iniVisible);
 
         UpdateUI();
         RemoveActiveNavigationPointer();
@@ -319,7 +355,7 @@ public class ItemCollector : MonoBehaviour
         if (stageSettings != null && stageSettings.Length > 0)
         {
             stageItemsMap = new List<GameObject>[stageSettings.Length];
-            for (int i = 0; i < stageItemsMap.Length; ++i) stageItemsMap[i] = new List<GameObject>();
+            for (int i = 0; i < stageItemsMap.Length; ++i) stageItemsMap[i] = new List<GameObject>(16); // 초기 용량
 
             foreach (var item in itemsList)
             {
@@ -344,16 +380,17 @@ public class ItemCollector : MonoBehaviour
 
         int stageCount = stageSettings.Length;
         stageObstacleMap = new List<GameObject>[stageCount];
-        for (int i = 0; i < stageCount; ++i) stageObstacleMap[i] = new List<GameObject>();
+        for (int i = 0; i < stageCount; ++i) stageObstacleMap[i] = new List<GameObject>(8); // 초기 용량
 
         var roots = SceneManager.GetActiveScene().GetRootGameObjects();
-        HashSet<GameObject> processedParents = new HashSet<GameObject>();
+        HashSet<GameObject> processedParents = new HashSet<GameObject>(32);
 
         foreach (var root in roots)
         {
             Transform[] allChildren = root.GetComponentsInChildren<Transform>(true);
-            foreach (var child in allChildren)
+            for (int c = 0; c < allChildren.Length; c++)
             {
+                var child = allChildren[c];
                 if (child.gameObject.layer == lockLayerIndex)
                 {
                     GameObject obstacleParent = FindTargetObstacle(child.gameObject);
@@ -380,26 +417,29 @@ public class ItemCollector : MonoBehaviour
     void RecursiveCollectItems(Transform t)
     {
         if (IsItemObject(t.gameObject)) itemsList.Add(t.gameObject);
-        for (int i = 0; i < t.childCount; ++i) RecursiveCollectItems(t.GetChild(i));
+        int childCount = t.childCount;
+        for (int i = 0; i < childCount; ++i) RecursiveCollectItems(t.GetChild(i));
     }
 
-    // --- 캐싱 시스템 ---
-
+    // 캐싱 시스템
     private ObjectDataCache GetOrAddCache(GameObject go)
     {
         int id = go.GetInstanceID();
         if (_dataCache.TryGetValue(id, out var cache)) return cache;
 
+        // 임시 리스트 재사용
+        _tempSprList.Clear();
+        _tempRendList.Clear();
+        _tempColorList.Clear();
+
         var sprs = go.GetComponentsInChildren<SpriteRenderer>(true);
         var rends = go.GetComponentsInChildren<Renderer>(true);
-        var rendList = new List<Renderer>();
-        var rendColors = new List<Color>();
 
         foreach (var r in rends)
         {
             if (r is SpriteRenderer) continue;
-            rendList.Add(r);
-            rendColors.Add(r.sharedMaterial.HasProperty(_BaseColorID) ? r.sharedMaterial.color : Color.white);
+            _tempRendList.Add(r);
+            _tempColorList.Add(r.sharedMaterial.HasProperty(_BaseColorID) ? r.sharedMaterial.color : Color.white);
         }
 
         var sprColors = new Color[sprs.Length];
@@ -408,11 +448,11 @@ public class ItemCollector : MonoBehaviour
         cache = new ObjectDataCache
         {
             sprs = sprs,
-            rends = rendList.ToArray(),
+            rends = _tempRendList.ToArray(),
             cgs = go.GetComponentsInChildren<CanvasGroup>(true),
             colliders = go.GetComponentsInChildren<Collider2D>(true),
             origSprColors = sprColors,
-            origRendColors = rendColors.ToArray(),
+            origRendColors = _tempColorList.ToArray(),
             particles = go.GetComponentsInChildren<ParticleSystem>(true)
         };
         _dataCache[id] = cache;
@@ -423,15 +463,16 @@ public class ItemCollector : MonoBehaviour
 
     void HideItemsNotInAnyStage()
     {
-        HashSet<GameObject> anySet = new HashSet<GameObject>();
+        HashSet<GameObject> anySet = new HashSet<GameObject>(itemsList.Count);
         if (stageItemsMap != null)
         {
             foreach (var list in stageItemsMap)
-                if (list != null) foreach (var it in list) if (it != null) anySet.Add(it);
+                if (list != null) for (int i = 0; i < list.Count; i++) if (list[i] != null) anySet.Add(list[i]);
         }
 
-        foreach (var item in itemLayerItemsList)
+        for (int i = 0; i < itemLayerItemsList.Count; i++)
         {
+            var item = itemLayerItemsList[i];
             if (item == null || anySet.Contains(item)) continue;
             ApplyInitialHide(item);
         }
@@ -440,11 +481,7 @@ public class ItemCollector : MonoBehaviour
     void HideItemsForList(List<GameObject> list, int visibleCount)
     {
         if (list == null) return;
-        for (int i = 0; i < list.Count; ++i)
-        {
-            if (i < visibleCount) continue;
-            ApplyInitialHide(list[i]);
-        }
+        for (int i = visibleCount; i < list.Count; ++i) ApplyInitialHide(list[i]);
     }
 
     void ApplyInitialHide(GameObject item)
@@ -452,10 +489,14 @@ public class ItemCollector : MonoBehaviour
         if (item == null) return;
         var cache = GetOrAddCache(item);
         UpdateItemAlphaInternal(cache, 0f);
-        foreach (var col in cache.colliders) col.enabled = false;
 
-        foreach (var ps in cache.particles)
+        for (int i = 0; i < cache.colliders.Length; i++)
+            if (cache.colliders[i]) cache.colliders[i].enabled = false;
+        
+
+        for (int i = 0; i < cache.particles.Length; i++)
         {
+            var ps = cache.particles[i];
             if (ps != null)
             {
                 ps.Stop();
@@ -502,9 +543,11 @@ public class ItemCollector : MonoBehaviour
             yield return null;
         }
         UpdateItemAlphaInternal(cache, 1f);
-        foreach (var col in cache.colliders) col.enabled = true;
-        foreach (var ps in cache.particles)
+
+        for (int i = 0; i < cache.colliders.Length; i++) if (cache.colliders[i]) cache.colliders[i].enabled = true;
+        for (int i = 0; i < cache.particles.Length; i++)
         {
+            var ps = cache.particles[i];
             if (ps != null)
             {
                 ps.gameObject.SetActive(true);
@@ -556,9 +599,7 @@ public class ItemCollector : MonoBehaviour
         bool isKeyByGameManager = false;
         int matchedKeySlotIndex = -1;
 
-        // 우선순위: KeyActivator가 붙어 있으면 그 쪽을 우선 사용.
         if (keyActivator == null && GameManager.Instance != null) isKeyByGameManager = GameManager.Instance.IsKeySlotMatch(candidate, out matchedKeySlotIndex);
-        
 
         bool isItemByMask = IsItemObject(candidate);
         bool isKeyByLayer = (candidate.layer == keyLayerIndex);
@@ -580,7 +621,9 @@ public class ItemCollector : MonoBehaviour
         if (GameManager.Instance != null) GameManager.Instance.OnItemCollected(candidate);
 
         var cache = GetOrAddCache(candidate);
-        if (disableColliderDuringItemFade) foreach (var col in cache.colliders) col.enabled = false;
+        if (disableColliderDuringItemFade)
+            for (int i = 0; i < cache.colliders.Length; i++) if (cache.colliders[i]) cache.colliders[i].enabled = false;
+        
 
         if (isAnyKey)
         {
@@ -591,7 +634,6 @@ public class ItemCollector : MonoBehaviour
             }
             else
             {
-                // 기존 흐름(게임 매니저 기반)
                 SoundManager.Instance?.PlayKey();
                 if (isKeyByGameManager) GameManager.Instance.ConsumeKeySlot(matchedKeySlotIndex);
                 int keyStageIndex = GetStageIndexForPosition(candidate.transform.position);
@@ -631,27 +673,53 @@ public class ItemCollector : MonoBehaviour
                 var obst = obstaclesInStage[i];
                 if (obst == null || !obst.activeInHierarchy) continue;
                 float distSqr = (obst.transform.position - keyPos).sqrMagnitude;
-                if (distSqr < closestDistSqr) { closestDistSqr = distSqr; targetObstacle = obst; }
+                if (distSqr < closestDistSqr)
+                {
+                    closestDistSqr = distSqr;
+                    targetObstacle = obst;
+                }
             }
         }
 
         if (targetObstacle == null)
         {
-            GameObject[] allObjects = GameObject.FindObjectsByType<GameObject>(FindObjectsSortMode.None);
-            foreach (var go in allObjects)
+            GameObject[] allObjects = FindObjectsByType<GameObject>(FindObjectsSortMode.None);
+            for (int i = 0; i < allObjects.Length; ++i)
             {
-                if (go.activeInHierarchy && (go.layer == lockLayerIndex || HasLockChild(go)))
+                var go = allObjects[i];
+                if (go == null || !go.activeInHierarchy) continue;
+
+                GameObject candidateParent = null;
+
+                if (HasLockChild(go)) candidateParent = go;
+                else if (go.layer == lockLayerIndex) candidateParent = FindTargetObstacle(go);
+                else continue;
+
+                if (candidateParent == null || !candidateParent.activeInHierarchy) continue;
+
+                float distSqr = (candidateParent.transform.position - keyPos).sqrMagnitude;
+                if (distSqr < closestDistSqr)
                 {
-                    float distSqr = (go.transform.position - keyPos).sqrMagnitude;
-                    if (distSqr < closestDistSqr) { closestDistSqr = distSqr; targetObstacle = go; }
+                    closestDistSqr = distSqr;
+                    targetObstacle = candidateParent;
                 }
             }
         }
 
         if (targetObstacle != null)
         {
+            if (keyStageIndex >= 0 && stageObstacleMap != null && keyStageIndex < stageObstacleMap.Length)
+                if (stageObstacleMap[keyStageIndex].Contains(targetObstacle)) stageObstacleMap[keyStageIndex].Remove(targetObstacle);
+            
+            else if (stageObstacleMap != null)
+            {
+                for (int si = 0; si < stageObstacleMap.Length; ++si)
+                {
+                    var list = stageObstacleMap[si];
+                    if (list != null && list.Contains(targetObstacle)) list.Remove(targetObstacle);
+                }
+            }
             StartCoroutine(FadeOutObstacleRoutine(targetObstacle));
-            if (keyStageIndex >= 0 && stageObstacleMap[keyStageIndex].Contains(targetObstacle)) stageObstacleMap[keyStageIndex].Remove(targetObstacle);
         }
     }
 
@@ -659,7 +727,8 @@ public class ItemCollector : MonoBehaviour
     {
         if (obstacle == null) yield break;
         var cache = GetOrAddCache(obstacle);
-        foreach (var c in cache.colliders) if (c) c.enabled = false;
+
+        for (int i = 0; i < cache.colliders.Length; i++) if (cache.colliders[i]) cache.colliders[i].enabled = false;
 
         float elapsed = 0f;
         while (elapsed < obstacleFadeDuration)
@@ -720,9 +789,9 @@ public class ItemCollector : MonoBehaviour
         SetNextPointVisualAlpha(1f, sprs, canvasGroups, renderers);
         ToggleNextPointCollider(true, point);
 
-        // 페이드인 완료 후 파티클 활성화
-        foreach (var ps in particles)
+        for (int i = 0; i < particles.Count; i++)
         {
+            var ps = particles[i];
             if (ps != null)
             {
                 ps.gameObject.SetActive(true);
@@ -730,8 +799,6 @@ public class ItemCollector : MonoBehaviour
             }
         }
     }
-
-    // --- UI 및 문자열 최적화 ---
 
     void UpdateUI()
     {
@@ -759,16 +826,12 @@ public class ItemCollector : MonoBehaviour
 
         if (uiUpdater != null && uiUpdater.stageEntries != null)
         {
-            foreach (var entry in uiUpdater.stageEntries)
+            for (int e = 0; e < uiUpdater.stageEntries.Length; e++)
             {
+                var entry = uiUpdater.stageEntries[e];
                 if (entry.bounds == null) continue;
-                foreach (var b in entry.bounds)
-                {
-                    if (b != null && b == currentBounds)
-                    {
-                        return !string.IsNullOrEmpty(entry.message) ? entry.message : currentSettings.stageName;
-                    }
-                }
+                for (int b = 0; b < entry.bounds.Length; b++)
+                    if (entry.bounds[b] != null && entry.bounds[b] == currentBounds) return !string.IsNullOrEmpty(entry.message) ? entry.message : currentSettings.stageName;
             }
         }
         return currentSettings.stageName;
@@ -796,16 +859,31 @@ public class ItemCollector : MonoBehaviour
     {
         sprs.AddRange(go.GetComponentsInChildren<SpriteRenderer>(true));
         canvasGroups.AddRange(go.GetComponentsInChildren<CanvasGroup>(true));
-        foreach (var r in go.GetComponentsInChildren<Renderer>(true)) if (!(r is SpriteRenderer)) renderers.Add(r);
+
+        var allRenderers = go.GetComponentsInChildren<Renderer>(true);
+        for (int i = 0; i < allRenderers.Length; i++) if (!(allRenderers[i] is SpriteRenderer)) renderers.Add(allRenderers[i]);
+
         particles.AddRange(go.GetComponentsInChildren<ParticleSystem>(true));
     }
 
     void SetNextPointVisualAlpha(float alpha, List<SpriteRenderer> sprs, List<CanvasGroup> canvasGroups, List<Renderer> renderers)
     {
-        foreach (var s in sprs) { if (s) { Color c = s.color; c.a = alpha; s.color = c; } }
-        foreach (var cg in canvasGroups) { if (cg) { cg.alpha = alpha; cg.interactable = cg.blocksRaycasts = alpha > 0.9f; } }
-        foreach (var r in renderers)
+        for (int i = 0; i < sprs.Count; i++)
+            if (sprs[i]) { Color c = sprs[i].color; c.a = alpha; sprs[i].color = c; }
+        
+
+        for (int i = 0; i < canvasGroups.Count; i++)
         {
+            if (canvasGroups[i])
+            {
+                canvasGroups[i].alpha = alpha;
+                canvasGroups[i].interactable = canvasGroups[i].blocksRaycasts = alpha > 0.9f;
+            }
+        }
+
+        for (int i = 0; i < renderers.Count; i++)
+        {
+            var r = renderers[i];
             if (r)
             {
                 r.GetPropertyBlock(_mpb);
@@ -822,7 +900,8 @@ public class ItemCollector : MonoBehaviour
         if (point)
         {
             var cache = GetOrAddCache(point);
-            foreach (var col in cache.colliders) col.enabled = enabled;
+            for (int i = 0; i < cache.colliders.Length; i++)
+                if (cache.colliders[i]) cache.colliders[i].enabled = enabled;
         }
     }
 
@@ -830,40 +909,40 @@ public class ItemCollector : MonoBehaviour
     {
         if (stageSettings == null) return -1;
         for (int i = 0; i < stageSettings.Length; ++i)
-        {
             if (stageSettings[i].stageBounds != null && stageSettings[i].stageBounds.bounds.Contains(worldPos)) return i;
-        }
+
         return -1;
     }
 
     bool HasLockChild(GameObject parent)
     {
-        foreach (Transform child in parent.transform) if (child.gameObject.layer == lockLayerIndex) return true;
+        int childCount = parent.transform.childCount;
+        for (int i = 0; i < childCount; i++)
+            if (parent.transform.GetChild(i).gameObject.layer == lockLayerIndex) return true;
+        
         return false;
     }
 
     public int GetInitialVisibleCount(int stageIndex)
     {
-        if (stageSettings != null && stageIndex >= 0 && stageIndex < stageSettings.Length)
-            return Mathf.Max(0, stageSettings[stageIndex].initialVisibleCount);
+        if (stageSettings != null && stageIndex >= 0 && stageIndex < stageSettings.Length) return Mathf.Max(0, stageSettings[stageIndex].initialVisibleCount);
         return Mathf.Max(0, defaultInitialVisibleCount);
     }
 
     public int GetSubsequentRevealCount(int stageIndex)
     {
-        if (stageSettings != null && stageIndex >= 0 && stageIndex < stageSettings.Length)
-            return Mathf.Max(1, stageSettings[stageIndex].subsequentRevealCount);
+        if (stageSettings != null && stageIndex >= 0 && stageIndex < stageSettings.Length) return Mathf.Max(1, stageSettings[stageIndex].subsequentRevealCount);
         return Mathf.Max(1, defaultSubsequentRevealCount);
     }
 
     public bool GetRevealSequentially(int stageIndex)
     {
-        if (stageSettings != null && stageIndex >= 0 && stageIndex < stageSettings.Length)
-            return stageSettings[stageIndex].revealSequentially;
+        if (stageSettings != null && stageIndex >= 0 && stageIndex < stageSettings.Length) return stageSettings[stageIndex].revealSequentially;
         return revealItemsSequentially;
     }
 
     public void CollectBy(GameObject item) => TryCollect(item);
+
     public void FadeOutTarget(GameObject obstacle)
     {
         if (obstacle == null) return;
