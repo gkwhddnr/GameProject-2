@@ -10,7 +10,7 @@ public class DeadlyLight : MonoBehaviour
     [Header("Light Settings")]
     public float maxDistance = 5f;
     private Light2D thisLight;
-
+    private bool isHitted;
     private void Awake()
     {
         thisLight = GetComponent<Light2D>();
@@ -43,6 +43,9 @@ public class DeadlyLight : MonoBehaviour
 
     private void CheckLineOfSight(Transform player)
     {
+        if (isHitted) return;
+
+        isHitted = true;
         Vector2 direction = player.position - transform.position;
         float distance = direction.magnitude;
 
@@ -60,8 +63,9 @@ public class DeadlyLight : MonoBehaviour
             {
                 Debug.DrawRay(transform.position, direction, Color.red);
                 Debug.Log("플레이어 사망!");
-                // GameManager.Instance.GameOver();
+                GameManager.Instance.DieAndRespawn();
             }
         }
+        isHitted = false;
     }
 }

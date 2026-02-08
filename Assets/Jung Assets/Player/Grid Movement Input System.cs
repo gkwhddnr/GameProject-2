@@ -189,4 +189,22 @@ public class GridMovementSystem : MonoBehaviour
     {
         return isMoving;
     }
+    public void ResetMovement()
+    {
+        // 1. 실행 중인 모든 이동/충돌 코루틴 중지
+        StopAllCoroutines();
+
+        // 2. 내부 플래그 초기화
+        isMoving = false;
+        isInputProcessed = false;
+        _nextStepOffset = 0.0f; // 발걸음 순서도 초기화
+
+        // 3. 애니메이션 상태 초기화 (걷기 모션 끄기)
+        if (_animator != null)
+        {
+            _animator.SetBool(_isMovingHash, false);
+            // 필요하다면 Idle 상태로 강제 전환하는 Trigger를 쏠 수도 있습니다.
+            _animator.Play("Idle", -1, 0f);
+        }
+    }
 }

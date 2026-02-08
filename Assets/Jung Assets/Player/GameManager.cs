@@ -27,6 +27,13 @@ public class GameManager : MonoBehaviour
         public bool consumeOnCollect = true;
     }
 
+    [Header("설정")]
+    [Tooltip("에디터에서 시작 지점(빈 오브젝트 등)을 끌어다 놓으세요.")]
+    public Transform startPoint;
+
+    private GridMovementSystem _movementSystem;
+    private Collider2D _collider;
+
     [Header("UI & Stage Settings")]
     public TextMeshProUGUI countText;
     public Transform playerTransform;
@@ -44,6 +51,7 @@ public class GameManager : MonoBehaviour
     private int currentStageIndex = -1;
     private int _prevStageIndex = -1;
     private bool isGameOver = false;
+    private bool isRespawning = false;
 
     // --- Player GridMovementSystem 기본값 캐시 ---
     private float _playerDefaultMoveSpeed = 0f;
@@ -52,6 +60,9 @@ public class GameManager : MonoBehaviour
 
     void Awake()
     {
+        _movementSystem = GetComponent<GridMovementSystem>();
+        _collider = GetComponent<Collider2D>();
+
         if (Instance == null) Instance = this;
         else { Destroy(gameObject); return; }
 
@@ -168,6 +179,47 @@ public class GameManager : MonoBehaviour
         {
             countText.text = $"Count: {MoveCount}";
         }
+    }
+    public void DieAndRespawn()
+    {
+        Debug.Log("플레이어 사망! 시작 지점으로 복귀합니다.");
+        // 1. 이미 리스폰 중이라면 무시하고 함수 종료 (가장 중요!)
+        if (isRespawning) return;
+
+        // 2. 리스폰 시작 상태로 변경 (문을 잠금)
+        isRespawning = true;
+
+        // 1. 이동 시스템 강제 초기화 (이동 중 사망 시 버그 방지)
+        if (_movementSystem != null)
+        {
+            _movementSystem.ResetMovement();
+        }
+
+        // 2. 물리 충돌 잠시 끄기 (리스폰 위치로 순간이동할 때 충돌 방지)
+        if (_collider != null) _collider.enabled = false;
+
+        // 3. 위치 이동 (시작 포인트가 설정되어 있다면 그곳으로, 없다면 0,0,0)
+        if (startPoint != null)
+        {
+            playerTransform.position = startPoint.position;
+        }
+        else
+        {
+            Debug.LogWarning("Start Point가 설정되지 않았습니다! (0,0,0)으로 이동합니다.");
+            playerTransform.position = Vector3.zero;
+        }
+
+        // 4. 물리 충돌 다시 켜기
+        if (_collider != null) _collider.enabled = true;
+        StartCoroutine(ResetRespawnFlag());
+    }
+    private IEnumerator ResetRespawnFlag()
+    {
+        // 0.1초 정도 기다려서 위치 이동과 물리 연산이 확실히 끝날 시간을 줌
+        yield return new WaitForSeconds(0.1f);
+
+        // 다시 죽을 수 있는 상태로 변경
+        isRespawning = false;
     }
 
     private void HandleGameOver(string reason)
