@@ -53,6 +53,8 @@ public class GameManager : MonoBehaviour
     private bool isGameOver = false;
     private bool isRespawning = false;
 
+    public bool IsRespawning => isRespawning;
+
     // --- Player GridMovementSystem 기본값 캐시 ---
     private float _playerDefaultMoveSpeed = 0f;
     private float _playerDefaultGridSize = 0f;
@@ -182,44 +184,38 @@ public class GameManager : MonoBehaviour
     }
     public void DieAndRespawn()
     {
-        Debug.Log("플레이어 사망! 시작 지점으로 복귀합니다.");
-        // 1. 이미 리스폰 중이라면 무시하고 함수 종료 (가장 중요!)
+        // 이미 리스폰 중이면 무시 (이중 사망 방지)
         if (isRespawning) return;
 
-        // 2. 리스폰 시작 상태로 변경 (문을 잠금)
-        isRespawning = true;
+        // 리스폰 프로세스 시작
+        StartCoroutine(RespawnProcess());
+    }
 
-        // 1. 이동 시스템 강제 초기화 (이동 중 사망 시 버그 방지)
-        if (_movementSystem != null)
-        {
-            _movementSystem.ResetMovement();
-        }
+    // ★ 2. 실제 로직: 하나로 합쳐서 순서대로 실행
+    private IEnumerator RespawnProcess()
+    {
 
-        // 2. 물리 충돌 잠시 끄기 (리스폰 위치로 순간이동할 때 충돌 방지)
-        if (_collider != null) _collider.enabled = false;
-
-        // 3. 위치 이동 (시작 포인트가 설정되어 있다면 그곳으로, 없다면 0,0,0)
+        isRespawning = true; // 무적 모드 ON
         if (startPoint != null)
         {
             playerTransform.position = startPoint.position;
         }
         else
         {
-            Debug.LogWarning("Start Point가 설정되지 않았습니다! (0,0,0)으로 이동합니다.");
-            playerTransform.position = Vector3.zero;
+            Debug.Log("스타트포인트 없음");
         }
 
-        // 4. 물리 충돌 다시 켜기
-        if (_collider != null) _collider.enabled = true;
-        StartCoroutine(ResetRespawnFlag());
-    }
-    private IEnumerator ResetRespawnFlag()
-    {
-        // 0.1초 정도 기다려서 위치 이동과 물리 연산이 확실히 끝날 시간을 줌
-        yield return new WaitForSeconds(0.1f);
+        if (_movementSystem != null) _movementSystem.ResetMovement();
+        if (_collider != null) _collider.enabled = false;
 
-        // 다시 죽을 수 있는 상태로 변경
-        isRespawning = false;
+        Physics2D.SyncTransforms();
+
+        yield return null;
+        yield return new WaitForSeconds(0.2f);
+        // --- [4] 기능 복구 ---
+        if (_collider != null) _collider.enabled = true;
+
+        isRespawning = false; // 무적 모드 OFF
     }
 
     private void HandleGameOver(string reason)

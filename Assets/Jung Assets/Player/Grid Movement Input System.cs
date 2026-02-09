@@ -189,6 +189,7 @@ public class GridMovementSystem : MonoBehaviour
     {
         return isMoving;
     }
+
     public void ResetMovement()
     {
         // 1. 실행 중인 모든 이동/충돌 코루틴 중지
@@ -207,4 +208,5 @@ public class GridMovementSystem : MonoBehaviour
             _animator.Play("Idle", -1, 0f);
         }
     }
+
 }
