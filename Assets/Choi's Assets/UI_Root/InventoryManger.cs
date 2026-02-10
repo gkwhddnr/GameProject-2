@@ -131,6 +131,8 @@ public class InventoryManager : MonoBehaviour
 
     private void UseItem(ItemType type)
     {
+        if (GameManager.Instance != null) GameManager.Instance.NotifyTurnProcessed();
+
         // TODO: 퍼즐 기능에 연결하면 됨
         switch (type)
         {

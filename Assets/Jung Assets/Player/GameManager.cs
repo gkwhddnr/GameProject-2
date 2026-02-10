@@ -175,7 +175,7 @@ public class GameManager : MonoBehaviour
                                   ? "∞"
                                   : stageRemainingCounts[currentStageIndex].ToString();
 
-            countText.text = $"Stage {currentStageIndex} : {displayCount}";
+            countText.text = $"Stage {currentStageIndex + 1} : {displayCount}";
         }
         else
         {
