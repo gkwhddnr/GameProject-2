@@ -348,7 +348,8 @@ public class ItemCollector : MonoBehaviour
     {
         itemsList.Clear();
         var roots = SceneManager.GetActiveScene().GetRootGameObjects();
-        foreach (var root in roots) RecursiveCollectItems(root.transform);
+        foreach (var root in roots)
+            RecursiveCollectItems(root.transform, includeInactive: true);
 
         if (defaultSubsequentRevealCount < 1) defaultSubsequentRevealCount = 1;
 
@@ -414,12 +415,17 @@ public class ItemCollector : MonoBehaviour
 
     GameObject FindTargetObstacle(GameObject child) => (child.transform.parent == null) ? child : child.transform.parent.gameObject;
 
-    void RecursiveCollectItems(Transform t)
+    void RecursiveCollectItems(Transform t, bool includeInactive)
     {
-        if (IsItemObject(t.gameObject)) itemsList.Add(t.gameObject);
+        if (includeInactive || t.gameObject.activeInHierarchy)
+        {
+            if (IsItemObject(t.gameObject))
+                itemsList.Add(t.gameObject);
+        }
         int childCount = t.childCount;
-        for (int i = 0; i < childCount; ++i) RecursiveCollectItems(t.GetChild(i));
+        for (int i = 0; i < childCount; ++i) RecursiveCollectItems(t.GetChild(i), includeInactive);
     }
+
 
     // 캐싱 시스템
     private ObjectDataCache GetOrAddCache(GameObject go)
@@ -504,6 +510,8 @@ public class ItemCollector : MonoBehaviour
                 ps.gameObject.SetActive(false);
             }
         }
+
+        item.SetActive(false);
     }
 
     void RevealNextHiddenBatch(int count)

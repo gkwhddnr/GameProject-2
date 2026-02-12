@@ -18,6 +18,7 @@ public class MainScreen : MonoBehaviour
     public void OnclickStartButton()
     {
         Debug.Log("start button clicked");
+        SceneManager.LoadScene("Ha");
     }
 
     public void OnclickcontinueButton()
@@ -34,5 +35,10 @@ public class MainScreen : MonoBehaviour
     public void OnclickExitButton()
     {
         Debug.Log("exit button clicked");
+#if UNITY_EDITOR
+        UnityEditor.EditorApplication.isPlaying = false;
+#else
+        Application.Quit();
+#endif
     }
 }

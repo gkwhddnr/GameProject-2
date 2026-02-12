@@ -11,6 +11,11 @@ public class BackgroundManager : MonoBehaviour
     public bool stopBeforeApply = true;
     public bool autoActivateOnStart = true;
 
+
+    private int activePreviousStageCount = 0;
+    private int activeNextStageCount = 2;
+    private bool useStageRangeActivation = true;
+
     class Stage
     {
         public GameObject root;
@@ -25,11 +30,16 @@ public class BackgroundManager : MonoBehaviour
 
     void Start()
     {
-        if (autoActivateOnStart && stages.Count > 0)
-        {
-            int idx = Mathf.Clamp(startStageIndex, 0, stages.Count - 1);
-            ActivateStage(idx, snapToBounds: true, previousDeactivateDelay: 0f);
-        }
+        if (autoActivateOnStart && stages.Count > 0) StartCoroutine(DelayedActivation());
+    }
+
+    IEnumerator DelayedActivation()
+    {
+        // 한 프레임 대기 (다른 모든 Start() 완료 후)
+        yield return new WaitForEndOfFrame();
+
+        int idx = Mathf.Clamp(startStageIndex, 0, stages.Count - 1);
+        ActivateStage(idx, snapToBounds: true, previousDeactivateDelay: 0f);
     }
 
     void BuildStagesFromChildren()
@@ -50,43 +60,64 @@ public class BackgroundManager : MonoBehaviour
     public int CurrentStageIndex => currentStage;
     public int StageCount => stages.Count;
 
-    /// <summary>
-    /// 이전 스테이지를 previousDeactivateDelay 초 후에 비활성화(옵션)하고 새 스테이지 활성화
-    /// </summary>
+    private void ApplyStageRangeActivation(int centerStageIndex)
+    {
+        if (!useStageRangeActivation) return;
+
+        int minActiveIndex = Mathf.Max(0, centerStageIndex - activePreviousStageCount);
+        int maxActiveIndex = Mathf.Min(stages.Count - 1, centerStageIndex + activeNextStageCount);
+
+        for (int i = 0; i < stages.Count; i++)
+        {
+            if (stages[i].root == null) continue;
+
+            bool shouldBeActive = (i >= minActiveIndex && i <= maxActiveIndex);
+
+            if (stages[i].root.activeSelf != shouldBeActive) stages[i].root.SetActive(shouldBeActive);
+        }
+    }
+
     public void ActivateStage(int stageIndex, bool snapToBounds = true, float previousDeactivateDelay = 0f)
     {
         if (stageIndex < 0 || stageIndex >= stages.Count) return;
 
-        // 이전 스테이지 처리 (지연 비활성화 가능)
-        if (currentStage >= 0 && currentStage < stages.Count)
+        if (!useStageRangeActivation)
         {
-            var prev = stages[currentStage];
-            foreach (var m in prev.movers)
+            if (currentStage >= 0 && currentStage < stages.Count)
             {
-                if (m == null) continue;
-                m.StopMove();
+                var prev = stages[currentStage];
+                foreach (var m in prev.movers)
+                {
+                    if (m == null) continue;
+                    m.StopMove();
+                }
+
+                if (deactivatePreviousStage)
+                {
+                    if (previousDeactivateDelay <= 0f) prev.root.SetActive(false);
+                    else StartCoroutine(DeactivateAfterDelay(prev.root, previousDeactivateDelay));
+                }
             }
 
-            if (deactivatePreviousStage)
+            var st = stages[stageIndex];
+            if (!st.root.activeSelf) st.root.SetActive(true);
+        }
+        else
+        {
+            if (currentStage >= 0 && currentStage < stages.Count)
             {
-                if (previousDeactivateDelay <= 0f)
+                var prev = stages[currentStage];
+                foreach (var m in prev.movers)
                 {
-                    prev.root.SetActive(false);
-                }
-                else
-                {
-                    StartCoroutine(DeactivateAfterDelay(prev.root, previousDeactivateDelay));
+                    if (m == null) continue;
+                    m.StopMove();
                 }
             }
+
+            ApplyStageRangeActivation(stageIndex);
         }
 
-        // 새 스테이지 활성화
-        var st = stages[stageIndex];
-        if (!st.root.activeSelf) st.root.SetActive(true);
-
-        // bounds 적용 및 movers 시작
         ApplyBoundsToStage(stageIndex, snapToBounds);
-
         currentStage = stageIndex;
     }
 
@@ -109,6 +140,7 @@ public class BackgroundManager : MonoBehaviour
         if (stageIndex < 0 || stageIndex >= stages.Count) return;
         var st = stages[stageIndex];
         var bounds = st.bounds;
+
         if (stopBeforeApply)
         {
             foreach (var m in st.movers)
@@ -121,10 +153,9 @@ public class BackgroundManager : MonoBehaviour
         foreach (var m in st.movers)
         {
             if (m == null) continue;
-            m.SetBounds(bounds); // Bounds null 허용 — BackgroundMover가 처리해야 함
+            m.SetBounds(bounds);
         }
 
-        // 한 번에 시작
         foreach (var m in st.movers)
         {
             if (m == null) continue;
@@ -132,10 +163,17 @@ public class BackgroundManager : MonoBehaviour
         }
     }
 
-    // public helper
     public BoxCollider2D GetCurrentStageBounds()
     {
         if (currentStage < 0 || currentStage >= stages.Count) return null;
         return stages[currentStage].bounds;
+    }
+
+    public void SetStageRange(int previousCount, int nextCount)
+    {
+        activePreviousStageCount = previousCount;
+        activeNextStageCount = nextCount;
+
+        if (currentStage >= 0) ApplyStageRangeActivation(currentStage);
     }
 }
