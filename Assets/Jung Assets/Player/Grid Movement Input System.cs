@@ -84,7 +84,6 @@ public class GridMovementSystem : MonoBehaviour
 
         if (direction != Vector3.zero)
         {
-            // ★ 수정됨: FlipX 대신 애니메이터 파라미터 업데이트
             UpdateAnimationDirection(direction);
 
             Vector3 targetPosition = transform.position + (direction * gridSize);
@@ -99,7 +98,7 @@ public class GridMovementSystem : MonoBehaviour
                 StartCoroutine(MoveRoutine(targetPosition));
             }
 
-            GameManager.Instance.NotifyTurnProcessed();
+            // GameManager.Instance.NotifyTurnProcessed();
         }
     }
 
@@ -178,6 +177,8 @@ public class GridMovementSystem : MonoBehaviour
 
         if (_animator) _animator.SetBool(_isMovingHash, false);
         isMoving = false;
+
+        GameManager.Instance.NotifyTurnProcessed();
     }
 
     private bool IsBlocked(Vector3 targetPos)
