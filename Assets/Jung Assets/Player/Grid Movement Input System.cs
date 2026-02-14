@@ -66,6 +66,7 @@ public class GridMovementSystem : MonoBehaviour
 
     void Update()
     {
+        if (GameManager.Instance.IsRespawning) return;
         Vector2 input = moveInputRef.action.ReadValue<Vector2>();
 
         if (input == Vector2.zero)
@@ -192,21 +193,25 @@ public class GridMovementSystem : MonoBehaviour
 
     public void ResetMovement()
     {
-        // 1. 실행 중인 모든 이동/충돌 코루틴 중지
+        // 1. 모든 코루틴 즉시 중단 (이동 루틴, 범프 애니메이션 등)
         StopAllCoroutines();
 
-        // 2. 내부 플래그 초기화
+        // 2. 내부 플래그 즉시 초기화
         isMoving = false;
         isInputProcessed = false;
-        _nextStepOffset = 0.0f; // 발걸음 순서도 초기화
+        _nextStepOffset = 0.0f;
 
-        // 3. 애니메이션 상태 초기화 (걷기 모션 끄기)
+        // 3. ★ 핵심: 애니메이터 즉시 초기화 (걷는 모션 끄기)
         if (_animator != null)
         {
             _animator.SetBool(_isMovingHash, false);
-            // 필요하다면 Idle 상태로 강제 전환하는 Trigger를 쏠 수도 있습니다.
+            // 강제로 Idle 상태로 전이 (Transition 딜레이 무시)
             _animator.Play("Idle", -1, 0f);
+            _animator.Update(0f); // ★ 애니메이터 강제 갱신
         }
-    }
 
+        // 4. ★ 핵심: 목표 위치로 가는 중이었어도 현재 위치에서 즉시 멈춤
+        // (원래는 targetPosition으로 강제 이동시켰으나, 리스폰 때는 방해가 됨)
+        // 리스폰 로직이 위치를 옮길 것이므로 여기서는 아무것도 안 하는 게 맞음.
+    }
 }

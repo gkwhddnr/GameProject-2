@@ -182,40 +182,51 @@ public class GameManager : MonoBehaviour
             countText.text = $"Count: {MoveCount}";
         }
     }
-    public void DieAndRespawn()
+public void DieAndRespawn()
     {
-        // 이미 리스폰 중이면 무시 (이중 사망 방지)
+        // 1. 진입 시점 검사 (가장 중요)
         if (isRespawning) return;
 
-        // 리스폰 프로세스 시작
+        // 2. ★ 핵심 수정: 코루틴 시작 전에 즉시 플래그 설정!
+        // 이렇게 해야 이 함수가 끝나기 전에 다른 곳에서 또 호출해도 막힘
+        isRespawning = true;
+        
+        Debug.Log("사망 절차 시작");
+
         StartCoroutine(RespawnProcess());
     }
 
-    // ★ 2. 실제 로직: 하나로 합쳐서 순서대로 실행
     private IEnumerator RespawnProcess()
     {
-
-        isRespawning = true; // 무적 모드 ON
-        if (startPoint != null)
+        // 1. 이동 시스템 끄기 (가장 먼저!)
+        if (_movementSystem != null)
         {
-            playerTransform.position = startPoint.position;
-        }
-        else
-        {
-            Debug.Log("스타트포인트 없음");
+            _movementSystem.ResetMovement();
+            _movementSystem.enabled = false; // ★ 아예 컴포넌트를 꺼버려서 Update 실행 차단
         }
 
-        if (_movementSystem != null) _movementSystem.ResetMovement();
+        // 2. 물리 충돌 끄기
         if (_collider != null) _collider.enabled = false;
 
+        // 3. 위치 이동
+        if (startPoint != null) playerTransform.position = startPoint.position;
+        else playerTransform.position = Vector3.zero;
+
+        // 4. ★ 물리 엔진 강제 동기화 (이동 직후 필수)
         Physics2D.SyncTransforms();
 
-        yield return null;
-        yield return new WaitForSeconds(0.2f);
-        // --- [4] 기능 복구 ---
+        // 5. ★ 물리 업데이트 1회 대기 (Physics Cycle을 한 번 넘겨야 충돌 판정이 리셋됨)
+        yield return new WaitForFixedUpdate();
+
+        // 6. 이동 시스템 복구
+        if (_movementSystem != null) _movementSystem.enabled = true;
+
+        // 7. 충돌체 복구
         if (_collider != null) _collider.enabled = true;
 
-        isRespawning = false; // 무적 모드 OFF
+        // 8. 잠금 해제
+        isRespawning = false;
+        Debug.Log("리스폰 완료");
     }
 
     private void HandleGameOver(string reason)
