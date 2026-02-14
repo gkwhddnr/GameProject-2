@@ -5,6 +5,7 @@ using System.Text;
 using TMPro;
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using UnityEngine.UIElements;
 
 [DisallowMultipleComponent]
 public class ItemCollector : MonoBehaviour
@@ -101,6 +102,7 @@ public class ItemCollector : MonoBehaviour
     private int currentStageTotalRevealedCount = 0;
     private int currentStageTotalItems = 0;
     private GameObject activeNavGO = null;
+    private Sprite cachedUnlockSprite = null;
     private StageBoundsUIUpdater uiUpdater;
 
     // 배열 대신 리스트로 통일 (메모리 효율)
@@ -120,6 +122,8 @@ public class ItemCollector : MonoBehaviour
     private int lockLayerIndex = -1;
     private int itemLayerIndex = -1;
     private int currentStageIndex = -1;
+
+    
 
     // 코루틴 캐싱
     private WaitForEndOfFrame _waitForEndOfFrame;
@@ -166,6 +170,33 @@ public class ItemCollector : MonoBehaviour
 
         InitializeUI();
         SceneManager.sceneLoaded += OnSceneLoaded;
+        CacheUnlockSprite();
+    }
+    void CacheUnlockSprite()
+    {
+        Debug.Log("[ItemCollector] unlock 스프라이트 캐싱 시작...");
+
+        // 씬에서 찾기
+        SpriteRenderer[] allSprites = FindObjectsByType<SpriteRenderer>(FindObjectsSortMode.None);
+        foreach (var sr in allSprites)
+        {
+            if (sr.sprite != null && sr.sprite.name.Contains("unlock"))
+            {
+                cachedUnlockSprite = sr.sprite;
+                Debug.Log($"[ItemCollector] ✓ unlock 스프라이트 캐싱 완료: {sr.sprite.name}");
+                return;
+            }
+        }
+
+        // Resources에서 로드
+        cachedUnlockSprite = Resources.Load<Sprite>("Sprites/unlock-256");
+        if (cachedUnlockSprite != null)
+        {
+            Debug.Log("[ItemCollector] ✓ Resources에서 로드 완료");
+            return;
+        }
+
+        Debug.LogError("[ItemCollector] ✗ unlock 스프라이트를 찾을 수 없습니다!");
     }
 
     void OnDestroy() { Cleanup(); }
@@ -727,8 +758,73 @@ public class ItemCollector : MonoBehaviour
                     if (list != null && list.Contains(targetObstacle)) list.Remove(targetObstacle);
                 }
             }
+
+            ChangeLockSpriteToUnlock(targetObstacle);
             StartCoroutine(FadeOutObstacleRoutine(targetObstacle));
         }
+    }
+
+    void ChangeLockSpriteToUnlock(GameObject obstacle)
+    {
+        if (obstacle == null) return;
+        Transform[] allChildren = obstacle.GetComponentsInChildren<Transform>(true);
+
+        foreach (Transform child in allChildren)
+        {
+            if (child.gameObject.layer == lockLayerIndex)
+            {
+                SpriteRenderer sr = child.GetComponent<SpriteRenderer>();
+                if (sr != null && sr.sprite != null)
+                {
+                    string currentSpriteName = sr.sprite.name;
+                    string unlockSpriteName = GetUnlockSpriteName(currentSpriteName);
+                    Sprite unlockSprite = LoadUnlockSprite(unlockSpriteName);
+
+                    if (unlockSprite != null) sr.sprite = unlockSprite;
+                }
+                break;
+            }
+        }
+    }
+
+    string GetUnlockSpriteName(string currentName)
+    {
+        if (currentName.StartsWith("lock", System.StringComparison.OrdinalIgnoreCase)) return "unlock" + currentName.Substring(4);        
+        if (currentName.Contains("Lock")) return currentName.Replace("Lock", "Unlock");        
+        if (currentName.Contains("lock")) return currentName.Replace("lock", "unlock");
+        
+        return "unlock-" + currentName;
+    }
+
+    Sprite LoadUnlockSprite(string spriteName)
+    {
+        if (cachedUnlockSprite != null)  return cachedUnlockSprite;
+        
+        SpriteRenderer[] allSprites = FindObjectsByType<SpriteRenderer>(FindObjectsSortMode.None);
+        foreach (var sr in allSprites)
+        {
+            if (sr.sprite != null && sr.sprite.name == spriteName)
+            {
+                cachedUnlockSprite = sr.sprite; // 찾으면 캐싱
+                return sr.sprite;
+            }
+        }
+
+        Sprite sprite = Resources.Load<Sprite>("Sprites/" + spriteName);
+        if (sprite != null)
+        {
+            cachedUnlockSprite = sprite; // 캐싱
+            return sprite;
+        }
+
+        sprite = Resources.Load<Sprite>(spriteName);
+        if (sprite != null)
+        {
+            cachedUnlockSprite = sprite; // 캐싱
+            return sprite;
+        }
+
+        return null;
     }
 
     IEnumerator FadeOutObstacleRoutine(GameObject obstacle)

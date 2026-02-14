@@ -4457,7 +4457,7 @@ SpriteRenderer:
   m_GlobalIlluminationMeshLod: 0
   m_SortingLayerID: 644732309
   m_SortingLayer: 1
-  m_SortingOrder: 100
+  m_SortingOrder: 0
   m_MaskInteraction: 0
   m_Sprite: {fileID: 21300000, guid: a95a1e26d6e3b5149b04c447848daf7f, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
@@ -4477,13 +4477,13 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 287997978}
   serializedVersion: 2
-  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: -8.803214, y: 2.77049, z: 0}
-  m_LocalScale: {x: 0.8592473, y: 0.34375, z: 1}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 32.7314, y: 5.07, z: 0}
+  m_LocalScale: {x: 0.7991, y: 0.6875, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 1572028654}
-  m_Father: {fileID: 1159171099}
+  m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &307880453
 GameObject:
@@ -7805,7 +7805,7 @@ SpriteRenderer:
   m_GlobalIlluminationMeshLod: 0
   m_SortingLayerID: 644732309
   m_SortingLayer: 1
-  m_SortingOrder: 100
+  m_SortingOrder: 0
   m_MaskInteraction: 0
   m_Sprite: {fileID: 21300000, guid: f54435d3ff17b874eb76089989502615, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
@@ -7825,13 +7825,13 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 463722755}
   serializedVersion: 2
-  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: -7.4503093, y: 2.7805398, z: 0}
-  m_LocalScale: {x: 0.7469547, y: 0.2871925, z: 1}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 33.9896, y: 5.0901, z: 0}
+  m_LocalScale: {x: 0.6946678, y: 0.574385, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 1921385082}
-  m_Father: {fileID: 1159171099}
+  m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &463722760
 MonoBehaviour:
@@ -21133,8 +21133,6 @@ Transform:
   - {fileID: 1937396339}
   - {fileID: 607584361}
   - {fileID: 1623151126}
-  - {fileID: 287997983}
-  - {fileID: 463722759}
   m_Father: {fileID: 8673005}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &1159171100
@@ -22708,20 +22706,6 @@ RectTransform:
   m_CorrespondingSourceObject: {fileID: 3363346349790898451, guid: dc8b8698b2ec7eb49b2814758fa89071, type: 3}
   m_PrefabInstance: {fileID: 1425838472}
   m_PrefabAsset: {fileID: 0}
---- !u!114 &1247233342
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: fc1515ab76e54f068e2f2207940fab32, type: 3}
-  m_Name: Player/Move
-  m_EditorClassIdentifier: Unity.InputSystem::UnityEngine.InputSystem.InputActionReference
-  m_Asset: {fileID: -944628639613478452, guid: 2bcd2660ca9b64942af0de543d8d7100, type: 3}
-  m_ActionId: 351f2ccd-1f9f-44bf-9bec-d62ac5c5f408
 --- !u!1001 &1248485424
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -52435,7 +52419,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d5799b48e4cd64049b1429fca21a021e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlayerMoveScript
-  moveInputRef: {fileID: 1247233342}
+  moveInputRef: {fileID: 0}
   moveSpeed: 0.05
   gridSize: 1
   obstacleLayer:
@@ -52489,7 +52473,6 @@ GameObject:
   - component: {fileID: 4948024995977992623}
   - component: {fileID: 7631758977811040613}
   - component: {fileID: 420376794692521298}
-  - component: {fileID: 7631758977811040614}
   m_Layer: 6
   m_Name: Character
   m_TagString: Player
@@ -53188,26 +53171,6 @@ Animator:
   m_AllowConstantClipSamplingOptimization: 1
   m_KeepAnimatorStateOnDisable: 0
   m_WriteDefaultValuesOnDisable: 0
---- !u!114 &7631758977811040614
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 4671884659947259221}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 0b8820553571946409f087c33d41b62a, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::InventoryItemCollector
-  collectibleLayerMask:
-    serializedVersion: 2
-    m_Bits: 49152
-  fadeOutOnCollect: 1
-  fadeDuration: 0.5
-  destroyAfterFade: 1
-  debugLog: 1
-  inventoryManagerReference: {fileID: 0}
 --- !u!1001 &7709352742362916412
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -53529,3 +53492,5 @@ SceneRoots:
   - {fileID: 712089221}
   - {fileID: 1387746014}
   - {fileID: 500615018}
+  - {fileID: 287997983}
+  - {fileID: 463722759}

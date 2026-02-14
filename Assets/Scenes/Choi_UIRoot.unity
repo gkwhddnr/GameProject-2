@@ -1745,12 +1745,17 @@ MonoBehaviour:
   - {fileID: 1779903695}
   - {fileID: 679748984}
   itemDefs:
-  - type: 0
-    icon: {fileID: 8416562676405154990, guid: 52d6a1543b72b664d9a5cb01ea2f0fe5, type: 3}
   - type: 1
-    icon: {fileID: 8957324059118975939, guid: c98547987d5bdaa449f92a763c79934f, type: 3}
+    icon: {fileID: 8416562676405154990, guid: 52d6a1543b72b664d9a5cb01ea2f0fe5, type: 3}
   - type: 2
+    icon: {fileID: 8957324059118975939, guid: c98547987d5bdaa449f92a763c79934f, type: 3}
+  - type: 3
     icon: {fileID: 3573036208370857778, guid: bdfcea896f5f3be4c96ed89b3bf356e1, type: 3}
+  - type: 10
+    icon: {fileID: 21300000, guid: 53b62b68b60a62a47a099be44ae19854, type: 3}
+  - type: 11
+    icon: {fileID: 21300000, guid: 81cf0d38d117f0d47bc2e3374552d8d9, type: 3}
+  playerObject: {fileID: 0}
 --- !u!1 &792740623
 GameObject:
   m_ObjectHideFlags: 0
