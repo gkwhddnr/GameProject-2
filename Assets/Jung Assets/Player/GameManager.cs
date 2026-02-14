@@ -71,12 +71,9 @@ public class GameManager : MonoBehaviour
         if (stageSettings != null)
         {
             stageRemainingCounts = new int[stageSettings.Length];
-            for (int i = 0; i < stageSettings.Length; i++)
-            {
-                stageRemainingCounts[i] = stageSettings[i].assignedCount;
-            }
+            for (int i = 0; i < stageSettings.Length; i++) stageRemainingCounts[i] = stageSettings[i].assignedCount;
         }
-        else { stageRemainingCounts = new int[0]; }
+        else stageRemainingCounts = new int[0];
 
         UpdateCurrentStage();
         ApplyMovementSettingsToPlayer(); // 초기 적용 (Awake 시)

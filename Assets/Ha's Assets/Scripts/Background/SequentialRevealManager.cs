@@ -86,10 +86,7 @@ public class SequentialRevealManager : MonoBehaviour
             foreach (var group in config.batchGroups)
             {
                 if (group.objectsToActivate == null) continue;
-                foreach (var obj in group.objectsToActivate)
-                {
-                    if (obj) obj.SetActive(false);
-                }
+                foreach (var obj in group.objectsToActivate) if (obj) obj.SetActive(false);
             }
         }
     }
@@ -99,20 +96,36 @@ public class SequentialRevealManager : MonoBehaviour
         _itemToStageMap.Clear();
         if (stageConfigs == null) return;
 
-        // 씬 내 모든 Collider2D 검사해서 itemLayerMask에 속하는 게임오브젝트를 스테이지 인덱스로 맵핑
-        Collider2D[] allColliders = FindObjectsByType<Collider2D>(FindObjectsSortMode.None);
-        foreach (var col in allColliders)
+        var roots = UnityEngine.SceneManagement.SceneManager.GetActiveScene().GetRootGameObjects();
+        int totalMapped = 0;
+        foreach (var root in roots)
         {
-            if (((1 << col.gameObject.layer) & itemLayerMask.value) != 0)
+            // ★ true 파라미터로 비활성 오브젝트도 포함
+            Collider2D[] allColliders = root.GetComponentsInChildren<Collider2D>(true);
+
+            foreach (var col in allColliders)
             {
-                GameObject itemGo = col.gameObject;
-                for (int i = 0; i < stageConfigs.Length; i++)
+                if (col == null) continue;
+
+                // itemLayerMask에 속하는지 확인
+                if (((1 << col.gameObject.layer) & itemLayerMask.value) != 0)
                 {
-                    var bound = stageConfigs[i].bound;
-                    if (bound != null && bound.bounds.Contains(itemGo.transform.position))
+                    GameObject itemGo = col.gameObject;
+                    int itemId = itemGo.GetInstanceID();
+
+                    // 이미 매핑되었으면 스킵
+                    if (_itemToStageMap.ContainsKey(itemId)) continue;
+
+                    // 스테이지 매핑
+                    for (int i = 0; i < stageConfigs.Length; i++)
                     {
-                        _itemToStageMap[itemGo.GetInstanceID()] = i;
-                        break;
+                        var bound = stageConfigs[i].bound;
+                        if (bound != null && bound.bounds.Contains(itemGo.transform.position))
+                        {
+                            _itemToStageMap[itemId] = i;
+                            totalMapped++;
+                            break;
+                        }
                     }
                 }
             }
@@ -218,9 +231,8 @@ public class SequentialRevealManager : MonoBehaviour
 
         // Previous: 이전 단계들 끄기
         if (currentGroup.Previous)
-        {
             for (int i = 0; i < batchIdx; i++) DeactivateGroup(config.batchGroups[i]);
-        }
+        
 
         // 현재 단계 켜기
         if (currentGroup.objectsToActivate != null)
@@ -250,10 +262,7 @@ public class SequentialRevealManager : MonoBehaviour
     private void DeactivateGroup(BatchRevealGroup group)
     {
         if (group == null || group.objectsToActivate == null) return;
-        foreach (var obj in group.objectsToActivate)
-        {
-            if (obj != null) obj.SetActive(false);
-        }
+        foreach (var obj in group.objectsToActivate) if (obj != null) obj.SetActive(false);
     }
 
     private void OnDestroy() { if (Instance == this) Instance = null; }
