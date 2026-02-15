@@ -4318,10 +4318,11 @@ GameObject:
   - component: {fileID: 287997983}
   - component: {fileID: 287997982}
   - component: {fileID: 287997981}
+  - component: {fileID: 287997980}
   - component: {fileID: 287997979}
   m_Layer: 14
   m_Name: wrench-128 (2)
-  m_TagString: Untagged
+  m_TagString: Kit
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -4356,11 +4357,11 @@ BoxCollider2D:
   m_CallbackLayers:
     serializedVersion: 2
     m_Bits: 4294967295
-  m_IsTrigger: 1
+  m_IsTrigger: 0
   m_UsedByEffector: 0
   m_CompositeOperation: 0
   m_CompositeOrder: 0
-  m_Offset: {x: -0.041049957, y: -0.08209467}
+  m_Offset: {x: 0, y: 0}
   m_SpriteTilingProperty:
     border: {x: 0, y: 0, z: 0, w: 0}
     pivot: {x: 0.5, y: 0.5}
@@ -4372,6 +4373,31 @@ BoxCollider2D:
   m_AutoTiling: 0
   m_Size: {x: 0.54115295, y: 0.7545986}
   m_EdgeRadius: 0
+--- !u!114 &287997980
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 287997978}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9bf4113f75b7e1348a9e33fc2205fd21, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::SpriteRotator
+  spinDirection: 0
+  baseRotationSpeed: 18
+  idleSpeedVariance: 2
+  randomizeDirectionOnStart: 0
+  ease: 0.85
+  fadeOnDisappear: 1
+  disableOnComplete: 0
+  approachScale: {x: 0.85, y: 0.85, z: 1}
+  approachRotationMultiplier: 1.2
+  disappearSpinSpeed: 720
+  targetDisappearScale: {x: 0.05, y: 0.05, z: 1}
+  disappearDuration: 0.45
+  targetAlpha: 0
 --- !u!114 &287997981
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -7666,9 +7692,10 @@ GameObject:
   - component: {fileID: 463722758}
   - component: {fileID: 463722757}
   - component: {fileID: 463722756}
+  - component: {fileID: 463722760}
   m_Layer: 15
   m_Name: shield-128 (1)
-  m_TagString: Untagged
+  m_TagString: Shield
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -7715,11 +7742,11 @@ BoxCollider2D:
   m_CallbackLayers:
     serializedVersion: 2
     m_Bits: 4294967295
-  m_IsTrigger: 1
+  m_IsTrigger: 0
   m_UsedByEffector: 0
   m_CompositeOperation: 0
   m_CompositeOrder: 0
-  m_Offset: {x: 0, y: 0}
+  m_Offset: {x: -0.025327474, y: 0.010211408}
   m_SpriteTilingProperty:
     border: {x: 0, y: 0, z: 0, w: 0}
     pivot: {x: 0.5, y: 0.5}
@@ -7729,7 +7756,7 @@ BoxCollider2D:
     drawMode: 0
     adaptiveTiling: 0
   m_AutoTiling: 0
-  m_Size: {x: 1.28, y: 1.28}
+  m_Size: {x: 0.9591604, y: 0.9736657}
   m_EdgeRadius: 0
 --- !u!212 &463722758
 SpriteRenderer:
@@ -7806,6 +7833,31 @@ Transform:
   - {fileID: 1921385082}
   m_Father: {fileID: 1159171099}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &463722760
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 463722755}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9bf4113f75b7e1348a9e33fc2205fd21, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::SpriteRotator
+  spinDirection: 0
+  baseRotationSpeed: 0
+  idleSpeedVariance: 0
+  randomizeDirectionOnStart: 0
+  ease: 0.85
+  fadeOnDisappear: 1
+  disableOnComplete: 0
+  approachScale: {x: 0.85, y: 0.85, z: 1}
+  approachRotationMultiplier: 1.2
+  disappearSpinSpeed: 720
+  targetDisappearScale: {x: 0.05, y: 0.05, z: 1}
+  disappearDuration: 0.45
+  targetAlpha: 0
 --- !u!1001 &472719433
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -22656,6 +22708,20 @@ RectTransform:
   m_CorrespondingSourceObject: {fileID: 3363346349790898451, guid: dc8b8698b2ec7eb49b2814758fa89071, type: 3}
   m_PrefabInstance: {fileID: 1425838472}
   m_PrefabAsset: {fileID: 0}
+--- !u!114 &1247233342
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fc1515ab76e54f068e2f2207940fab32, type: 3}
+  m_Name: Player/Move
+  m_EditorClassIdentifier: Unity.InputSystem::UnityEngine.InputSystem.InputActionReference
+  m_Asset: {fileID: -944628639613478452, guid: 2bcd2660ca9b64942af0de543d8d7100, type: 3}
+  m_ActionId: 351f2ccd-1f9f-44bf-9bec-d62ac5c5f408
 --- !u!1001 &1248485424
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -25657,7 +25723,7 @@ SpriteRenderer:
   m_Size: {x: 2.56, y: 2.56}
   m_AdaptiveModeThreshold: 0.5
   m_SpriteTileMode: 0
-  m_WasSpriteAssigned: 0
+  m_WasSpriteAssigned: 1
   m_SpriteSortPoint: 0
 --- !u!4 &1387746014
 Transform:
@@ -49612,20 +49678,6 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &2062836303
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: fc1515ab76e54f068e2f2207940fab32, type: 3}
-  m_Name: Player/Move
-  m_EditorClassIdentifier: Unity.InputSystem::UnityEngine.InputSystem.InputActionReference
-  m_Asset: {fileID: -944628639613478452, guid: 2bcd2660ca9b64942af0de543d8d7100, type: 3}
-  m_ActionId: 351f2ccd-1f9f-44bf-9bec-d62ac5c5f408
 --- !u!1 &2076888967
 GameObject:
   m_ObjectHideFlags: 0
@@ -52383,7 +52435,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d5799b48e4cd64049b1429fca21a021e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlayerMoveScript
-  moveInputRef: {fileID: 2062836303}
+  moveInputRef: {fileID: 1247233342}
   moveSpeed: 0.05
   gridSize: 1
   obstacleLayer:
@@ -52437,7 +52489,6 @@ GameObject:
   - component: {fileID: 4948024995977992623}
   - component: {fileID: 7631758977811040613}
   - component: {fileID: 420376794692521298}
-  - component: {fileID: 7631758977811040614}
   m_Layer: 6
   m_Name: Character
   m_TagString: Player
@@ -53136,18 +53187,6 @@ Animator:
   m_AllowConstantClipSamplingOptimization: 1
   m_KeepAnimatorStateOnDisable: 0
   m_WriteDefaultValuesOnDisable: 0
---- !u!114 &7631758977811040614
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 4671884659947259221}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 0b8820553571946409f087c33d41b62a, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::InventoryItemCollector
 --- !u!1001 &7709352742362916412
 PrefabInstance:
   m_ObjectHideFlags: 0

@@ -5,11 +5,16 @@ using System.Text;
 using TMPro;
 using UnityEngine;
 using UnityEngine.SceneManagement;
-using UnityEngine.UIElements;
 
+/// <summary>
+/// Strategy 패턴 적용 + 인터페이스 구현
+/// </summary>
 [DisallowMultipleComponent]
-public class ItemCollector : MonoBehaviour
+public class ItemCollector : MonoBehaviour,
+    IStageDataProvider, IItemCollectionContext, IObstacleController
 {
+    #region Nested Classes
+
     private class ObjectDataCache
     {
         public SpriteRenderer[] sprs;
@@ -20,7 +25,6 @@ public class ItemCollector : MonoBehaviour
         public Color[] origRendColors;
         public ParticleSystem[] particles;
 
-        // 캐시 재사용을 위한 Clear 메서드
         public void Clear()
         {
             sprs = null;
@@ -47,6 +51,10 @@ public class ItemCollector : MonoBehaviour
         public int initialVisibleCount = 1;
         public int subsequentRevealCount = 2;
     }
+
+    #endregion
+
+    #region Inspector Fields
 
     [Header("스테이지별 통합 설정")]
     public StageItemSettings[] stageSettings;
@@ -82,10 +90,17 @@ public class ItemCollector : MonoBehaviour
     private bool resetCollectedOnStageEnter = true;
     private float obstacleFadeDuration = 1.5f;
 
-    // --- 최적화된 내부 상태 필드 ---
-    private HashSet<int> collectedInstanceIds = new HashSet<int>(32); // 초기 용량 지정
-    private Dictionary<int, ObjectDataCache> _dataCache = new Dictionary<int, ObjectDataCache>(64); // 초기 용량 지정
-    private StringBuilder _sb = new StringBuilder(256); // 용량 증가 최소화
+    #endregion
+
+    #region Private Fields
+
+    // ★ Strategy 리스트 (추가)
+    private List<IItemCollectionStrategy> collectionStrategies;
+
+    // 최적화된 내부 상태 필드
+    private HashSet<int> collectedInstanceIds = new HashSet<int>(32);
+    private Dictionary<int, ObjectDataCache> _dataCache = new Dictionary<int, ObjectDataCache>(64);
+    private StringBuilder _sb = new StringBuilder(256);
     private MaterialPropertyBlock _mpb;
     private static readonly int _BaseColorID = Shader.PropertyToID("_Color");
 
@@ -105,7 +120,7 @@ public class ItemCollector : MonoBehaviour
     private Sprite cachedUnlockSprite = null;
     private StageBoundsUIUpdater uiUpdater;
 
-    // 배열 대신 리스트로 통일 (메모리 효율)
+    // 배열 대신 리스트로 통일
     private List<SpriteRenderer>[] nextPointsSprs;
     private List<CanvasGroup>[] nextPointsCanvasGroups;
     private List<Renderer>[] nextPointsRenderers;
@@ -123,12 +138,13 @@ public class ItemCollector : MonoBehaviour
     private int itemLayerIndex = -1;
     private int currentStageIndex = -1;
 
-    
-
     // 코루틴 캐싱
     private WaitForEndOfFrame _waitForEndOfFrame;
     private Dictionary<float, WaitForSeconds> _waitForSecondsCache = new Dictionary<float, WaitForSeconds>(8);
 
+    #endregion
+
+    #region Unity Lifecycle
 
     private void Awake()
     {
@@ -152,7 +168,6 @@ public class ItemCollector : MonoBehaviour
 
         foreach (var it in itemsList)
             if (it != null && it.layer == itemLayerIndex) itemLayerItemsList.Add(it);
-        
 
         nextHiddenIndex = Mathf.Clamp(defaultInitialVisibleCount, 0, itemLayerItemsList.Count);
         totalRevealedCount = nextHiddenIndex;
@@ -171,42 +186,130 @@ public class ItemCollector : MonoBehaviour
         InitializeUI();
         SceneManager.sceneLoaded += OnSceneLoaded;
         CacheUnlockSprite();
+
+        InitializeStrategies();
     }
+
+    void Update()
+    {
+        if (stageSettings == null || stageSettings.Length == 0 || playerTransform == null) return;
+
+        Vector3 playerPosition = playerTransform.position;
+        int foundIndex = -1;
+
+        for (int i = 0; i < stageSettings.Length; ++i)
+        {
+            var bounds = stageSettings[i].stageBounds;
+            if (bounds != null && bounds.bounds.Contains(playerPosition))
+            {
+                foundIndex = i;
+                break;
+            }
+        }
+
+        if (foundIndex != -1)
+        {
+            if (!uiShown || currentStageIndex != foundIndex)
+            {
+                if (currentStageIndex != foundIndex && resetCollectedOnStageEnter)
+                    ResetCollectedForNewStage(foundIndex);
+                currentStageIndex = foundIndex;
+                ShowUI();
+            }
+        }
+        else if (uiShown)
+        {
+            HideUIInstant();
+            uiShown = false;
+            currentStageIndex = -1;
+        }
+    }
+
+    void OnTriggerEnter2D(Collider2D other)
+    {
+        if (other is BoxCollider2D poly && poly.isTrigger) TryCollect(other.gameObject);
+        SpriteRotator rotator = other.GetComponent<SpriteRotator>();
+        if (rotator != null && other.gameObject.CompareTag("NextPoint"))
+        {
+            rotator.TriggerDisappear();
+            SoundManager.Instance?.PlayDestination();
+        }
+    }
+
+    void OnCollisionEnter2D(Collision2D collision){ TryCollect(collision.collider.gameObject); }
+
+    void OnDestroy() { Cleanup(); }
+    void OnDisable() { Cleanup(); }
+
+    #endregion
+
+    #region Strategy Initialization
+
+    /// <summary>
+    /// Strategy 패턴 초기화
+    /// </summary>
+    private void InitializeStrategies()
+    {
+        collectionStrategies = new List<IItemCollectionStrategy>
+        {
+            new StarItemStrategy(),
+            new KeyItemStrategy(this), // this = IObstacleController
+            new InventoryItemStrategy()
+        };
+    }
+
+    #endregion
+
+    #region Collection Logic (★ 수정됨 - Strategy 패턴 적용)
+
+    /// <summary>
+    /// Strategy 패턴 적용
+    /// 기존 TryCollect 로직을 Strategy로 위임
+    /// </summary>
+    void TryCollect(GameObject candidate)
+    {
+        if (candidate == null) return;
+
+        // 중복 수집 방지
+        int id = candidate.GetInstanceID();
+        if (collectedInstanceIds.Contains(id)) return;
+        collectedInstanceIds.Add(id);
+
+        // ★ Strategy 패턴 적용: 적절한 Strategy 찾아서 처리
+        foreach (var strategy in collectionStrategies)
+        {
+            if (strategy.CanCollect(candidate))
+            {
+                strategy.Collect(candidate, this); // this = IItemCollectionContext
+                return;
+            }
+        }
+    }
+
+    #endregion
+
+    #region Initialization Methods (기존 유지)
+
     void CacheUnlockSprite()
     {
-        Debug.Log("[ItemCollector] unlock 스프라이트 캐싱 시작...");
-
-        // 씬에서 찾기
         SpriteRenderer[] allSprites = FindObjectsByType<SpriteRenderer>(FindObjectsSortMode.None);
         foreach (var sr in allSprites)
         {
             if (sr.sprite != null && sr.sprite.name.Contains("unlock"))
             {
                 cachedUnlockSprite = sr.sprite;
-                Debug.Log($"[ItemCollector] ✓ unlock 스프라이트 캐싱 완료: {sr.sprite.name}");
                 return;
             }
         }
 
-        // Resources에서 로드
         cachedUnlockSprite = Resources.Load<Sprite>("Sprites/unlock-256");
-        if (cachedUnlockSprite != null)
-        {
-            Debug.Log("[ItemCollector] ✓ Resources에서 로드 완료");
-            return;
-        }
-
-        Debug.LogError("[ItemCollector] ✗ unlock 스프라이트를 찾을 수 없습니다!");
+        if (cachedUnlockSprite != null) return;
     }
-
-    void OnDestroy() { Cleanup(); }
-    void OnDisable() { Cleanup(); }
 
     void Cleanup()
     {
         SceneManager.sceneLoaded -= OnSceneLoaded;
 
-        // 캐시 명시적 해제
         foreach (var cache in _dataCache.Values) cache.Clear();
         _dataCache.Clear();
 
@@ -219,7 +322,6 @@ public class ItemCollector : MonoBehaviour
         stageItemsMap = null;
         stageObstacleMap = null;
 
-        // WaitForSeconds 캐시 정리
         _waitForSecondsCache.Clear();
     }
 
@@ -268,40 +370,6 @@ public class ItemCollector : MonoBehaviour
         BuildObstacleMap();
     }
 
-    void Update()
-    {
-        if (stageSettings == null || stageSettings.Length == 0 || playerTransform == null) return;
-
-        Vector3 playerPosition = playerTransform.position;
-        int foundIndex = -1;
-
-        for (int i = 0; i < stageSettings.Length; ++i)
-        {
-            var bounds = stageSettings[i].stageBounds;
-            if (bounds != null && bounds.bounds.Contains(playerPosition))
-            {
-                foundIndex = i;
-                break;
-            }
-        }
-
-        if (foundIndex != -1)
-        {
-            if (!uiShown || currentStageIndex != foundIndex)
-            {
-                if (currentStageIndex != foundIndex && resetCollectedOnStageEnter) ResetCollectedForNewStage(foundIndex);
-                currentStageIndex = foundIndex;
-                ShowUI();
-            }
-        }
-        else if (uiShown)
-        {
-            HideUIInstant();
-            uiShown = false;
-            currentStageIndex = -1;
-        }
-    }
-
     void InitializeNextPoints()
     {
         if (stageSettings == null || stageSettings.Length == 0) return;
@@ -325,7 +393,6 @@ public class ItemCollector : MonoBehaviour
                 SetNextPointVisualAlpha(0f, nextPointsSprs[i], nextPointsCanvasGroups[i], nextPointsRenderers[i]);
                 ToggleNextPointCollider(false, nPoint);
 
-                // 파티클 초기 비활성화
                 for (int j = 0; j < nextPointsParticles[i].Count; j++)
                 {
                     var ps = nextPointsParticles[i][j];
@@ -379,15 +446,15 @@ public class ItemCollector : MonoBehaviour
     {
         itemsList.Clear();
         var roots = SceneManager.GetActiveScene().GetRootGameObjects();
-        foreach (var root in roots)
-            RecursiveCollectItems(root.transform, includeInactive: true);
+        foreach (var root in roots) RecursiveCollectItems(root.transform, includeInactive: true);
 
         if (defaultSubsequentRevealCount < 1) defaultSubsequentRevealCount = 1;
 
         if (stageSettings != null && stageSettings.Length > 0)
         {
             stageItemsMap = new List<GameObject>[stageSettings.Length];
-            for (int i = 0; i < stageItemsMap.Length; ++i) stageItemsMap[i] = new List<GameObject>(16); // 초기 용량
+            for (int i = 0; i < stageItemsMap.Length; ++i)
+                stageItemsMap[i] = new List<GameObject>(16);
 
             foreach (var item in itemsList)
             {
@@ -412,7 +479,7 @@ public class ItemCollector : MonoBehaviour
 
         int stageCount = stageSettings.Length;
         stageObstacleMap = new List<GameObject>[stageCount];
-        for (int i = 0; i < stageCount; ++i) stageObstacleMap[i] = new List<GameObject>(8); // 초기 용량
+        for (int i = 0; i < stageCount; ++i) stageObstacleMap[i] = new List<GameObject>(8);
 
         var roots = SceneManager.GetActiveScene().GetRootGameObjects();
         HashSet<GameObject> processedParents = new HashSet<GameObject>(32);
@@ -431,7 +498,8 @@ public class ItemCollector : MonoBehaviour
                         Vector3 pos = obstacleParent.transform.position;
                         for (int i = 0; i < stageSettings.Length; ++i)
                         {
-                            if (stageSettings[i].stageBounds != null && stageSettings[i].stageBounds.bounds.Contains(pos))
+                            if (stageSettings[i].stageBounds != null &&
+                                stageSettings[i].stageBounds.bounds.Contains(pos))
                             {
                                 stageObstacleMap[i].Add(obstacleParent);
                                 processedParents.Add(obstacleParent);
@@ -444,27 +512,27 @@ public class ItemCollector : MonoBehaviour
         }
     }
 
-    GameObject FindTargetObstacle(GameObject child) => (child.transform.parent == null) ? child : child.transform.parent.gameObject;
+    GameObject FindTargetObstacle(GameObject child){ return (child.transform.parent == null) ? child : child.transform.parent.gameObject; }
 
     void RecursiveCollectItems(Transform t, bool includeInactive)
     {
         if (includeInactive || t.gameObject.activeInHierarchy)
         {
-            if (IsItemObject(t.gameObject))
-                itemsList.Add(t.gameObject);
+            if (IsItemObject(t.gameObject)) itemsList.Add(t.gameObject);
         }
         int childCount = t.childCount;
         for (int i = 0; i < childCount; ++i) RecursiveCollectItems(t.GetChild(i), includeInactive);
     }
 
+    #endregion
 
-    // 캐싱 시스템
+    #region Caching System (기존 유지)
+
     private ObjectDataCache GetOrAddCache(GameObject go)
     {
         int id = go.GetInstanceID();
         if (_dataCache.TryGetValue(id, out var cache)) return cache;
 
-        // 임시 리스트 재사용
         _tempSprList.Clear();
         _tempRendList.Clear();
         _tempColorList.Clear();
@@ -476,7 +544,8 @@ public class ItemCollector : MonoBehaviour
         {
             if (r is SpriteRenderer) continue;
             _tempRendList.Add(r);
-            _tempColorList.Add(r.sharedMaterial.HasProperty(_BaseColorID) ? r.sharedMaterial.color : Color.white);
+            _tempColorList.Add(r.sharedMaterial.HasProperty(_BaseColorID) ?
+                r.sharedMaterial.color : Color.white);
         }
 
         var sprColors = new Color[sprs.Length];
@@ -496,7 +565,11 @@ public class ItemCollector : MonoBehaviour
         return cache;
     }
 
-    void HideItemsInitially_Global() => HideItemsForList(itemLayerItemsList, defaultInitialVisibleCount);
+    #endregion
+
+    #region Visibility Management (기존 유지)
+
+    void HideItemsInitially_Global(){ HideItemsForList(itemLayerItemsList, defaultInitialVisibleCount); }
 
     void HideItemsNotInAnyStage()
     {
@@ -504,7 +577,9 @@ public class ItemCollector : MonoBehaviour
         if (stageItemsMap != null)
         {
             foreach (var list in stageItemsMap)
-                if (list != null) for (int i = 0; i < list.Count; i++) if (list[i] != null) anySet.Add(list[i]);
+                if (list != null)
+                    for (int i = 0; i < list.Count; i++)
+                        if (list[i] != null) anySet.Add(list[i]);
         }
 
         for (int i = 0; i < itemLayerItemsList.Count; i++)
@@ -529,7 +604,6 @@ public class ItemCollector : MonoBehaviour
 
         for (int i = 0; i < cache.colliders.Length; i++)
             if (cache.colliders[i]) cache.colliders[i].enabled = false;
-        
 
         for (int i = 0; i < cache.particles.Length; i++)
         {
@@ -545,7 +619,7 @@ public class ItemCollector : MonoBehaviour
         item.SetActive(false);
     }
 
-    void RevealNextHiddenBatch(int count)
+    public void RevealNextHiddenBatch(int count)
     {
         bool isStageContext = stageSettings != null && stageSettings.Length > 0 && currentStageIndex >= 0;
         int revealCount = count;
@@ -565,8 +639,16 @@ public class ItemCollector : MonoBehaviour
             idx++; revealed++;
         }
 
-        if (isStageContext) { currentStageNextHiddenIndex = idx; currentStageTotalRevealedCount += revealed; }
-        else { nextHiddenIndex = idx; totalRevealedCount += revealed; }
+        if (isStageContext)
+        {
+            currentStageNextHiddenIndex = idx;
+            currentStageTotalRevealedCount += revealed;
+        }
+        else
+        {
+            nextHiddenIndex = idx;
+            totalRevealedCount += revealed;
+        }
     }
 
     IEnumerator FadeInItemRoutine(GameObject item, float duration)
@@ -583,7 +665,8 @@ public class ItemCollector : MonoBehaviour
         }
         UpdateItemAlphaInternal(cache, 1f);
 
-        for (int i = 0; i < cache.colliders.Length; i++) if (cache.colliders[i]) cache.colliders[i].enabled = true;
+        for (int i = 0; i < cache.colliders.Length; i++)
+            if (cache.colliders[i]) cache.colliders[i].enabled = true;
         for (int i = 0; i < cache.particles.Length; i++)
         {
             var ps = cache.particles[i];
@@ -615,90 +698,11 @@ public class ItemCollector : MonoBehaviour
         }
     }
 
-    bool IsItemObject(GameObject go) => go != null && ((1 << go.layer) & itemLayerMask.value) != 0;
+    #endregion
 
-    void OnTriggerEnter2D(Collider2D other)
-    {
-        if (other is BoxCollider2D poly && poly.isTrigger) TryCollect(other.gameObject);
-        SpriteRotator rotator = other.GetComponent<SpriteRotator>();
-        if (rotator != null && other.gameObject.CompareTag("NextPoint"))
-        {
-            rotator.TriggerDisappear();
-            SoundManager.Instance?.PlayDestination();
-        }
-    }
+    #region Obstacle Management (기존 유지 - IObstacleController 구현)
 
-    void OnCollisionEnter2D(Collision2D collision) { TryCollect(collision.collider.gameObject); }
-
-    void TryCollect(GameObject candidate)
-    {
-        if (candidate == null) return;
-        KeyActivator keyActivator = candidate.GetComponent<KeyActivator>();
-
-        bool isKeyByGameManager = false;
-        int matchedKeySlotIndex = -1;
-
-        if (keyActivator == null && GameManager.Instance != null) isKeyByGameManager = GameManager.Instance.IsKeySlotMatch(candidate, out matchedKeySlotIndex);
-
-        bool isItemByMask = IsItemObject(candidate);
-        bool isKeyByLayer = (candidate.layer == keyLayerIndex);
-        bool isKeyByName = string.Equals(candidate.name, "Key", StringComparison.OrdinalIgnoreCase);
-        bool isAnyKey = isKeyByGameManager || isKeyByLayer || isKeyByName;
-
-        if (!isItemByMask && !isAnyKey) return;
-
-        int id = candidate.GetInstanceID();
-        if (collectedInstanceIds.Contains(id)) return;
-        collectedInstanceIds.Add(id);
-
-        bool isCountedAsItem = (candidate.layer == itemLayerIndex);
-        if (isCountedAsItem) collected++;
-
-        if (FloatingTextSpawner.Instance != null) FloatingTextSpawner.Instance.ShowForCollectedItem(candidate);
-        UpdateUI();
-        SequentialRevealManager.Instance?.NotifyCollected(candidate);
-        if (GameManager.Instance != null) GameManager.Instance.OnItemCollected(candidate);
-
-        var cache = GetOrAddCache(candidate);
-        if (disableColliderDuringItemFade)
-            for (int i = 0; i < cache.colliders.Length; i++) if (cache.colliders[i]) cache.colliders[i].enabled = false;
-        
-
-        if (isAnyKey)
-        {
-            if (keyActivator != null)
-            {
-                SoundManager.Instance?.PlayKey();
-                keyActivator.Activate(currentStageIndex);
-            }
-            else
-            {
-                SoundManager.Instance?.PlayKey();
-                if (isKeyByGameManager) GameManager.Instance.ConsumeKeySlot(matchedKeySlotIndex);
-                int keyStageIndex = GetStageIndexForPosition(candidate.transform.position);
-                HandleKeyCollected(candidate, keyStageIndex >= 0 ? keyStageIndex : currentStageIndex);
-            }
-        }
-        else SoundManager.Instance?.PlayCollect();
-
-        SpriteRotator rotator = candidate.GetComponent<SpriteRotator>();
-        if (rotator != null) { rotator.TriggerDisappear(); StartCoroutine(HandleStageComplete(rotator)); }
-
-        if (fadeOutItems) StartCoroutine(FadeOutItemRoutine(candidate));
-        else { if (destroyItemAfterFade) Destroy(candidate); else candidate.SetActive(false); }
-
-        if (isCountedAsItem)
-        {
-            if (revealItemsSequentially)
-            {
-                int currentTotal = (stageSettings != null && stageSettings.Length > 0) ? currentStageTotalRevealedCount : totalRevealedCount;
-                if (collected >= currentTotal) RevealNextHiddenBatch(0);
-            }
-            if (collected >= currentStageTotalItems) RevealNextPointForStage(currentStageIndex);
-        }
-    }
-
-    void HandleKeyCollected(GameObject key, int keyStageIndex)
+    public void HandleKeyCollected(GameObject key, int keyStageIndex)
     {
         Vector3 keyPos = key.transform.position;
         GameObject targetObstacle = null;
@@ -749,15 +753,15 @@ public class ItemCollector : MonoBehaviour
         {
             if (keyStageIndex >= 0 && stageObstacleMap != null && keyStageIndex < stageObstacleMap.Length)
                 if (stageObstacleMap[keyStageIndex].Contains(targetObstacle)) stageObstacleMap[keyStageIndex].Remove(targetObstacle);
-            
-            else if (stageObstacleMap != null)
-            {
-                for (int si = 0; si < stageObstacleMap.Length; ++si)
+
+                else if (stageObstacleMap != null)
                 {
-                    var list = stageObstacleMap[si];
-                    if (list != null && list.Contains(targetObstacle)) list.Remove(targetObstacle);
+                    for (int si = 0; si < stageObstacleMap.Length; ++si)
+                    {
+                        var list = stageObstacleMap[si];
+                        if (list != null && list.Contains(targetObstacle)) list.Remove(targetObstacle);
+                    }
                 }
-            }
 
             ChangeLockSpriteToUnlock(targetObstacle);
             StartCoroutine(FadeOutObstacleRoutine(targetObstacle));
@@ -789,23 +793,23 @@ public class ItemCollector : MonoBehaviour
 
     string GetUnlockSpriteName(string currentName)
     {
-        if (currentName.StartsWith("lock", System.StringComparison.OrdinalIgnoreCase)) return "unlock" + currentName.Substring(4);        
-        if (currentName.Contains("Lock")) return currentName.Replace("Lock", "Unlock");        
+        if (currentName.StartsWith("lock", StringComparison.OrdinalIgnoreCase)) return "unlock" + currentName.Substring(4);
+        if (currentName.Contains("Lock")) return currentName.Replace("Lock", "Unlock");
         if (currentName.Contains("lock")) return currentName.Replace("lock", "unlock");
-        
+
         return "unlock-" + currentName;
     }
 
     Sprite LoadUnlockSprite(string spriteName)
     {
-        if (cachedUnlockSprite != null)  return cachedUnlockSprite;
-        
+        if (cachedUnlockSprite != null) return cachedUnlockSprite;
+
         SpriteRenderer[] allSprites = FindObjectsByType<SpriteRenderer>(FindObjectsSortMode.None);
         foreach (var sr in allSprites)
         {
             if (sr.sprite != null && sr.sprite.name == spriteName)
             {
-                cachedUnlockSprite = sr.sprite; // 찾으면 캐싱
+                cachedUnlockSprite = sr.sprite;
                 return sr.sprite;
             }
         }
@@ -813,14 +817,14 @@ public class ItemCollector : MonoBehaviour
         Sprite sprite = Resources.Load<Sprite>("Sprites/" + spriteName);
         if (sprite != null)
         {
-            cachedUnlockSprite = sprite; // 캐싱
+            cachedUnlockSprite = sprite;
             return sprite;
         }
 
         sprite = Resources.Load<Sprite>(spriteName);
         if (sprite != null)
         {
-            cachedUnlockSprite = sprite; // 캐싱
+            cachedUnlockSprite = sprite;
             return sprite;
         }
 
@@ -832,7 +836,8 @@ public class ItemCollector : MonoBehaviour
         if (obstacle == null) yield break;
         var cache = GetOrAddCache(obstacle);
 
-        for (int i = 0; i < cache.colliders.Length; i++) if (cache.colliders[i]) cache.colliders[i].enabled = false;
+        for (int i = 0; i < cache.colliders.Length; i++)
+            if (cache.colliders[i]) cache.colliders[i].enabled = false;
 
         float elapsed = 0f;
         while (elapsed < obstacleFadeDuration)
@@ -841,12 +846,20 @@ public class ItemCollector : MonoBehaviour
             UpdateItemAlphaInternal(cache, Mathf.Clamp01(1f - (elapsed / obstacleFadeDuration)));
             yield return null;
         }
-        if (obstacle != null) { if (destroyItemAfterFade) Destroy(obstacle); else obstacle.SetActive(false); }
+        if (obstacle != null)
+        {
+            if (destroyItemAfterFade) Destroy(obstacle);
+            else obstacle.SetActive(false);
+        }
     }
 
-    IEnumerator HandleStageComplete(SpriteRotator rotator) { yield return StartCoroutine(rotator.WaitForDisappear()); }
+    #endregion
 
-    IEnumerator FadeOutItemRoutine(GameObject target)
+    #region Fade Effects (기존 유지)
+
+    IEnumerator HandleStageComplete(SpriteRotator rotator){ yield return StartCoroutine(rotator.WaitForDisappear()); }
+
+    public IEnumerator FadeOutItemRoutine(GameObject target)
     {
         if (target == null) yield break;
         var cache = GetOrAddCache(target);
@@ -857,19 +870,30 @@ public class ItemCollector : MonoBehaviour
             UpdateItemAlphaInternal(cache, Mathf.Clamp01(1f - (t / itemFadeDuration)));
             yield return null;
         }
-        if (target != null) { if (destroyItemAfterFade) Destroy(target); else target.SetActive(false); }
+        if (target != null)
+        {
+            if (destroyItemAfterFade) Destroy(target);
+            else target.SetActive(false);
+        }
     }
 
-    void RevealNextPointForStage(int stageIndex)
+    #endregion
+
+    #region NextPoint Management (기존 유지)
+
+    public void RevealNextPointForStage(int stageIndex)
     {
         if (stageSettings == null || stageIndex < 0 || stageIndex >= stageSettings.Length || stageSettings[stageIndex].nextPoint == null) return;
 
         GameObject nPoint = stageSettings[stageIndex].nextPoint;
-        StartCoroutine(FadeInNextPointRoutine(nPoint, nextPointsSprs[stageIndex], nextPointsCanvasGroups[stageIndex], nextPointsRenderers[stageIndex], nextPointsParticles[stageIndex]));
+        StartCoroutine(FadeInNextPointRoutine(nPoint, nextPointsSprs[stageIndex],
+            nextPointsCanvasGroups[stageIndex], nextPointsRenderers[stageIndex], nextPointsParticles[stageIndex]));
 
         if (navigationPointerPrefab != null && activeNavGO == null)
         {
-            if (uiCanvas == null) uiCanvas = (FloatingTextSpawner.Instance != null) ? FloatingTextSpawner.Instance.canvas : FindFirstObjectByType<Canvas>();
+            if (uiCanvas == null)
+                uiCanvas = (FloatingTextSpawner.Instance != null) ?
+                    FloatingTextSpawner.Instance.canvas : FindFirstObjectByType<Canvas>();
             activeNavGO = Instantiate(navigationPointerPrefab, uiCanvas.transform);
             var nav = activeNavGO.GetComponent<NavigationPointer>();
             var sc = FindAnyObjectByType<MapCameraStageController>();
@@ -877,9 +901,17 @@ public class ItemCollector : MonoBehaviour
         }
     }
 
-    void RemoveActiveNavigationPointer() { if (activeNavGO) { Destroy(activeNavGO); activeNavGO = null; } }
+    void RemoveActiveNavigationPointer()
+    {
+        if (activeNavGO)
+        {
+            Destroy(activeNavGO);
+            activeNavGO = null;
+        }
+    }
 
-    IEnumerator FadeInNextPointRoutine(GameObject point, List<SpriteRenderer> sprs, List<CanvasGroup> canvasGroups, List<Renderer> renderers, List<ParticleSystem> particles)
+    IEnumerator FadeInNextPointRoutine(GameObject point, List<SpriteRenderer> sprs,
+        List<CanvasGroup> canvasGroups, List<Renderer> renderers, List<ParticleSystem> particles)
     {
         if (point == null) yield break;
         point.SetActive(true);
@@ -904,7 +936,69 @@ public class ItemCollector : MonoBehaviour
         }
     }
 
-    void UpdateUI()
+    void CollectNextPointRenderers(GameObject go, List<SpriteRenderer> sprs, List<CanvasGroup> canvasGroups,
+        List<Renderer> renderers, List<ParticleSystem> particles)
+    {
+        sprs.AddRange(go.GetComponentsInChildren<SpriteRenderer>(true));
+        canvasGroups.AddRange(go.GetComponentsInChildren<CanvasGroup>(true));
+
+        var allRenderers = go.GetComponentsInChildren<Renderer>(true);
+        for (int i = 0; i < allRenderers.Length; i++)
+            if (!(allRenderers[i] is SpriteRenderer)) renderers.Add(allRenderers[i]);
+
+        particles.AddRange(go.GetComponentsInChildren<ParticleSystem>(true));
+    }
+
+    void SetNextPointVisualAlpha(float alpha, List<SpriteRenderer> sprs,
+        List<CanvasGroup> canvasGroups, List<Renderer> renderers)
+    {
+        for (int i = 0; i < sprs.Count; i++)
+            if (sprs[i])
+            {
+                Color c = sprs[i].color;
+                c.a = alpha;
+                sprs[i].color = c;
+            }
+
+        for (int i = 0; i < canvasGroups.Count; i++)
+        {
+            if (canvasGroups[i])
+            {
+                canvasGroups[i].alpha = alpha;
+                canvasGroups[i].interactable = canvasGroups[i].blocksRaycasts = alpha > 0.9f;
+            }
+        }
+
+        for (int i = 0; i < renderers.Count; i++)
+        {
+            var r = renderers[i];
+            if (r)
+            {
+                r.GetPropertyBlock(_mpb);
+                Color c = r.sharedMaterial.HasProperty(_BaseColorID) ?
+                    r.sharedMaterial.color : Color.white;
+                c.a = alpha;
+                _mpb.SetColor(_BaseColorID, c);
+                r.SetPropertyBlock(_mpb);
+            }
+        }
+    }
+
+    void ToggleNextPointCollider(bool enabled, GameObject point)
+    {
+        if (point)
+        {
+            var cache = GetOrAddCache(point);
+            for (int i = 0; i < cache.colliders.Length; i++)
+                if (cache.colliders[i]) cache.colliders[i].enabled = enabled;
+        }
+    }
+
+    #endregion
+
+    #region UI Management (기존 유지)
+
+    public void UpdateUI()
     {
         if (uiText == null) return;
 
@@ -935,7 +1029,9 @@ public class ItemCollector : MonoBehaviour
                 var entry = uiUpdater.stageEntries[e];
                 if (entry.bounds == null) continue;
                 for (int b = 0; b < entry.bounds.Length; b++)
-                    if (entry.bounds[b] != null && entry.bounds[b] == currentBounds) return !string.IsNullOrEmpty(entry.message) ? entry.message : currentSettings.stageName;
+                    if (entry.bounds[b] != null && entry.bounds[b] == currentBounds)
+                        return !string.IsNullOrEmpty(entry.message) ?
+                            entry.message : currentSettings.stageName;
             }
         }
         return currentSettings.stageName;
@@ -955,65 +1051,32 @@ public class ItemCollector : MonoBehaviour
         return _sb.ToString();
     }
 
-    void ShowUIInstant() { if (uiText) uiText.gameObject.SetActive(true); UpdateUI(); }
-    void HideUIInstant() { if (uiText) uiText.gameObject.SetActive(false); }
-    void ShowUI() { ShowUIInstant(); uiShown = true; }
-
-    void CollectNextPointRenderers(GameObject go, List<SpriteRenderer> sprs, List<CanvasGroup> canvasGroups, List<Renderer> renderers, List<ParticleSystem> particles)
+    void ShowUIInstant()
     {
-        sprs.AddRange(go.GetComponentsInChildren<SpriteRenderer>(true));
-        canvasGroups.AddRange(go.GetComponentsInChildren<CanvasGroup>(true));
-
-        var allRenderers = go.GetComponentsInChildren<Renderer>(true);
-        for (int i = 0; i < allRenderers.Length; i++) if (!(allRenderers[i] is SpriteRenderer)) renderers.Add(allRenderers[i]);
-
-        particles.AddRange(go.GetComponentsInChildren<ParticleSystem>(true));
+        if (uiText) uiText.gameObject.SetActive(true);
+        UpdateUI();
     }
 
-    void SetNextPointVisualAlpha(float alpha, List<SpriteRenderer> sprs, List<CanvasGroup> canvasGroups, List<Renderer> renderers)
+    void HideUIInstant(){ if (uiText) uiText.gameObject.SetActive(false); }
+
+    void ShowUI()
     {
-        for (int i = 0; i < sprs.Count; i++)
-            if (sprs[i]) { Color c = sprs[i].color; c.a = alpha; sprs[i].color = c; }
-        
-
-        for (int i = 0; i < canvasGroups.Count; i++)
-        {
-            if (canvasGroups[i])
-            {
-                canvasGroups[i].alpha = alpha;
-                canvasGroups[i].interactable = canvasGroups[i].blocksRaycasts = alpha > 0.9f;
-            }
-        }
-
-        for (int i = 0; i < renderers.Count; i++)
-        {
-            var r = renderers[i];
-            if (r)
-            {
-                r.GetPropertyBlock(_mpb);
-                Color c = r.sharedMaterial.HasProperty(_BaseColorID) ? r.sharedMaterial.color : Color.white;
-                c.a = alpha;
-                _mpb.SetColor(_BaseColorID, c);
-                r.SetPropertyBlock(_mpb);
-            }
-        }
+        ShowUIInstant();
+        uiShown = true;
     }
 
-    void ToggleNextPointCollider(bool enabled, GameObject point)
-    {
-        if (point)
-        {
-            var cache = GetOrAddCache(point);
-            for (int i = 0; i < cache.colliders.Length; i++)
-                if (cache.colliders[i]) cache.colliders[i].enabled = enabled;
-        }
-    }
+    #endregion
+
+    #region Utility Methods 
+
+    bool IsItemObject(GameObject go){ return go != null && ((1 << go.layer) & itemLayerMask.value) != 0; }
 
     int GetStageIndexForPosition(Vector3 worldPos)
     {
         if (stageSettings == null) return -1;
         for (int i = 0; i < stageSettings.Length; ++i)
-            if (stageSettings[i].stageBounds != null && stageSettings[i].stageBounds.bounds.Contains(worldPos)) return i;
+            if (stageSettings[i].stageBounds != null &&
+                stageSettings[i].stageBounds.bounds.Contains(worldPos)) return i;
 
         return -1;
     }
@@ -1023,9 +1086,13 @@ public class ItemCollector : MonoBehaviour
         int childCount = parent.transform.childCount;
         for (int i = 0; i < childCount; i++)
             if (parent.transform.GetChild(i).gameObject.layer == lockLayerIndex) return true;
-        
+
         return false;
     }
+
+    #endregion
+
+    #region Public API 
 
     public int GetInitialVisibleCount(int stageIndex)
     {
@@ -1052,4 +1119,86 @@ public class ItemCollector : MonoBehaviour
         if (obstacle == null) return;
         StartCoroutine(FadeOutObstacleRoutine(obstacle));
     }
+
+    #endregion
+
+    #region Interface Implementations
+
+    // ================================================================
+    // IStageDataProvider 구현
+    // ================================================================
+
+    public int GetStageCount(){ return stageSettings != null ? stageSettings.Length : 0; }
+
+    public BoxCollider2D GetStageBounds(int stageIndex)
+    {
+        if (stageSettings != null && stageIndex >= 0 && stageIndex < stageSettings.Length) return stageSettings[stageIndex].stageBounds;
+        return null;
+    }
+
+    public int GetCurrentStageIndex(){ return currentStageIndex; }
+
+    // ================================================================
+    // IItemCollectionContext 구현
+    // ================================================================
+
+    public void IncrementCollectedCount(){ collected++; }
+
+    public void PlaySound(string soundType)
+    {
+        if (soundType == "key") SoundManager.Instance?.PlayKey();
+        else if (soundType == "collect") SoundManager.Instance?.PlayCollect();
+        else if (soundType == "destination") SoundManager.Instance?.PlayDestination();
+    }
+
+    public void FadeOutItem(GameObject item)
+    {
+        if (item != null)
+        {
+            var cache = GetOrAddCache(item);
+
+            if (disableColliderDuringItemFade)
+            {
+                for (int i = 0; i < cache.colliders.Length; i++)
+                    if (cache.colliders[i]) cache.colliders[i].enabled = false;
+            }
+
+            if (fadeOutItems)
+                StartCoroutine(FadeOutItemRoutine(item));
+            else
+            {
+                if (destroyItemAfterFade) Destroy(item);
+                else item.SetActive(false);
+            }
+        }
+    }
+
+    public void NotifyGameManager(GameObject item){ GameManager.Instance?.OnItemCollected(item); }
+
+    public void NotifySequentialReveal(GameObject item){ SequentialRevealManager.Instance?.NotifyCollected(item); }
+
+    public void ShowFloatingText(GameObject item) { FloatingTextSpawner.Instance?.ShowForCollectedItem(item); }
+
+    object IItemCollectionContext.GetOrAddCache(GameObject item){ return GetOrAddCache(item); }
+
+    void IItemCollectionContext.RevealNextHiddenBatch()
+    {
+        if (revealItemsSequentially)
+        {
+            int currentTotal = (stageSettings != null && stageSettings.Length > 0)
+                ? currentStageTotalRevealedCount : totalRevealedCount;
+            if (collected >= currentTotal)
+                RevealNextHiddenBatch(0);
+        }
+    }
+
+    public void CheckStageCompletion(){ if (collected >= currentStageTotalItems) RevealNextPointForStage(currentStageIndex); }
+
+    // ================================================================
+    // IObstacleController 구현
+    // ================================================================
+
+    void IObstacleController.FadeOutObstacle(GameObject obstacle){ if (obstacle != null) StartCoroutine(FadeOutObstacleRoutine(obstacle)); }
+
+    #endregion
 }

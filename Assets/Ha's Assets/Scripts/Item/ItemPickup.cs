@@ -8,7 +8,10 @@ public class ItemPickup : MonoBehaviour
     private List<GameObject> childObjects = new List<GameObject>();
     private List<ParticleSystem> childParticles = new List<ParticleSystem>();
     private bool previousColliderState = false;
-    private bool particlesEverActivated = false; // 파티클이 한 번이라도 활성화되었는지 추적
+    private bool particlesEverActivated = false;
+
+    // 중복 수집 방지 플래그 (충돌/트리거가 여러 번 들어오는 걸 막음)
+    private bool hasCollected = false;
 
     void Awake()
     {
@@ -28,13 +31,15 @@ public class ItemPickup : MonoBehaviour
         if (myCollider != null)
         {
             previousColliderState = myCollider.enabled;
-            // 시작할 때 콜라이더 상태에 따라 자식들 설정
             UpdateChildrenState(myCollider.enabled);
         }
     }
 
     void Update()
     {
+        // ★ 수정: 수집된 후에는 더 이상 자식 상태 업데이트 안함!
+        if (hasCollected) return;
+
         if (myCollider != null)
         {
             // 콜라이더 상태가 변경되었을 때만 업데이트
@@ -48,10 +53,8 @@ public class ItemPickup : MonoBehaviour
 
     private void UpdateChildrenState(bool colliderEnabled)
     {
-        // 콜라이더가 활성화되면
         if (colliderEnabled)
         {
-            // 일반 자식들 활성화
             SetChildrenActive(true);
 
             // 파티클은 처음 한 번만 활성화
@@ -68,37 +71,28 @@ public class ItemPickup : MonoBehaviour
                 particlesEverActivated = true;
             }
         }
-        // 콜라이더가 비활성화될 때
         else
         {
             // 파티클이 아직 활성화되지 않았으면 자식들 전부 비활성화
             if (!particlesEverActivated)
-            {
                 SetChildrenActive(false);
-            }
+
             // 파티클이 이미 활성화되었으면 파티클만 켜진 채로 유지
             else
-            {
                 SetChildrenActiveExceptParticles(false);
-            }
         }
     }
 
     private void SetChildrenActive(bool active)
     {
-        // 모든 자식 오브젝트 활성화/비활성화
         foreach (var child in childObjects)
         {
-            if (child != null)
-            {
-                child.SetActive(active);
-            }
+            if (child != null) child.SetActive(active);
         }
     }
 
     private void SetChildrenActiveExceptParticles(bool active)
     {
-        // 파티클을 제외한 자식들만 활성화/비활성화
         foreach (var child in childObjects)
         {
             if (child != null)
@@ -112,9 +106,27 @@ public class ItemPickup : MonoBehaviour
         }
     }
 
+    // 트리거로 들어왔을 때 (Player 태그 검사)
     void OnTriggerEnter2D(Collider2D other)
     {
+        if (hasCollected) return;
         if (!other.CompareTag("Player")) return;
+
+        hasCollected = true;
+
+        if (myCollider != null) myCollider.enabled = false;
+        if (collector != null) collector.CollectBy(gameObject);
+    }
+
+    // 물리 충돌(트리거가 아닌 경우)도 동일 처리
+    void OnCollisionEnter2D(Collision2D collision)
+    {
+        if (hasCollected) return;
+        if (!collision.collider.CompareTag("Player")) return;
+
+        hasCollected = true;
+
+        if (myCollider != null) myCollider.enabled = false;
         if (collector != null) collector.CollectBy(gameObject);
     }
 }
