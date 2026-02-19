@@ -996,7 +996,7 @@ public class ItemCollector : MonoBehaviour,
 
     #endregion
 
-    #region UI Management (기존 유지)
+    #region UI Management
 
     public void UpdateUI()
     {

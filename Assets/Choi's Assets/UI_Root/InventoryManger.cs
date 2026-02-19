@@ -18,7 +18,7 @@ public class InventoryManager : MonoBehaviour
     public InventorySlotUI[] slots = new InventorySlotUI[6];
 
     [Header("Item Definitions")]
-    public ItemDef[] itemDefs; // 아이템 타입별 아이콘 등록
+    public ItemDef[] itemDefs;
 
     private GameObject playerObject;
     private Dictionary<ItemType, Sprite> iconMap = new();
@@ -36,17 +36,13 @@ public class InventoryManager : MonoBehaviour
         DontDestroyOnLoad(gameObject);
 
         BuildIconMap();
-
-        // UI 초기화(슬롯 존재여부 체크 포함)
         RefreshAllUI();
     }
 
     private void Start()
     {
-        // inspector에 수동으로 넣어놨으면 그대로 사용
         if (playerObject != null) return;
 
-        // 우선 바로 GameManager가 있으면 가능한 값으로 셋팅
         if (GameManager.Instance != null && GameManager.Instance.playerTransform != null)
         {
             playerObject = GameManager.Instance.playerTransform.gameObject;
@@ -54,7 +50,6 @@ public class InventoryManager : MonoBehaviour
             return;
         }
 
-        // GameManager가 아직 없거나 playerTransform이 비어있다면 대기 코루틴 시작
         StartCoroutine(WaitForGameManagerAndAssign(waitForGameManagerTimeout));
     }
 
@@ -74,7 +69,7 @@ public class InventoryManager : MonoBehaviour
         }
         else
         {
-            Debug.LogWarning("[InventoryManager] GameManager 또는 playerTransform을 찾지 못했습니다. playerObject가 null 상태입니다. (Inspector에 수동 할당 권장)");
+            Debug.LogWarning("[InventoryManager] GameManager 또는 playerTransform을 찾지 못했습니다. playerObject가 null 상태입니다.");
         }
     }
 
@@ -89,9 +84,6 @@ public class InventoryManager : MonoBehaviour
         }
     }
 
-    /// <summary>
-    /// 랜덤 아이템 지급 (테스트용 버튼)
-    /// </summary>
     public void GiveRandomItem()
     {
         var values = (ItemType[])Enum.GetValues(typeof(ItemType));
@@ -104,14 +96,10 @@ public class InventoryManager : MonoBehaviour
         AddItem(randomType, 1);
     }
 
-    /// <summary>
-    /// 아이템 추가 (스택 + 순서 유지)
-    /// </summary>
     public void AddItem(ItemType type, int amount)
     {
         Debug.Log($"[InventoryManager] {type} 아이템 {amount}개 추가");
 
-        // 1) 이미 가지고 있으면 수량만 증가
         for (int i = 0; i < slots.Length; i++)
         {
             if (slots[i] == null) continue;
@@ -123,7 +111,6 @@ public class InventoryManager : MonoBehaviour
             }
         }
 
-        // 2) 없으면 첫 빈 슬롯에 추가
         int emptyIndex = FindFirstEmptySlot();
         if (emptyIndex == -1)
         {
@@ -159,53 +146,79 @@ public class InventoryManager : MonoBehaviour
         if (slotIndex < 0 || slotIndex >= slots.Length) return;
 
         var slot = slots[slotIndex];
-
         if (slot == null) return;
-
-        // 아이템 없으면 사용 불가
         if (!slot.itemType.HasValue || slot.count <= 0) return;
 
-        // ★ 아이템 효과 실행
-        UseItem(slot.itemType.Value);
+        // ★ 아이템 사용 시도 (UseItem이 false를 반환하면 사용 실패)
+        bool success = UseItem(slot.itemType.Value);
 
-        // 수량 감소
-        slot.count -= 1;
-
-        if (slot.count <= 0)
+        // ★ 사용 성공한 경우에만 아이템 소모
+        if (success)
         {
-            slot.Clear();
-            CompactSlotsUp(); // 빈칸 생기면 위로 정렬
+            slot.count -= 1;
+
+            if (slot.count <= 0)
+            {
+                slot.Clear();
+                CompactSlotsUp();
+            }
+            else
+            {
+                slot.RefreshCountText();
+            }
         }
-        else slot.RefreshCountText();
+        else
+        {
+            Debug.Log($"[InventoryManager] {slot.itemType.Value} 아이템을 사용할 수 없습니다. (조건 불충족)");
+        }
     }
 
     /// <summary>
     /// 아이템 효과 실행 (Factory Pattern 사용)
+    /// ★ 반환값: true = 사용 성공, false = 사용 실패
     /// </summary>
-    private void UseItem(ItemType type)
+    private bool UseItem(ItemType type)
     {
-        Debug.Log($"[InventoryManager] {type} 아이템 사용!");
+        Debug.Log($"[InventoryManager] {type} 아이템 사용 시도...");
 
-        // GameManager 턴 처리 (선택사항)
-        if (GameManager.Instance != null) GameManager.Instance.NotifyTurnProcessed();
+        // ★ Shield 특수 처리: 이미 활성화 중이면 사용 불가
+        if (type == ItemType.Shield)
+        {
+            ShieldEffectController controller = FindFirstObjectByType<ShieldEffectController>();
+            if (controller != null && controller.IsShieldActive)
+            {
+                Debug.LogWarning("[InventoryManager] Shield가 이미 활성화되어 있어 사용할 수 없습니다!");
+                return false; // ★ 사용 실패
+            }
+        }
 
-        // ★ Factory에서 효과 객체 가져와서 실행
+        // GameManager 턴 처리
+        if (GameManager.Instance != null)
+            GameManager.Instance.NotifyTurnProcessed();
+
+        // Factory에서 효과 객체 가져와서 실행
         IItemEffect effect = ItemEffectFactory.GetEffect(type);
 
         if (effect != null)
         {
-            if (playerObject != null) effect.Execute(playerObject);
-            else Debug.LogWarning("[InventoryManager] playerObject가 null입니다. 아이템 효과가 적용되지 않습니다.");
+            if (playerObject != null)
+            {
+                effect.Execute(playerObject);
+                return true; // ★ 사용 성공
+            }
+            else
+            {
+                Debug.LogWarning("[InventoryManager] playerObject가 null입니다. 아이템 효과가 적용되지 않습니다.");
+                return false; // ★ 사용 실패
+            }
         }
         else
         {
             Debug.LogWarning($"[InventoryManager] {type}에 대한 효과가 정의되지 않았습니다.");
+            return false; // ★ 사용 실패
         }
     }
 
-    /// <summary>
-    /// 아래로 밀린 순서 유지하면서 빈칸 제거
-    /// </summary>
     private void CompactSlotsUp()
     {
         for (int i = 0; i < slots.Length - 1; i++)
@@ -236,21 +249,19 @@ public class InventoryManager : MonoBehaviour
         }
     }
 
-    /// <summary>
-    /// 특정 타입 아이템 개수 확인
-    /// </summary>
     public int GetItemCount(ItemType type)
     {
         for (int i = 0; i < slots.Length; i++)
         {
             if (slots[i] == null) continue;
-            if (slots[i].itemType.HasValue && slots[i].itemType.Value == type) return slots[i].count;
+            if (slots[i].itemType.HasValue && slots[i].itemType.Value == type)
+                return slots[i].count;
         }
         return 0;
     }
 
-    /// <summary>
-    /// 특정 타입 아이템 보유 여부
-    /// </summary>
-    public bool HasItem(ItemType type) { return GetItemCount(type) > 0; }
+    public bool HasItem(ItemType type)
+    {
+        return GetItemCount(type) > 0;
+    }
 }

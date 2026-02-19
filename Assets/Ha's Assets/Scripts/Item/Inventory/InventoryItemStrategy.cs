@@ -43,15 +43,26 @@ public class InventoryItemStrategy : IItemCollectionStrategy
         // 5. GameManager 알림
         context.NotifyGameManager(item);
 
-        // 6. SpriteRotator 처리 (있는 경우)
-        SpriteRotator rotator = item.GetComponent<SpriteRotator>();
-        if (rotator != null)
+        // 6. 파티클 시스템 중지 (이펙트 제거)
+        ParticleSystem[] particles = item.GetComponentsInChildren<ParticleSystem>();
+        foreach (var ps in particles)
         {
-            // SpriteRotator의 자체 애니메이션 비활성화
-            rotator.enabled = false;
+            if (ps != null)
+            {
+                ps.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
+                ps.Clear(true);               
+                ps.gameObject.SetActive(false);
+            }
+
         }
 
-        // 7. 아이템 페이드아웃
-        context.FadeOutItem(item);
+        // 6. SpriteRotator 처리 (있는 경우)
+        SpriteRotator rotator = item.GetComponent<SpriteRotator>();
+        if (rotator != null) rotator.TriggerDisappear();
+        else
+        {
+            // SpriteRotator가 없으면 기본 페이드아웃
+            context.FadeOutItem(item);
+        }
     }
 }

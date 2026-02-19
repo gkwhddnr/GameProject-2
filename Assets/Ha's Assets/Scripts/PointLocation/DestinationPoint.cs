@@ -3,14 +3,13 @@ using System.Collections;
 using System.Reflection;
 using UnityEngine;
 using UnityEngine.Events;
+using UnityEngine.SceneManagement;
 
 [RequireComponent(typeof(BoxCollider2D))]
 [DisallowMultipleComponent]
 public class DestinationPoint : MonoBehaviour
 {
-    private const bool V = true;
-    private const string V1 = "Player";
-    [Tooltip("플레이어가 도착했을 때 호출되는 이벤트입니다. (인스펙터에서 GameManager 함수 연결 가능)")]
+    [Tooltip("플레이어가 도착했을 때 호출되는 이벤트입니다.")]
     public UnityEvent onReached;
 
     [Header("캐릭터가 목표지점에 도착 시 딜레이 후 이동")]
@@ -19,20 +18,26 @@ public class DestinationPoint : MonoBehaviour
     [Header("설정")]
     [Tooltip("이동하는 동안 플레이어의 조작을 막을지 여부")]
     private bool disablePlayerMovementDuringDelay = true;
+
     [Tooltip("물리 연산을 멈출지 여부 (밀림 방지)")]
-    private readonly bool disableRigidbodySimulationDuringDelay = V;
+    private readonly bool disableRigidbodySimulationDuringDelay = true;
 
-    private readonly string playerTag = V1;
-    private bool triggered = false; // 중복 트리거 방지 플래그
+    private readonly string playerTag = "Player";
+    private bool triggered = false;
 
-    public bool DisablePlayerMovementDuringDelay { get => disablePlayerMovementDuringDelay; set => disablePlayerMovementDuringDelay = value; }
+    public bool DisablePlayerMovementDuringDelay
+    {
+        get => disablePlayerMovementDuringDelay;
+        set => disablePlayerMovementDuringDelay = value;
+    }
 
     void Reset()
     {
         if (string.IsNullOrEmpty(gameObject.name) || gameObject.name.StartsWith("GameObject")) gameObject.name = "Destination";
 
         if (!TryGetComponent<BoxCollider2D>(out var bc)) bc = gameObject.AddComponent<BoxCollider2D>();
-        bc.isTrigger = true; // 목적지는 보통 트리거로 설정
+
+        bc.isTrigger = true;
     }
 
     void OnTriggerEnter2D(Collider2D other)
@@ -49,13 +54,10 @@ public class DestinationPoint : MonoBehaviour
 
     void HandleCollision(GameObject otherGO)
     {
-        // GridMovementSystem이 있는 오브젝트를 플레이어로 간주
         GridMovementSystem gms = otherGO.GetComponent<GridMovementSystem>();
-
-        // 혹은 태그로 확인
         bool isPlayerTag = !string.IsNullOrEmpty(playerTag) && otherGO.CompareTag(playerTag);
 
-        if (gms != null || isPlayerTag) HandleReached(otherGO, gms);   
+        if (gms != null || isPlayerTag) HandleReached(otherGO, gms);
     }
 
     void HandleReached(GameObject playerGO, GridMovementSystem gms)
@@ -63,7 +65,7 @@ public class DestinationPoint : MonoBehaviour
         if (triggered) return;
         triggered = true;
 
-        Debug.Log($"Destination reached by {playerGO.name}");
+        Debug.Log($"[DestinationPoint] Destination reached by {playerGO.name}");
 
         StartCoroutine(DelayAndHandle(playerGO, gms));
     }
@@ -72,7 +74,7 @@ public class DestinationPoint : MonoBehaviour
     {
         if (playerGO == null) yield break;
 
-        // 1. 즉시 이동 멈추기 (이동 코루틴 강제 중단)
+        // 1. 즉시 이동 멈추기
         bool moveSysWasEnabled = false;
         bool rbSimulatedWas = true;
         Rigidbody2D rb = playerGO.GetComponent<Rigidbody2D>();
@@ -81,53 +83,89 @@ public class DestinationPoint : MonoBehaviour
         if (gms != null)
         {
             moveSysWasEnabled = gms.enabled;
-
-            // 현재 실행 중인 모든 이동 코루틴 즉시 중단
             gms.StopAllCoroutines();
-
-            // 내부 상태 강제 리셋
             ResetPrivateMovementFlags(gms);
 
-            if (DisablePlayerMovementDuringDelay) gms.enabled = false;     // Update 및 입력 차단
+            if (DisablePlayerMovementDuringDelay)
+                gms.enabled = false;
         }
 
-        // 애니메이션 강제 Idle 전환 (걷는 모션으로 굳는 것 방지)
-        if (anim != null) anim.SetBool("IsMoving", false);
+        // 애니메이션 Idle 전환
+        if (anim != null)
+            anim.SetBool("IsMoving", false);
+
+        // 물리 연산 중단
         if (disableRigidbodySimulationDuringDelay && rb != null)
         {
             rbSimulatedWas = rb.simulated;
             rb.linearVelocity = Vector2.zero;
             rb.angularVelocity = 0f;
-            rb.simulated = false; // 물리 연산 중단 (미끄러짐 방지)
+            rb.simulated = false;
         }
 
         // 2. 연출 대기
         if (delaySeconds > 0f) yield return new WaitForSecondsRealtime(delaySeconds);
 
         // 3. 이벤트 실행
-        try{ onReached?.Invoke(); }
-        catch (Exception ex){ Debug.LogException(ex); }
-
-        if (playerGO != null)
+        try
         {
-            if (rb != null && disableRigidbodySimulationDuringDelay) rb.simulated = rbSimulatedWas;
-            if (gms != null && DisablePlayerMovementDuringDelay)
-            {
-                // 다시 켜기 전에 플래그 확실히 초기화
-                ResetPrivateMovementFlags(gms);
-                gms.enabled = moveSysWasEnabled;
-            }
+            onReached?.Invoke();
+        }
+        catch (Exception ex)
+        {
+            Debug.LogException(ex);
+        }
+
+        // 4. Planet 레이어 체크 → 씬 전환
+        int planetLayer = LayerMask.NameToLayer("Planet");
+        if (planetLayer != -1 && gameObject.layer == planetLayer)
+        {
+            Debug.Log("[DestinationPoint] Planet 레이어 감지! 'Choi_MainScreen' 씬으로 이동...");
+
+            // 플레이어 상태 복원
+            RestorePlayerState(playerGO, rb, gms, rbSimulatedWas, moveSysWasEnabled);
+
+            // 씬 전환
+            AsyncOperation op = SceneManager.LoadSceneAsync("Choi_MainScreen");
+
+            if (op == null) yield break;
+            while (!op.isDone) yield return null;
+
+            Debug.Log("[DestinationPoint] 씬 전환 완료!");
+            yield break;
+        }
+
+        // 5. 일반 도착지점 - 플레이어 상태 복원
+        RestorePlayerState(playerGO, rb, gms, rbSimulatedWas, moveSysWasEnabled);
+    }
+
+    /// <summary>
+    /// 플레이어 상태 복원
+    /// </summary>
+    private void RestorePlayerState(GameObject playerGO, Rigidbody2D rb, GridMovementSystem gms,
+        bool rbSimulatedWas, bool moveSysWasEnabled)
+    {
+        if (playerGO == null) return;
+
+        // Rigidbody2D 복원
+        if (rb != null && disableRigidbodySimulationDuringDelay) rb.simulated = rbSimulatedWas;
+
+        // GridMovementSystem 복원
+        if (gms != null && DisablePlayerMovementDuringDelay)
+        {
+            ResetPrivateMovementFlags(gms);
+            gms.enabled = moveSysWasEnabled;
         }
     }
 
-
+    /// <summary>
+    /// GridMovementSystem의 private 플래그 리셋 (Reflection)
+    /// </summary>
     void ResetPrivateMovementFlags(GridMovementSystem gms)
     {
         if (gms == null) return;
 
         Type t = typeof(GridMovementSystem);
-
-        // 앞서 작성한 스크립트의 변수명에 맞춰 설정
         string[] fieldNames = new string[] { "isMoving", "isInputProcessed" };
 
         foreach (var name in fieldNames)
@@ -135,10 +173,7 @@ public class DestinationPoint : MonoBehaviour
             try
             {
                 FieldInfo field = t.GetField(name, BindingFlags.Instance | BindingFlags.NonPublic);
-                if (field != null && field.FieldType == typeof(bool))
-                {
-                    field.SetValue(gms, false);
-                }
+                if (field != null && field.FieldType == typeof(bool)) field.SetValue(gms, false);
             }
             catch { /* 무시 */ }
         }
@@ -148,7 +183,7 @@ public class DestinationPoint : MonoBehaviour
     {
         if (TryGetComponent<BoxCollider2D>(out var col))
         {
-            Gizmos.color = new Color(0f, 1f, 1f, 0.3f); // 하늘색 반투명
+            Gizmos.color = new Color(0f, 1f, 1f, 0.3f);
             Gizmos.DrawCube(transform.position + (Vector3)col.offset, col.size);
             Gizmos.color = new Color(0f, 1f, 1f, 1f);
             Gizmos.DrawWireCube(transform.position + (Vector3)col.offset, col.size);

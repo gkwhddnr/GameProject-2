@@ -1,5 +1,7 @@
+using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using UnityEngine.UI;
 
 public class MainScreen : MonoBehaviour
 {
@@ -18,7 +20,14 @@ public class MainScreen : MonoBehaviour
     public void OnclickStartButton()
     {
         Debug.Log("start button clicked");
-        SceneManager.LoadScene("Ha");
+        if (SceneFader.Instance != null) SceneFader.Instance.FadeToScene("Ha");
+        else
+        {
+            // SceneFader가 아직 없다면 생성 후 호출
+            GameObject go = new GameObject("SceneFader");
+            SceneFader f = go.AddComponent<SceneFader>();
+            f.FadeToScene("Ha");
+        }
     }
 
     public void OnclickcontinueButton()
