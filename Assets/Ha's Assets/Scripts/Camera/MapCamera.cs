@@ -223,6 +223,7 @@ public class MapCamera : MonoBehaviour
             if (found != null)
             {
                 playerTarget = found;
+                RefreshCameraState();
                 return;
             }
         }
