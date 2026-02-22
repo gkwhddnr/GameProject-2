@@ -1,4 +1,3 @@
-using System.Collections;
 using UnityEngine;
 
 /// <summary>
@@ -20,11 +19,7 @@ public class ItemSpriteRegistrar : MonoBehaviour
     [Tooltip("게임 시작 시 자동으로 InventoryManager에 등록")]
     public bool registerOnStart = true;
 
-    [Tooltip("InventoryManager가 늦게 생성될 때 등록을 재시도할 최대 시간(초)")]
-    public float registerRetryTimeout = 3f;
-
     private SpriteRenderer spriteRenderer;
-    private Coroutine registerCoroutine;
 
     private void Awake()
     {
@@ -35,16 +30,7 @@ public class ItemSpriteRegistrar : MonoBehaviour
     {
         if (registerOnStart)
         {
-            registerCoroutine = StartCoroutine(RegisterWhenInventoryManagerReady());
-        }
-    }
-
-    private void OnDisable()
-    {
-        if (registerCoroutine != null)
-        {
-            StopCoroutine(registerCoroutine);
-            registerCoroutine = null;
+            RegisterSprite();
         }
     }
 
@@ -77,22 +63,8 @@ public class ItemSpriteRegistrar : MonoBehaviour
         }
         else
         {
-            Debug.LogWarning($"[ItemSpriteRegistrar] InventoryManager를 찾을 수 없어 {itemType} 등록에 실패했습니다.");
+            Debug.LogWarning("[ItemSpriteRegistrar] InventoryManager를 찾을 수 없습니다!");
         }
-    }
-
-    private IEnumerator RegisterWhenInventoryManagerReady()
-    {
-        float elapsed = 0f;
-
-        while (InventoryManager.Instance == null && elapsed < registerRetryTimeout)
-        {
-            elapsed += Time.deltaTime;
-            yield return null;
-        }
-
-        RegisterSprite();
-        registerCoroutine = null;
     }
 
     /// <summary>

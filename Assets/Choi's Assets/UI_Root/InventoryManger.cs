@@ -76,11 +76,18 @@ public class InventoryManager : MonoBehaviour
     private void BuildIconMap()
     {
         iconMap.Clear();
+
+        // itemDefs는 기본값으로만 사용하고, 씬의 ItemSpriteRegistrar가 우선됨
         if (itemDefs == null) return;
 
         foreach (var def in itemDefs)
         {
-            if (!iconMap.ContainsKey(def.type)) iconMap.Add(def.type, def.icon);
+            // iconMap에 추가 (나중에 RegisterItemSprite로 덮어쓸 수 있음)
+            if (!iconMap.ContainsKey(def.type))
+            {
+                iconMap.Add(def.type, def.icon);
+                Debug.Log($"[InventoryManager] 기본 아이콘 설정: {def.type} = {(def.icon != null ? def.icon.name : "null")}");
+            }
         }
     }
 
@@ -95,16 +102,17 @@ public class InventoryManager : MonoBehaviour
             return;
         }
 
-        // iconMap에 추가/업데이트
+        Debug.Log($"[InventoryManager] RegisterItemSprite 호출: {type} → {sprite.name}");
+
+        // iconMap에 강제 업데이트 (기존 값 덮어쓰기)
         if (iconMap.ContainsKey(type))
         {
-            // 이미 있으면 업데이트
+            Sprite oldSprite = iconMap[type];
             iconMap[type] = sprite;
-            Debug.Log($"[InventoryManager] {type} 아이템 Sprite 업데이트: {sprite.name}");
+            Debug.Log($"[InventoryManager] {type} 아이템 Sprite 업데이트: {(oldSprite != null ? oldSprite.name : "null")} → {sprite.name}");
         }
         else
         {
-            // 없으면 새로 추가
             iconMap.Add(type, sprite);
             Debug.Log($"[InventoryManager] {type} 아이템 Sprite 등록: {sprite.name}");
         }
@@ -112,7 +120,7 @@ public class InventoryManager : MonoBehaviour
         // itemDefs 배열도 업데이트 (Inspector에 반영)
         UpdateItemDefs(type, sprite);
 
-        // 이미 인벤토리에 있는 해당 아이템의 아이콘도 업데이트
+        // 이미 인벤토리에 있는 해당 아이템의 아이콘도 즉시 업데이트
         UpdateExistingSlotIcons(type, sprite);
     }
 
