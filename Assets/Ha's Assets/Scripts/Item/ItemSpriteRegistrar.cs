@@ -1,25 +1,30 @@
+using System.Collections;
 using UnityEngine;
 
 /// <summary>
-/// ¾ÀÀÇ ¾ÆÀÌÅÛ ¿ÀºêÁ§Æ®µéÀÇ Sprite¸¦ ÀÚµ¿À¸·Î InventoryManager¿¡ µî·Ï
-/// Kit, Shield µîÀÇ ¾ÆÀÌÅÛ ¿ÀºêÁ§Æ®¿¡ ºÎÂøÇÏ¿© »ç¿ë
+/// ì”¬ì˜ ì•„ì´í…œ ì˜¤ë¸Œì íŠ¸ë“¤ì˜ Spriteë¥¼ ìë™ìœ¼ë¡œ InventoryManagerì— ë“±ë¡
+/// Kit, Shield ë“±ì˜ ì•„ì´í…œ ì˜¤ë¸Œì íŠ¸ì— ë¶€ì°©í•˜ì—¬ ì‚¬ìš©
 /// </summary>
 [RequireComponent(typeof(SpriteRenderer))]
 public class ItemSpriteRegistrar : MonoBehaviour
 {
-    [Header("¾ÆÀÌÅÛ Å¸ÀÔ")]
-    [Tooltip("ÀÌ ¿ÀºêÁ§Æ®°¡ ³ªÅ¸³»´Â ¾ÆÀÌÅÛ Å¸ÀÔ")]
+    [Header("ì•„ì´í…œ íƒ€ì…")]
+    [Tooltip("ì´ ì˜¤ë¸Œì íŠ¸ê°€ ë‚˜íƒ€ë‚´ëŠ” ì•„ì´í…œ íƒ€ì…")]
     public ItemType itemType;
 
-    [Header("ÀÎº¥Åä¸® ¾ÆÀÌÄÜ")]
-    [Tooltip("ÀÎº¥Åä¸®¿¡ Ç¥½ÃµÉ ¾ÆÀÌÄÜ (ºñ¾îÀÖÀ¸¸é SpriteRendererÀÇ Sprite »ç¿ë)")]
+    [Header("ì¸ë²¤í† ë¦¬ ì•„ì´ì½˜")]
+    [Tooltip("ì¸ë²¤í† ë¦¬ì— í‘œì‹œë  ì•„ì´ì½˜ (ë¹„ì–´ìˆìœ¼ë©´ SpriteRendererì˜ Sprite ì‚¬ìš©)")]
     public Sprite inventoryIcon;
 
-    [Header("ÀÚµ¿ µî·Ï ¼³Á¤")]
-    [Tooltip("°ÔÀÓ ½ÃÀÛ ½Ã ÀÚµ¿À¸·Î InventoryManager¿¡ µî·Ï")]
+    [Header("ìë™ ë“±ë¡ ì„¤ì •")]
+    [Tooltip("ê²Œì„ ì‹œì‘ ì‹œ ìë™ìœ¼ë¡œ InventoryManagerì— ë“±ë¡")]
     public bool registerOnStart = true;
 
+    [Tooltip("InventoryManagerê°€ ëŠ¦ê²Œ ìƒì„±ë  ë•Œ ë“±ë¡ì„ ì¬ì‹œë„í•  ìµœëŒ€ ì‹œê°„(ì´ˆ)")]
+    public float registerRetryTimeout = 3f;
+
     private SpriteRenderer spriteRenderer;
+    private Coroutine registerCoroutine;
 
     private void Awake()
     {
@@ -30,57 +35,80 @@ public class ItemSpriteRegistrar : MonoBehaviour
     {
         if (registerOnStart)
         {
-            RegisterSprite();
+            registerCoroutine = StartCoroutine(RegisterWhenInventoryManagerReady());
+        }
+    }
+
+    private void OnDisable()
+    {
+        if (registerCoroutine != null)
+        {
+            StopCoroutine(registerCoroutine);
+            registerCoroutine = null;
         }
     }
 
     /// <summary>
-    /// ÀÌ ¾ÆÀÌÅÛÀÇ Sprite¸¦ InventoryManager¿¡ µî·Ï
+    /// ì´ ì•„ì´í…œì˜ Spriteë¥¼ InventoryManagerì— ë“±ë¡
     /// </summary>
     public void RegisterSprite()
     {
-        // »ç¿ëÇÒ Sprite °áÁ¤: inventoryIconÀÌ ÀÖÀ¸¸é ±×°Í »ç¿ë, ¾øÀ¸¸é SpriteRenderer »ç¿ë
+        // ì‚¬ìš©í•  Sprite ê²°ì •: inventoryIconì´ ìˆìœ¼ë©´ ê·¸ê²ƒ ì‚¬ìš©, ì—†ìœ¼ë©´ SpriteRenderer ì‚¬ìš©
         Sprite spriteToUse = inventoryIcon != null ? inventoryIcon : GetSpriteFromRenderer();
 
         if (spriteToUse == null)
         {
-            Debug.LogError($"[ItemSpriteRegistrar] {gameObject.name}¿¡ µî·ÏÇÒ Sprite°¡ ¾ø½À´Ï´Ù! " +
-                "Inventory IconÀ» ¼³Á¤ÇÏ°Å³ª SpriteRenderer¿¡ Sprite¸¦ ¼³Á¤ÇØÁÖ¼¼¿ä.");
+            Debug.LogError($"[ItemSpriteRegistrar] {gameObject.name}ì— ë“±ë¡í•  Spriteê°€ ì—†ìŠµë‹ˆë‹¤! " +
+                "Inventory Iconì„ ì„¤ì •í•˜ê±°ë‚˜ SpriteRendererì— Spriteë¥¼ ì„¤ì •í•´ì£¼ì„¸ìš”.");
             return;
         }
 
         if (itemType == ItemType.None)
         {
-            Debug.LogWarning($"[ItemSpriteRegistrar] {gameObject.name}ÀÇ ItemTypeÀÌ NoneÀÔ´Ï´Ù. Å¸ÀÔÀ» ¼³Á¤ÇØÁÖ¼¼¿ä.");
+            Debug.LogWarning($"[ItemSpriteRegistrar] {gameObject.name}ì˜ ItemTypeì´ Noneì…ë‹ˆë‹¤. íƒ€ì…ì„ ì„¤ì •í•´ì£¼ì„¸ìš”.");
             return;
         }
 
-        // InventoryManager¿¡ Sprite µî·Ï
+        // InventoryManagerì— Sprite ë“±ë¡
         if (InventoryManager.Instance != null)
         {
             InventoryManager.Instance.RegisterItemSprite(itemType, spriteToUse);
-            Debug.Log($"[ItemSpriteRegistrar] {itemType} ¾ÆÀÌÅÛ Sprite µî·Ï ¿Ï·á: {spriteToUse.name}");
+            Debug.Log($"[ItemSpriteRegistrar] {itemType} ì•„ì´í…œ Sprite ë“±ë¡ ì™„ë£Œ: {spriteToUse.name}");
         }
         else
         {
-            Debug.LogWarning("[ItemSpriteRegistrar] InventoryManager¸¦ Ã£À» ¼ö ¾ø½À´Ï´Ù!");
+            Debug.LogWarning($"[ItemSpriteRegistrar] InventoryManagerë¥¼ ì°¾ì„ ìˆ˜ ì—†ì–´ {itemType} ë“±ë¡ì— ì‹¤íŒ¨í–ˆìŠµë‹ˆë‹¤.");
         }
     }
 
+    private IEnumerator RegisterWhenInventoryManagerReady()
+    {
+        float elapsed = 0f;
+
+        while (InventoryManager.Instance == null && elapsed < registerRetryTimeout)
+        {
+            elapsed += Time.deltaTime;
+            yield return null;
+        }
+
+        RegisterSprite();
+        registerCoroutine = null;
+    }
+
     /// <summary>
-    /// SpriteRenderer¿¡¼­ Sprite °¡Á®¿À±â
+    /// SpriteRendererì—ì„œ Sprite ê°€ì ¸ì˜¤ê¸°
     /// </summary>
     private Sprite GetSpriteFromRenderer()
     {
         if (spriteRenderer == null)
         {
-            Debug.LogError($"[ItemSpriteRegistrar] {gameObject.name}¿¡ SpriteRenderer°¡ ¾ø½À´Ï´Ù!");
+            Debug.LogError($"[ItemSpriteRegistrar] {gameObject.name}ì— SpriteRendererê°€ ì—†ìŠµë‹ˆë‹¤!");
             return null;
         }
 
         if (spriteRenderer.sprite == null)
         {
-            Debug.LogError($"[ItemSpriteRegistrar] {gameObject.name}ÀÇ SpriteRenderer¿¡ Sprite°¡ ¼³Á¤µÇÁö ¾Ê¾Ò½À´Ï´Ù!");
+            Debug.LogError($"[ItemSpriteRegistrar] {gameObject.name}ì˜ SpriteRendererì— Spriteê°€ ì„¤ì •ë˜ì§€ ì•Šì•˜ìŠµë‹ˆë‹¤!");
             return null;
         }
 
@@ -88,18 +116,18 @@ public class ItemSpriteRegistrar : MonoBehaviour
     }
 
     /// <summary>
-    /// Inspector¿¡¼­ ¾ÆÀÌÅÛ Å¸ÀÔ ÀÚµ¿ °¨Áö (·¹ÀÌ¾î ±â¹İ)
+    /// Inspectorì—ì„œ ì•„ì´í…œ íƒ€ì… ìë™ ê°ì§€ (ë ˆì´ì–´ ê¸°ë°˜)
     /// </summary>
     private void OnValidate()
     {
-        // ·¹ÀÌ¾î ÀÌ¸§À¸·Î ÀÚµ¿ °¨Áö
+        // ë ˆì´ì–´ ì´ë¦„ìœ¼ë¡œ ìë™ ê°ì§€
         string layerName = LayerMask.LayerToName(gameObject.layer);
         ItemType detectedType = ItemLayers.GetItemType(layerName);
 
         if (detectedType != ItemType.None && itemType == ItemType.None)
         {
             itemType = detectedType;
-            Debug.Log($"[ItemSpriteRegistrar] {gameObject.name}ÀÇ ItemTypeÀ» ÀÚµ¿À¸·Î {detectedType}(À¸)·Î ¼³Á¤Çß½À´Ï´Ù.");
+            Debug.Log($"[ItemSpriteRegistrar] {gameObject.name}ì˜ ItemTypeì„ ìë™ìœ¼ë¡œ {detectedType}(ìœ¼)ë¡œ ì„¤ì •í–ˆìŠµë‹ˆë‹¤.");
         }
     }
 }
