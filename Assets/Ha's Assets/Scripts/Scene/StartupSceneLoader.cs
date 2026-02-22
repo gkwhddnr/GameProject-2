@@ -2,6 +2,7 @@ using UnityEngine;
 using UnityEngine.SceneManagement;
 using System.IO;
 
+
 static class StartupSceneLoader
 {
     private const string MainSceneName = "Choi_MainScreen";

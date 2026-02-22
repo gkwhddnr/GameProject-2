@@ -84,6 +84,86 @@ public class InventoryManager : MonoBehaviour
         }
     }
 
+    /// <summary>
+    /// 아이템 Sprite를 동적으로 등록 (씬의 아이템 오브젝트에서 호출)
+    /// </summary>
+    public void RegisterItemSprite(ItemType type, Sprite sprite)
+    {
+        if (sprite == null)
+        {
+            Debug.LogWarning($"[InventoryManager] {type} 아이템의 Sprite가 null입니다!");
+            return;
+        }
+
+        // iconMap에 추가/업데이트
+        if (iconMap.ContainsKey(type))
+        {
+            // 이미 있으면 업데이트
+            iconMap[type] = sprite;
+            Debug.Log($"[InventoryManager] {type} 아이템 Sprite 업데이트: {sprite.name}");
+        }
+        else
+        {
+            // 없으면 새로 추가
+            iconMap.Add(type, sprite);
+            Debug.Log($"[InventoryManager] {type} 아이템 Sprite 등록: {sprite.name}");
+        }
+
+        // itemDefs 배열도 업데이트 (Inspector에 반영)
+        UpdateItemDefs(type, sprite);
+
+        // 이미 인벤토리에 있는 해당 아이템의 아이콘도 업데이트
+        UpdateExistingSlotIcons(type, sprite);
+    }
+
+    /// <summary>
+    /// itemDefs 배열 업데이트
+    /// </summary>
+    private void UpdateItemDefs(ItemType type, Sprite sprite)
+    {
+        if (itemDefs == null)
+        {
+            itemDefs = new ItemDef[1];
+            itemDefs[0] = new ItemDef { type = type, icon = sprite };
+            return;
+        }
+
+        // 기존에 있는지 확인
+        for (int i = 0; i < itemDefs.Length; i++)
+        {
+            if (itemDefs[i].type == type)
+            {
+                itemDefs[i].icon = sprite;
+                return;
+            }
+        }
+
+        // 없으면 배열 확장
+        ItemDef[] newDefs = new ItemDef[itemDefs.Length + 1];
+        for (int i = 0; i < itemDefs.Length; i++)
+        {
+            newDefs[i] = itemDefs[i];
+        }
+        newDefs[itemDefs.Length] = new ItemDef { type = type, icon = sprite };
+        itemDefs = newDefs;
+    }
+
+    /// <summary>
+    /// 이미 인벤토리에 있는 아이템의 아이콘 업데이트
+    /// </summary>
+    private void UpdateExistingSlotIcons(ItemType type, Sprite sprite)
+    {
+        for (int i = 0; i < slots.Length; i++)
+        {
+            if (slots[i] == null) continue;
+            if (slots[i].itemType.HasValue && slots[i].itemType.Value == type)
+            {
+                slots[i].SetIcon(sprite);
+                Debug.Log($"[InventoryManager] 슬롯 {i}의 {type} 아이콘 업데이트");
+            }
+        }
+    }
+
     public void GiveRandomItem()
     {
         var values = (ItemType[])Enum.GetValues(typeof(ItemType));
@@ -138,9 +218,6 @@ public class InventoryManager : MonoBehaviour
         return null;
     }
 
-    /// <summary>
-    /// 슬롯 클릭 시 호출: 아이템 사용
-    /// </summary>
     public void TryUseSlot(int slotIndex)
     {
         if (slotIndex < 0 || slotIndex >= slots.Length) return;
@@ -149,10 +226,8 @@ public class InventoryManager : MonoBehaviour
         if (slot == null) return;
         if (!slot.itemType.HasValue || slot.count <= 0) return;
 
-        // ★ 아이템 사용 시도 (UseItem이 false를 반환하면 사용 실패)
         bool success = UseItem(slot.itemType.Value);
 
-        // ★ 사용 성공한 경우에만 아이템 소모
         if (success)
         {
             slot.count -= 1;
@@ -173,30 +248,24 @@ public class InventoryManager : MonoBehaviour
         }
     }
 
-    /// <summary>
-    /// 아이템 효과 실행 (Factory Pattern 사용)
-    /// ★ 반환값: true = 사용 성공, false = 사용 실패
-    /// </summary>
     private bool UseItem(ItemType type)
     {
         Debug.Log($"[InventoryManager] {type} 아이템 사용 시도...");
 
-        // ★ Shield 특수 처리: 이미 활성화 중이면 사용 불가
+        // Shield 특수 처리
         if (type == ItemType.Shield)
         {
             ShieldEffectController controller = FindFirstObjectByType<ShieldEffectController>();
             if (controller != null && controller.IsShieldActive)
             {
                 Debug.LogWarning("[InventoryManager] Shield가 이미 활성화되어 있어 사용할 수 없습니다!");
-                return false; // ★ 사용 실패
+                return false;
             }
         }
 
-        // GameManager 턴 처리
         if (GameManager.Instance != null)
             GameManager.Instance.NotifyTurnProcessed();
 
-        // Factory에서 효과 객체 가져와서 실행
         IItemEffect effect = ItemEffectFactory.GetEffect(type);
 
         if (effect != null)
@@ -204,18 +273,18 @@ public class InventoryManager : MonoBehaviour
             if (playerObject != null)
             {
                 effect.Execute(playerObject);
-                return true; // ★ 사용 성공
+                return true;
             }
             else
             {
                 Debug.LogWarning("[InventoryManager] playerObject가 null입니다. 아이템 효과가 적용되지 않습니다.");
-                return false; // ★ 사용 실패
+                return false;
             }
         }
         else
         {
             Debug.LogWarning($"[InventoryManager] {type}에 대한 효과가 정의되지 않았습니다.");
-            return false; // ★ 사용 실패
+            return false;
         }
     }
 
