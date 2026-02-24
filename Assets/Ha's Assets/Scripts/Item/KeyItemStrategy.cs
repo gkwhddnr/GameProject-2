@@ -47,7 +47,6 @@ public class KeyItemStrategy : IItemCollectionStrategy
         if (keyActivator != null)
         {
             context.PlaySound("key");
-            context.ShowFloatingText(item);
             keyActivator.Activate(context.GetCurrentStageIndex());
             context.FadeOutItem(item);
             return;
@@ -55,7 +54,6 @@ public class KeyItemStrategy : IItemCollectionStrategy
 
         // 일반 키 처리
         context.PlaySound("key");
-        context.ShowFloatingText(item);
 
         // GameManager 키 슬롯 처리
         if (GameManager.Instance != null)
@@ -66,6 +64,8 @@ public class KeyItemStrategy : IItemCollectionStrategy
             }
         }
 
+        context.ShowFloatingText(item);
+
         // 가장 가까운 장애물 찾아서 제거
         Vector3 keyPos = item.transform.position;
         int keyStageIndex = context.GetCurrentStageIndex();
@@ -75,7 +75,12 @@ public class KeyItemStrategy : IItemCollectionStrategy
             obstacleController.HandleKeyCollected(item, keyStageIndex);
         }
 
-        // 아이템 페이드아웃
+        var rotator = item.GetComponent<SpriteRotator>();
+        if (rotator != null)
+        {
+            rotator.TriggerDisappear();
+        }
+
         context.FadeOutItem(item);
     }
 }

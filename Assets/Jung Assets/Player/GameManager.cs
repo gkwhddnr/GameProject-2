@@ -174,10 +174,6 @@ public class GameManager : MonoBehaviour
 
             countText.text = $"Stage {currentStageIndex + 1} : {displayCount}";
         }
-        else
-        {
-            countText.text = $"Count: {MoveCount}";
-        }
     }
 public void DieAndRespawn()
     {

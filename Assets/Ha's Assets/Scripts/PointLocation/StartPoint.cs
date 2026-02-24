@@ -1,9 +1,12 @@
 using UnityEngine;
 
+
+
 [DisallowMultipleComponent]
+
 public class StartPoint : MonoBehaviour
+
 {
-    private const string V = "Player";
     [Header("Spawn Settings")]
     public GameObject playerPrefab;
 
@@ -27,7 +30,6 @@ public class StartPoint : MonoBehaviour
 
         // 씬에 이미 플레이어가 있는지 먼저 확인
         GameObject existingPlayer = null;
-
         if (!string.IsNullOrEmpty(playerTag))
         {
             try
@@ -44,35 +46,25 @@ public class StartPoint : MonoBehaviour
         {
             // 이미 배치된 캐릭터가 있으면 위치만 이동
             existingPlayer.transform.position = transform.position;
-
             var rb = existingPlayer.GetComponent<Rigidbody2D>();
             if (rb != null) rb.linearVelocity = Vector2.zero;
 
             Debug.Log($"StartPoint: 기존 플레이어 '{existingPlayer.name}'를 시작 위치로 이동시켰습니다.");
             return;
         }
-
         // 씬에 플레이어가 없을 때만 프리팹 생성
+
         if (playerPrefab != null)
         {
             var spawned = Instantiate(playerPrefab, transform.position, Quaternion.identity);
             spawned.name = playerPrefab.name;
-
             if (string.IsNullOrEmpty(spawned.tag) || spawned.tag == "Untagged")
             {
                 try { spawned.tag = playerTag; } catch { }
             }
-
             var rb = spawned.GetComponent<Rigidbody2D>();
             if (rb != null) rb.linearVelocity = Vector2.zero;
-
             Debug.Log($"StartPoint: 플레이어 프리팹 '{spawned.name}'를 새로 스폰했습니다.");
         }
-    }
-
-    // 유틸리티
-    public static StartPoint FindFirst()
-    {
-        return FindFirstObjectByType<StartPoint>();
     }
 }

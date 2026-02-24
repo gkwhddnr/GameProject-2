@@ -33,6 +33,7 @@ public class MapCameraStageController : MonoBehaviour
     private bool snapCameraWhenChanging = true;
     private int lastAppliedStage = -1;
     private int lastDetectedStage = -2;
+    private int stageExitCounter = 0;
     private bool hasAppliedInitialStage = false;
 
     [Serializable]
@@ -112,13 +113,29 @@ public class MapCameraStageController : MonoBehaviour
 
         if (idx < 0 || idx >= gameManager.stageSettings.Length)
         {
+            // 연속으로 밖에 있으면 카운트 증가
+            stageExitCounter++;
+
+            // 아직 유예 횟수에 미달하면 아무 동작도 하지 않음 (설정 유지)
+            if (stageExitCounter < Mathf.Max(1, 99))
+            {
+                return;
+            }
+
+            // 유예가 완료되었고 이전에 적용된 스테이지가 있었다면 None 상태로 처리(원하면 변경)
             if (lastAppliedStage != -1)
             {
                 lastAppliedStage = -1;
+
+                // 주의: ApplyModeToCamera의 None 분기는 더 이상 카메라 설정을 초기화하지 않음.
                 ApplyModeToCamera(StageCameraMode.None, null, forceImmediate, -1);
+                Debug.Log("[MapCameraStageController] Player remained outside; applied None mode after grace turns.");
             }
             return;
         }
+
+        // 플레이어가 스테이지 안에 들어온 경우, exit 카운터 초기화
+        stageExitCounter = 0;
 
         // ★ 스테이지가 변경되었는지 확인
         bool stageChanged = (lastAppliedStage != idx);

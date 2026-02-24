@@ -20,13 +20,12 @@ public class MainScreen : MonoBehaviour
     public void OnclickStartButton()
     {
         Debug.Log("start button clicked");
-        if (SceneFader.Instance != null) SceneFader.Instance.FadeToScene("Ha");
+        if (SceneFader.Instance != null) SceneFader.Instance.FadeToScene("StoryScene");
         else
         {
-            // SceneFader가 아직 없다면 생성 후 호출
             GameObject go = new GameObject("SceneFader");
             SceneFader f = go.AddComponent<SceneFader>();
-            f.FadeToScene("Ha");
+            f.FadeToScene("StoryScene");
         }
     }
 

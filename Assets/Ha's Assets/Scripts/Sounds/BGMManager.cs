@@ -72,9 +72,11 @@ public class BGMManager : MonoBehaviour
         // 일시정지 중이 아니고, 플레이리스트가 설정되어 있으며, 현재 노래가 끝났을 때
         if (!isPaused && playlist != null && playlist.Length > 0)
         {
-            if (!audioSources[activeIndex].isPlaying && fadeCoroutine == null)
+            var cur = audioSources[activeIndex];
+            // clip이 있던 곡이 실제로 끝나서 isPlaying이 false가 되었고 페이드가 없다면 다음곡 재생 시도
+            if (cur != null && cur.clip != null && !cur.isPlaying && fadeCoroutine == null)
             {
-                // 루프 설정이 되어있지 않은 곡이 끝났다면 다음 곡으로
+                // 다음 곡으로 이동 (PlayNextInPlaylist 내부에서 loopPlaylist 처리를 함)
                 PlayNextInPlaylist(defaultFadeTime);
             }
         }
@@ -177,23 +179,41 @@ public class BGMManager : MonoBehaviour
     public void PlayNextInPlaylist(float fadeTime = -1f)
     {
         if (playlist == null || playlist.Length == 0) return;
-        playlistIndex++;
-        if (playlistIndex >= playlist.Length)
+
+        // 현재 인덱스가 마지막인지 확인
+        bool atLast = (playlistIndex >= playlist.Length - 1);
+
+        if (atLast)
         {
-            if (loopPlaylist) playlistIndex = 0;
-            else { playlistIndex = playlist.Length - 1; return; }
+            if (loopPlaylist)
+            {
+                playlistIndex = 0; // 리스트 끝 -> 처음으로
+            }
+            else
+            {
+                // 반복하지 않는다면 더 이상 진행하지 않음
+                return;
+            }
         }
+        else
+        {
+            playlistIndex++;
+        }
+
         PlayPlaylistTrack(playlistIndex, fadeTime);
     }
 
     public void PlayPrevInPlaylist(float fadeTime = -1f)
     {
         if (playlist == null || playlist.Length == 0) return;
-        playlistIndex--;
         if (playlistIndex < 0)
         {
             if (loopPlaylist) playlistIndex = playlist.Length - 1;
             else { playlistIndex = 0; return; }
+        }
+        else
+        {
+            playlistIndex--;
         }
         PlayPlaylistTrack(playlistIndex, fadeTime);
     }

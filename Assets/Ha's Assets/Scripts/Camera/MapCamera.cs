@@ -14,15 +14,11 @@ public class MapCamera : MonoBehaviour
     public bool autoFitToBounds = false;
     public bool forceFitIgnoreMaxOrtho = false;
 
-    [Header("AutoFit 시 캐릭터 추적 옵션")]
-    [Tooltip("autoFitToBounds일 때도 캐릭터를 화면 안에 유지")]
-    public bool keepPlayerInView = true;
-    [Tooltip("화면 가장자리로부터의 최소 여백 (월드 단위)")]
-    public float playerPadding = 2f;
-
-    [Header("Bounds 크기 변경 감지")]
-    [Tooltip("BoxCollider2D 크기가 변경되면 자동으로 카메라 재조정")]
-    public bool autoDetectBoundsChange = true;
+    [Header("Bounds 강제 제한")]
+    [Tooltip("모든 모드에서 카메라가 Bounds 밖으로 나가지 못하도록 강제 제한")]
+    public bool alwaysClampToBounds = true;
+    [Tooltip("LateUpdate에서 실제 transform.position을 강제로 제한")]
+    public bool forceClampInLateUpdate = true;
 
     [Header("Zoom")]
     public float minOrthoSize = 3f;
@@ -36,7 +32,7 @@ public class MapCamera : MonoBehaviour
     [Header("플레이어 캐릭터 카메라")]
     public Transform playerTarget;
     public float followDeadzone = 1.5f;
-
+    
     [Header("플레이어를 추적하는 카메라 영역 설정")]
     public bool autoScaleFollowView = true;
     [Range(0.01f, 1f)] public float followViewFraction = 0.25f;
@@ -54,7 +50,6 @@ public class MapCamera : MonoBehaviour
     private int lastScreenW = 0;
     private int lastScreenH = 0;
 
-    // ★ Bounds 크기 변경 감지용
     private Vector3 lastBoundsSize = Vector3.zero;
     private Vector3 lastBoundsCenter = Vector3.zero;
 
@@ -82,13 +77,6 @@ public class MapCamera : MonoBehaviour
         minOrthoSize = Mathf.Max(0.0001f, minOrthoSize);
         maxOrthoSize = Mathf.Max(minOrthoSize, maxOrthoSize);
 
-        // ★ 초기 Bounds 크기 저장
-        if (boundsCollider != null)
-        {
-            lastBoundsSize = boundsCollider.bounds.size;
-            lastBoundsCenter = boundsCollider.bounds.center;
-        }
-
         RefreshCameraState();
 
         lastScreenW = Screen.width;
@@ -103,7 +91,6 @@ public class MapCamera : MonoBehaviour
             TryAutoFindPlayerByLayer();
         }
 
-        // ★ 화면 크기 변경 감지
         if (Screen.width != lastScreenW || Screen.height != lastScreenH)
         {
             lastScreenW = Screen.width;
@@ -111,38 +98,26 @@ public class MapCamera : MonoBehaviour
             RefreshCameraState();
         }
 
-        // ★ BoxCollider2D 크기 변경 감지
-        if (autoDetectBoundsChange && boundsCollider != null)
-        {
-            Vector3 currentSize = boundsCollider.bounds.size;
-            Vector3 currentCenter = boundsCollider.bounds.center;
-
-            if (Vector3.Distance(currentSize, lastBoundsSize) > 0.01f ||
-                Vector3.Distance(currentCenter, lastBoundsCenter) > 0.01f)
-            {
-                Debug.Log($"[MapCamera] Bounds 크기 변경 감지: {lastBoundsSize} → {currentSize}");
-                lastBoundsSize = currentSize;
-                lastBoundsCenter = currentCenter;
-
-                // 즉시 카메라 재조정
-                RefreshCameraState();
-            }
-        }
-
         if (autoFitToBounds)
         {
             if (boundsCollider != null && Cam.orthographic)
             {
                 FitCameraToBounds(ignoreMaxOrtho: forceFitIgnoreMaxOrtho);
+                SyncTransformImmediate();
 
-                if (keepPlayerInView && playerTarget != null) AdjustCameraToKeepPlayerInView();
+                // SmoothDamp 에 의한 잔여 관성 제거
+                velocity = Vector3.zero;
+
+                var playerLimiter = FindFirstObjectByType<PlayerBoundsLimiter>();
+                if (playerLimiter != null) playerLimiter.ForceClampNow();
             }
         }
         else
         {
             if (!useFixedViewSize)
             {
-                if (autoScaleFollowView && boundsCollider != null && Cam.orthographic) ApplyAutoFollowViewSizing();
+                if (autoScaleFollowView && boundsCollider != null && Cam.orthographic)
+                    ApplyAutoFollowViewSizing();
 
                 HandleFollow();
             }
@@ -151,6 +126,11 @@ public class MapCamera : MonoBehaviour
                 ApplyFixedViewSize();
                 if (boundsCollider != null) ClampTargetToBounds();
             }
+        }
+
+        if (alwaysClampToBounds && boundsCollider != null && Cam.orthographic)
+        {
+            ClampTargetToBounds();
         }
 
         Vector3 currentPos = transform.position;
@@ -163,47 +143,52 @@ public class MapCamera : MonoBehaviour
         }
     }
 
-    /// <summary>
-    /// autoFitToBounds 모드에서도 캐릭터가 화면 밖으로 나가지 않도록 카메라 위치를 조정합니다.
-    /// </summary>
-    private void AdjustCameraToKeepPlayerInView()
+    // ★ LateUpdate에서 최종적으로 강제 제한 (수정됨!)
+    void LateUpdate()
     {
-        if (playerTarget == null || boundsCollider == null || !Cam.orthographic) return;
+        if (!forceClampInLateUpdate || boundsCollider == null || !Cam.orthographic) return;
 
-        Collider2D playerCol = playerTarget.GetComponent<Collider2D>();
-        Vector3 playerMin = playerTarget.position;
-        Vector3 playerMax = playerTarget.position;
+        Vector3 pos = transform.position;
+        Bounds b = boundsCollider.bounds;
 
-        if (playerCol != null)
-        {
-            playerMin = playerCol.bounds.min;
-            playerMax = playerCol.bounds.max;
-        }
-
-        Bounds bounds = boundsCollider.bounds;
         float vExt = Cam.orthographicSize;
         float hExt = vExt * Cam.aspect;
 
-        float screenMinX = targetPos.x - hExt + playerPadding;
-        float screenMaxX = targetPos.x + hExt - playerPadding;
-        float screenMinY = targetPos.y - vExt + playerPadding;
-        float screenMaxY = targetPos.y + vExt - playerPadding;
+        // ★ 수정: 각 축별로 독립적으로 Clamp 처리
+        float minX = b.min.x + hExt;
+        float maxX = b.max.x - hExt;
+        float minY = b.min.y + vExt;
+        float maxY = b.max.y - vExt;
 
-        float offsetX = 0f;
-        float offsetY = 0f;
-
-        if (playerMin.x < screenMinX) offsetX = playerMin.x - screenMinX;
-        else if (playerMax.x > screenMaxX) offsetX = playerMax.x - screenMaxX;
-
-        if (playerMin.y < screenMinY) offsetY = playerMin.y - screenMinY;
-        else if (playerMax.y > screenMaxY) offsetY = playerMax.y - screenMaxY;
-
-        if (Mathf.Abs(offsetX) > 0.01f || Mathf.Abs(offsetY) > 0.01f)
+        // X축 처리
+        if (minX > maxX)
         {
-            targetPos.x += offsetX;
-            targetPos.y += offsetY;
-            ClampTargetToBounds();
+            // 카메라가 Bounds보다 넓으면 중앙에 고정
+            pos.x = b.center.x;
         }
+        else
+        {
+            // 정상적인 Clamp
+            pos.x = Mathf.Clamp(pos.x, minX, maxX);
+        }
+
+        // Y축 처리
+        if (minY > maxY)
+        {
+            // 카메라가 Bounds보다 높으면 중앙에 고정
+            pos.y = b.center.y;
+        }
+        else
+        {
+            // 정상적인 Clamp
+            pos.y = Mathf.Clamp(pos.y, minY, maxY);
+        }
+
+        pos.z = transform.position.z;
+        transform.position = pos;
+
+        // targetPos도 동기화
+        targetPos = pos;
     }
 
     private void RefreshCameraState()
@@ -211,12 +196,7 @@ public class MapCamera : MonoBehaviour
         if (autoFitToBounds && boundsCollider != null)
         {
             FitCameraToBounds(ignoreMaxOrtho: forceFitIgnoreMaxOrtho);
-
-            if (keepPlayerInView && playerTarget != null)
-            {
-                AdjustCameraToKeepPlayerInView();
-                SyncTransformImmediate();
-            }
+            SyncTransformImmediate();
         }
         else if (useFixedViewSize)
         {
@@ -252,7 +232,6 @@ public class MapCamera : MonoBehaviour
             if (found != null)
             {
                 playerTarget = found;
-                RefreshCameraState();
                 return;
             }
         }
@@ -295,7 +274,6 @@ public class MapCamera : MonoBehaviour
         if (Mathf.Abs(diffX) > followDeadzone || Mathf.Abs(diffY) > followDeadzone)
         {
             targetPos = playerTarget.position;
-            if (boundsCollider != null) ClampTargetToBounds();
         }
     }
 
@@ -345,10 +323,8 @@ public class MapCamera : MonoBehaviour
         float minY = b.min.y + neededOrtho;
         float maxY = b.max.y - neededOrtho;
 
-        targetPos.x = (minX > maxX) ? b.center.x : Mathf.Clamp(b.center.x, minX, maxX);
-        targetPos.y = (minY > maxY) ? b.center.y : Mathf.Clamp(b.center.y, minY, maxY);
-
-        if (!keepPlayerInView) SyncTransformImmediate();
+        targetPos.x = b.center.x;
+        targetPos.y = b.center.y;
 
         viewHeight = neededOrtho * 2f;
         viewWidth = viewHeight * aspect;
@@ -409,28 +385,16 @@ public class MapCamera : MonoBehaviour
             float hExt = vExt * c.aspect;
             Gizmos.color = Color.blue;
             Gizmos.DrawWireCube(new Vector3(transform.position.x, transform.position.y, 0f), new Vector3(hExt * 2f, vExt * 2f, 0.01f));
-
-            if (keepPlayerInView && playerPadding > 0f && autoFitToBounds)
-            {
-                Gizmos.color = new Color(1f, 1f, 0f, 0.3f);
-                Vector3 paddedSize = new Vector3((hExt - playerPadding) * 2f, (vExt - playerPadding) * 2f, 0.01f);
-                Gizmos.DrawWireCube(new Vector3(transform.position.x, transform.position.y, 0f), paddedSize);
-            }
         }
     }
 
     public void SetBounds(BoxCollider2D newBounds, bool snapCameraToBounds = true, bool fitViewToBounds = false)
     {
+        if (newBounds == null) return;
+        
+
         boundsCollider = newBounds;
         CurrentBounds = newBounds;
-
-        // ★ 새 Bounds 크기 저장
-        if (boundsCollider != null)
-        {
-            lastBoundsSize = boundsCollider.bounds.size;
-            lastBoundsCenter = boundsCollider.bounds.center;
-        }
-
         if (boundsCollider == null) return;
 
         if (fitViewToBounds || autoFitToBounds) FitCameraToBounds(ignoreMaxOrtho: forceFitIgnoreMaxOrtho);
@@ -442,9 +406,6 @@ public class MapCamera : MonoBehaviour
         }
     }
 
-    /// <summary>
-    /// 현재 Bounds를 강제로 재조정 (외부 호출용)
-    /// </summary>
     public void ForceRefreshBounds()
     {
         if (boundsCollider != null)
