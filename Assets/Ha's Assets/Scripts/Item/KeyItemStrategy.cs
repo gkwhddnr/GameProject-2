@@ -1,8 +1,8 @@
 using UnityEngine;
 
 /// <summary>
-/// Å° ¾ÆÀÌÅÛ ¼öÁı Àü·«
-/// ±âÁ¸ ItemCollectorÀÇ Å° ¼öÁı ·ÎÁ÷À» ±×´ë·Î ±¸Çö
+/// í‚¤ ì•„ì´í…œ ìˆ˜ì§‘ ì „ëµ
+/// ê¸°ì¡´ ItemCollectorì˜ í‚¤ ìˆ˜ì§‘ ë¡œì§ì„ ê·¸ëŒ€ë¡œ êµ¬í˜„
 /// </summary>
 public class KeyItemStrategy : IItemCollectionStrategy
 {
@@ -19,11 +19,11 @@ public class KeyItemStrategy : IItemCollectionStrategy
     {
         if (item == null) return false;
 
-        // KeyActivator ÄÄÆ÷³ÍÆ®°¡ ÀÖ´Â °æ¿ì
+        // KeyActivator ì»´í¬ë„ŒíŠ¸ê°€ ìˆëŠ” ê²½ìš°
         KeyActivator keyActivator = item.GetComponent<KeyActivator>();
         if (keyActivator != null) return true;
 
-        // GameManagerÀÇ Å° ½½·Ô ¸ÅÄª
+        // GameManagerì˜ í‚¤ ìŠ¬ë¡¯ ë§¤ì¹­
         bool isKeyByGameManager = false;
         int matchedKeySlotIndex = -1;
         if (GameManager.Instance != null)
@@ -31,10 +31,10 @@ public class KeyItemStrategy : IItemCollectionStrategy
             isKeyByGameManager = GameManager.Instance.IsKeySlotMatch(item, out matchedKeySlotIndex);
         }
 
-        // Å° ·¹ÀÌ¾îÀÎ °æ¿ì
+        // í‚¤ ë ˆì´ì–´ì¸ ê²½ìš°
         bool isKeyByLayer = (item.layer == keyLayerIndex);
 
-        // ÀÌ¸§ÀÌ "Key"ÀÎ °æ¿ì
+        // ì´ë¦„ì´ "Key"ì¸ ê²½ìš°
         bool isKeyByName = string.Equals(item.name, "Key", System.StringComparison.OrdinalIgnoreCase);
 
         return isKeyByGameManager || isKeyByLayer || isKeyByName;
@@ -42,20 +42,21 @@ public class KeyItemStrategy : IItemCollectionStrategy
 
     public void Collect(GameObject item, IItemCollectionContext context)
     {
-        // KeyActivator°¡ ÀÖ´Â °æ¿ì Ã³¸®
+        // KeyActivatorê°€ ìˆëŠ” ê²½ìš° ì²˜ë¦¬
         KeyActivator keyActivator = item.GetComponent<KeyActivator>();
         if (keyActivator != null)
         {
             context.PlaySound("key");
             keyActivator.Activate(context.GetCurrentStageIndex());
+            context.NotifySequentialReveal(item);
             context.FadeOutItem(item);
             return;
         }
 
-        // ÀÏ¹İ Å° Ã³¸®
+        // ì¼ë°˜ í‚¤ ì²˜ë¦¬
         context.PlaySound("key");
 
-        // GameManager Å° ½½·Ô Ã³¸®
+        // GameManager í‚¤ ìŠ¬ë¡¯ ì²˜ë¦¬
         if (GameManager.Instance != null)
         {
             if (GameManager.Instance.IsKeySlotMatch(item, out int matchedKeySlotIndex))
@@ -66,7 +67,7 @@ public class KeyItemStrategy : IItemCollectionStrategy
 
         context.ShowFloatingText(item);
 
-        // °¡Àå °¡±î¿î Àå¾Ö¹° Ã£¾Æ¼­ Á¦°Å
+        // ê°€ì¥ ê°€ê¹Œìš´ ì¥ì• ë¬¼ ì°¾ì•„ì„œ ì œê±°
         Vector3 keyPos = item.transform.position;
         int keyStageIndex = context.GetCurrentStageIndex();
 
@@ -74,6 +75,8 @@ public class KeyItemStrategy : IItemCollectionStrategy
         {
             obstacleController.HandleKeyCollected(item, keyStageIndex);
         }
+
+        context.NotifySequentialReveal(item);
 
         var rotator = item.GetComponent<SpriteRotator>();
         if (rotator != null)

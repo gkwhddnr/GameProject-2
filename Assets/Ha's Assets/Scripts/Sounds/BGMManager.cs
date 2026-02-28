@@ -2,9 +2,9 @@ using System.Collections;
 using UnityEngine;
 
 /// <summary>
-/// - µÎ °³ÀÇ AudioSource·Î Å©·Î½ºÆäÀÌµå(ºÎµå·¯¿î ÀüÈ¯) ±¸Çö
-/// - Àç»ı/Á¤Áö/ÀÏ½ÃÁ¤Áö/Àç°³, º¼·ı Á¦¾î, ÇÃ·¹ÀÌ¸®½ºÆ®(´ÙÀ½/ÀÌÀü) Áö¿ø
-/// - DontDestroyOnLoad ·Î ¾À°£ À¯Áö
+/// - ë‘ ê°œì˜ AudioSourceë¡œ í¬ë¡œìŠ¤í˜ì´ë“œ(ë¶€ë“œëŸ¬ìš´ ì „í™˜) êµ¬í˜„
+/// - ì¬ìƒ/ì •ì§€/ì¼ì‹œì •ì§€/ì¬ê°œ, ë³¼ë¥¨ ì œì–´, í”Œë ˆì´ë¦¬ìŠ¤íŠ¸(ë‹¤ìŒ/ì´ì „) ì§€ì›
+/// - DontDestroyOnLoad ë¡œ ì”¬ê°„ ìœ ì§€
 /// </summary>
 [DisallowMultipleComponent]
 public class BGMManager : MonoBehaviour
@@ -12,34 +12,34 @@ public class BGMManager : MonoBehaviour
     public static BGMManager Instance { get; private set; }
 
     [Header("Initial / Playlist (optional)")]
-    [Tooltip("Inspector¿¡¼­ ÃÊ±â Àç»ıÇÒ Æ®·¢")]
+    [Tooltip("Inspectorì—ì„œ ì´ˆê¸° ì¬ìƒí•  íŠ¸ë™")]
     public AudioClip initialTrack;
-    [Tooltip("ÇÃ·¹ÀÌ¸®½ºÆ®(Inspector¿¡ ¿©·¯ Æ®·¢ µî·Ï °¡´É)")]
+    [Tooltip("í”Œë ˆì´ë¦¬ìŠ¤íŠ¸(Inspectorì— ì—¬ëŸ¬ íŠ¸ë™ ë“±ë¡ ê°€ëŠ¥)")]
     public AudioClip[] playlist;
-    [Tooltip("ÇÃ·¹ÀÌ¸®½ºÆ® ÀÚµ¿Àç»ı(¾À ½ÃÀÛ ½Ã)")]
+    [Tooltip("í”Œë ˆì´ë¦¬ìŠ¤íŠ¸ ìë™ì¬ìƒ(ì”¬ ì‹œì‘ ì‹œ)")]
     public bool playPlaylistOnStart = false;
-    [Tooltip("ÇÃ·¹ÀÌ¸®½ºÆ® ¹İº¹ Àç»ı ¿©ºÎ")]
+    [Tooltip("í”Œë ˆì´ë¦¬ìŠ¤íŠ¸ ë°˜ë³µ ì¬ìƒ ì—¬ë¶€")]
     public bool loopPlaylist = true;
 
     [Header("Settings")]
     [Range(0f, 1f)] public float masterVolume = 1f;
-    [Tooltip("Æ®·¢ ÀüÈ¯/Àç»ı½Ã ±âº» ÆäÀÌµå ½Ã°£(ÃÊ)")]
+    [Tooltip("íŠ¸ë™ ì „í™˜/ì¬ìƒì‹œ ê¸°ë³¸ í˜ì´ë“œ ì‹œê°„(ì´ˆ)")]
     public float defaultFadeTime = 0.6f;
-    [Tooltip("»õ Æ®·¢À» Àç»ıÇÒ ¶§ ÀÚµ¿À¸·Î ·çÇÁ(Clip.loop) ¼³Á¤ ¿©ºÎ")]
+    [Tooltip("ìƒˆ íŠ¸ë™ì„ ì¬ìƒí•  ë•Œ ìë™ìœ¼ë¡œ ë£¨í”„(Clip.loop) ì„¤ì • ì—¬ë¶€")]
     public bool defaultLoopClip = true;
 
-    // ³»ºÎ: 2°³ÀÇ AudioSource¸¦ ¹ø°¥¾Æ »ç¿ëÇÏ¿© crossfade
+    // ë‚´ë¶€: 2ê°œì˜ AudioSourceë¥¼ ë²ˆê°ˆì•„ ì‚¬ìš©í•˜ì—¬ crossfade
     private AudioSource[] audioSources = new AudioSource[2];
-    private int activeIndex = 0; // ÇöÀç ¼Ò¸®°¡ ³ª°í ÀÖ´Â ¼Ò½º ÀÎµ¦½º
+    private int activeIndex = 0; // í˜„ì¬ ì†Œë¦¬ê°€ ë‚˜ê³  ìˆëŠ” ì†ŒìŠ¤ ì¸ë±ìŠ¤
     private Coroutine fadeCoroutine = null;
 
-    // ÇÃ·¹ÀÌ¸®½ºÆ® »óÅÂ
+    // í”Œë ˆì´ë¦¬ìŠ¤íŠ¸ ìƒíƒœ
     private int playlistIndex = 0;
     private bool isPaused = false;
 
     void Awake()
     {
-        // ½Ì±ÛÅæ º¸Àå
+        // ì‹±ê¸€í†¤ ë³´ì¥
         if (Instance == null)
         {
             Instance = this;
@@ -55,7 +55,7 @@ public class BGMManager : MonoBehaviour
 
     void Start()
     {
-        // ÃÊ±â Æ®·¢ ¶Ç´Â ÇÃ·¹ÀÌ¸®½ºÆ® ÀÚµ¿ Àç»ı
+        // ì´ˆê¸° íŠ¸ë™ ë˜ëŠ” í”Œë ˆì´ë¦¬ìŠ¤íŠ¸ ìë™ ì¬ìƒ
         if (playPlaylistOnStart && playlist != null && playlist.Length > 0)
         {
             playlistIndex = 0;
@@ -69,14 +69,14 @@ public class BGMManager : MonoBehaviour
 
     void Update()
     {
-        // ÀÏ½ÃÁ¤Áö ÁßÀÌ ¾Æ´Ï°í, ÇÃ·¹ÀÌ¸®½ºÆ®°¡ ¼³Á¤µÇ¾î ÀÖÀ¸¸ç, ÇöÀç ³ë·¡°¡ ³¡³µÀ» ¶§
+        // ì¼ì‹œì •ì§€ ì¤‘ì´ ì•„ë‹ˆê³ , í”Œë ˆì´ë¦¬ìŠ¤íŠ¸ê°€ ì„¤ì •ë˜ì–´ ìˆìœ¼ë©°, í˜„ì¬ ë…¸ë˜ê°€ ëë‚¬ì„ ë•Œ
         if (!isPaused && playlist != null && playlist.Length > 0)
         {
             var cur = audioSources[activeIndex];
-            // clipÀÌ ÀÖ´ø °îÀÌ ½ÇÁ¦·Î ³¡³ª¼­ isPlayingÀÌ false°¡ µÇ¾ú°í ÆäÀÌµå°¡ ¾ø´Ù¸é ´ÙÀ½°î Àç»ı ½Ãµµ
+            // clipì´ ìˆë˜ ê³¡ì´ ì‹¤ì œë¡œ ëë‚˜ì„œ isPlayingì´ falseê°€ ë˜ì—ˆê³  í˜ì´ë“œê°€ ì—†ë‹¤ë©´ ë‹¤ìŒê³¡ ì¬ìƒ ì‹œë„
             if (cur != null && cur.clip != null && !cur.isPlaying && fadeCoroutine == null)
             {
-                // ´ÙÀ½ °îÀ¸·Î ÀÌµ¿ (PlayNextInPlaylist ³»ºÎ¿¡¼­ loopPlaylist Ã³¸®¸¦ ÇÔ)
+                // ë‹¤ìŒ ê³¡ìœ¼ë¡œ ì´ë™ (PlayNextInPlaylist ë‚´ë¶€ì—ì„œ loopPlaylist ì²˜ë¦¬ë¥¼ í•¨)
                 PlayNextInPlaylist(defaultFadeTime);
             }
         }
@@ -84,7 +84,7 @@ public class BGMManager : MonoBehaviour
 
     void OnValidate()
     {
-        // ÀÎ½ºÆåÅÍ º¯°æ ½Ã ¿Àµğ¿À º¼·ı µ¿±âÈ­
+        // ì¸ìŠ¤í™í„° ë³€ê²½ ì‹œ ì˜¤ë””ì˜¤ ë³¼ë¥¨ ë™ê¸°í™”
         if (audioSources != null)
         {
             foreach (var a in audioSources)
@@ -98,7 +98,7 @@ public class BGMManager : MonoBehaviour
     {
         for (int i = 0; i < 2; ++i)
         {
-            // ÀÚ½Ä ¿ÀºêÁ§Æ®·Î »ı¼ºÇÏ¿© °ü¸® (ÇÏÀÌ¾î¶óÅ°°¡ ±ò²ûÇØÁü)
+            // ìì‹ ì˜¤ë¸Œì íŠ¸ë¡œ ìƒì„±í•˜ì—¬ ê´€ë¦¬ (í•˜ì´ì–´ë¼í‚¤ê°€ ê¹”ë”í•´ì§)
             GameObject child = new GameObject($"BGMSource_{i}");
             child.transform.SetParent(transform);
 
@@ -173,25 +173,26 @@ public class BGMManager : MonoBehaviour
         if (playlist == null || playlist.Length == 0) return;
         index = Mathf.Clamp(index, 0, playlist.Length - 1);
         playlistIndex = index;
-        PlayBGM(playlist[playlistIndex], fadeTime, defaultLoopClip);
+        // í”Œë ˆì´ë¦¬ìŠ¤íŠ¸ ì¬ìƒ ì‹œ ê°œë³„ ê³¡ì˜ ë°˜ë³µì„ ë„ê³  ëë‚˜ë©´ ë‹¤ìŒ ê³¡ìœ¼ë¡œ ë„˜ì–´ê°€ê²Œ ì„¤ì •
+        PlayBGM(playlist[playlistIndex], fadeTime, false);
     }
 
     public void PlayNextInPlaylist(float fadeTime = -1f)
     {
         if (playlist == null || playlist.Length == 0) return;
 
-        // ÇöÀç ÀÎµ¦½º°¡ ¸¶Áö¸·ÀÎÁö È®ÀÎ
+        // í˜„ì¬ ì¸ë±ìŠ¤ê°€ ë§ˆì§€ë§‰ì¸ì§€ í™•ì¸
         bool atLast = (playlistIndex >= playlist.Length - 1);
 
         if (atLast)
         {
             if (loopPlaylist)
             {
-                playlistIndex = 0; // ¸®½ºÆ® ³¡ -> Ã³À½À¸·Î
+                playlistIndex = 0; // ë¦¬ìŠ¤íŠ¸ ë -> ì²˜ìŒìœ¼ë¡œ
             }
             else
             {
-                // ¹İº¹ÇÏÁö ¾Ê´Â´Ù¸é ´õ ÀÌ»ó ÁøÇàÇÏÁö ¾ÊÀ½
+                // ë°˜ë³µí•˜ì§€ ì•ŠëŠ”ë‹¤ë©´ ë” ì´ìƒ ì§„í–‰í•˜ì§€ ì•ŠìŒ
                 return;
             }
         }

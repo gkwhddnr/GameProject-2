@@ -7,6 +7,7 @@ static class StartupSceneLoader
 {
     private const string MainSceneName = "Choi_MainScreen";
 
+    /*
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
     static void EnsureMainMenuShown()
     {
@@ -32,4 +33,5 @@ static class StartupSceneLoader
         // 메인 씬으로 로드 (동기)
         SceneManager.LoadScene(MainSceneName);
     }
+    */
 }
