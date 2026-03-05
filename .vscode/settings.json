@@ -67,5 +67,6 @@
         "*.sln": "*.csproj",
         "*.slnx": "*.csproj"
     },
-    "dotnet.defaultSolution": "GameProject-2.slnx"
+    "dotnet.defaultSolution": "GameProject-2.slnx",
+    "dotnet.preferCSharpExtension": true
 }

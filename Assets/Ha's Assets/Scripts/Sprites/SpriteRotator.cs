@@ -2,21 +2,20 @@
 using UnityEngine;
 
 [DisallowMultipleComponent]
-[RequireComponent(typeof(SpriteRenderer))] // SpriteRenderer가 필수임을 명시
+[RequireComponent(typeof(SpriteRenderer))]
 public class SpriteRotator : MonoBehaviour
 {
-    public enum SpinDirection { Left = -1, Right = 1, Random = 0 }
-
     [Header("Rotation Settings")]
-    [SerializeField] private SpinDirection spinDirection = SpinDirection.Right;
-    [SerializeField] private float baseRotationSpeed = 18f;
-    [SerializeField] private float idleSpeedVariance = 2f;
-    [SerializeField] private bool randomizeDirectionOnStart = false;
+    public bool m_rotate = true;
+    public bool m_rotateClockwise = false;
+    public bool m_randomDirection = true;
+    public float m_rotationSpeed = 18f;
+    public float m_randomSpeedVariance = 2f;
 
     [Header("Visual Effects")]
     [Range(0f, 1f)][SerializeField] private float ease = 0.85f;
     [SerializeField] private bool fadeOnDisappear = true;
-    [SerializeField] private bool disableOnComplete = false;
+    [SerializeField] private bool disableOnComplete = true;
 
     [Header("Animation States")]
     public Vector3 approachScale = new Vector3(0.85f, 0.85f, 1f);
@@ -30,9 +29,11 @@ public class SpriteRotator : MonoBehaviour
     private SpriteRenderer _spriteRenderer;
     private Vector3 _initialScale;
     private Color _initialColor;
-    private float _currentRotationSpeed;
     private bool _isDisappearing;
     private Coroutine _activeAnimation;
+
+    private float _currentAnimationSpeed;
+    private bool _isVisible = true; // 프러파일러 분석: 카메라 밖이면 회전을 멈춰 CPU 절약
 
     // Property: 레이어 이름을 확인하여 NextPoint 여부 판단
     private bool IsNextPoint => gameObject.layer == LayerMask.NameToLayer("next");
@@ -43,25 +44,48 @@ public class SpriteRotator : MonoBehaviour
         _initialScale = transform.localScale;
         _initialColor = _spriteRenderer != null ? _spriteRenderer.color : Color.white;
         InitializeRotation();
+        
+        // m_rotate가 꺼져있으면 아예 Update를 시작하지 않음
+        enabled = m_rotate;
     }
 
-    void OnEnable() => ResetToInitialState();
+    // 카메라 렌더링 범위 안에 들어왔을 때만 Update 활성화
+    private void OnBecameVisible() { _isVisible = true; }
+    private void OnBecameInvisible() { _isVisible = false; }
+
+    void OnEnable()
+    {
+        ResetToInitialState();
+    }
 
     void Update()
     {
-        if (!_isDisappearing)
+        // 1. 사라지는 중이 아님
+        // 2. 가시성 검사 (카메라에 보일 때만)
+        // 3. 회전 설정 활성화
+        if (!_isDisappearing && _isVisible && m_rotate)
         {
-            transform.Rotate(0, 0, _currentRotationSpeed * Time.deltaTime);
+            float finalRotationDelta = _currentAnimationSpeed * Time.deltaTime;
+            transform.Rotate(0f, 0f, finalRotationDelta);
         }
     }
 
     private void InitializeRotation()
     {
-        int dirSign = (spinDirection == SpinDirection.Random || randomizeDirectionOnStart)
-            ? (Random.value < 0.5f ? -1 : 1)
-            : (int)spinDirection;
+        // 런타임에 초기 방향 설정 및 Random 기능 반영
+        int dirSign = m_rotateClockwise ? -1 : 1;
+        if (m_randomDirection)
+        {
+            dirSign = Random.value < 0.5f ? -1 : 1;
+        }
 
-        _currentRotationSpeed = (baseRotationSpeed * dirSign) + Random.Range(-idleSpeedVariance, idleSpeedVariance);
+        float variance = 0f;
+        if (m_randomSpeedVariance > 0f)
+        {
+            variance = Random.Range(-m_randomSpeedVariance, m_randomSpeedVariance);
+        }
+
+        _currentAnimationSpeed = (m_rotationSpeed + variance) * dirSign;
     }
 
     #region Animation Methods
@@ -93,19 +117,24 @@ public class SpriteRotator : MonoBehaviour
     {
         float elapsed = 0f;
         Vector3 startScale = transform.localScale;
-        float startSpeed = _currentRotationSpeed;
+        float startSpeed = _currentAnimationSpeed;
         float targetSpeed = startSpeed * approachRotationMultiplier;
 
         while (elapsed < duration)
         {
             float t = GetEaseT(ref elapsed, duration);
             transform.localScale = Vector3.Lerp(startScale, approachScale, t);
-            _currentRotationSpeed = Mathf.Lerp(startSpeed, targetSpeed, t);
+            
+            float currentDynSpeed = Mathf.Lerp(startSpeed, targetSpeed, t);
+            if (m_rotate)
+            {
+                transform.Rotate(0f, 0f, currentDynSpeed * Time.deltaTime);
+            }
             yield return null;
         }
 
         transform.localScale = approachScale;
-        _currentRotationSpeed = targetSpeed;
+        _currentAnimationSpeed = targetSpeed;
     }
 
     private IEnumerator DisappearRoutine()
@@ -114,7 +143,7 @@ public class SpriteRotator : MonoBehaviour
         Color startColor = _spriteRenderer.color;
         Color endColor = new Color(startColor.r, startColor.g, startColor.b, targetAlpha);
 
-        float startSpeed = _currentRotationSpeed;
+        float startSpeed = _currentAnimationSpeed;
         float targetSpeed = Mathf.Abs(disappearSpinSpeed) * Mathf.Sign(startSpeed == 0 ? 1 : startSpeed);
         if (!IsNextPoint) targetSpeed *= 0.5f;
 
@@ -123,8 +152,11 @@ public class SpriteRotator : MonoBehaviour
         {
             float t = GetEaseT(ref elapsed, disappearDuration);
 
-            _currentRotationSpeed = Mathf.Lerp(startSpeed, targetSpeed, t);
-            transform.Rotate(0, 0, _currentRotationSpeed * Time.deltaTime);
+            float currentDynSpeed = Mathf.Lerp(startSpeed, targetSpeed, t);
+            if (m_rotate)
+            {
+                transform.Rotate(0f, 0f, currentDynSpeed * Time.deltaTime);
+            }
             transform.localScale = Vector3.Lerp(startScale, targetDisappearScale, t);
 
             if (fadeOnDisappear)

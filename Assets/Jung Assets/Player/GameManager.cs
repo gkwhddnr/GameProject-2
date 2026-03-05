@@ -17,7 +17,16 @@ public class GameManager : MonoBehaviour
         [Header("캐릭터 이동속도 및 픽셀 설정")]
         public float moveSpeed = 0.15f;
         public float gridSize = 1f;
+
+        [Header("스테이지별 아이템 필터 설정")]
+        [Tooltip("체크 시 아래의 Stage Item Layer Mask를 사용합니다. 체크 해제 시 GameManager의 기본 설정을 따릅니다.")]
+        public bool overrideLayerMask = false;
+        public LayerMask stageItemLayerMask;
     }
+
+    [Header("Default Item Settings")]
+    [Tooltip("스테이지별 오버라이드가 없을 때 사용할 기본 레이어 마스크 (Item, Key 추천)")]
+    public LayerMask defaultItemLayerMask;
 
     [Serializable]
     public class ItemSlotSettings
@@ -174,10 +183,6 @@ public class GameManager : MonoBehaviour
 
             countText.text = $"Stage {currentStageIndex + 1} : {displayCount}";
         }
-        else
-        {
-            countText.text = $"Count: {MoveCount}";
-        }
     }
 public void DieAndRespawn()
     {
@@ -309,5 +314,15 @@ public void DieAndRespawn()
         // 스테이지가 없거나 설정이 없으면 기본값 복원
         gridComp.moveSpeed = _playerDefaultMoveSpeed;
         gridComp.gridSize = _playerDefaultGridSize;
+    }
+
+    public LayerMask GetItemLayerMaskForStage(int stageIndex)
+    {
+        if (stageIndex >= 0 && stageIndex < stageSettings.Length)
+        {
+            var settings = stageSettings[stageIndex];
+            return settings.overrideLayerMask ? settings.stageItemLayerMask : defaultItemLayerMask;
+        }
+        return defaultItemLayerMask;
     }
 }

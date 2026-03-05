@@ -65,7 +65,6 @@ public class ItemCollector : MonoBehaviour,
 
     [Header("UI 참조")]
     public TextMeshProUGUI uiText;
-    public Transform playerTransform;
     public GameObject navigationPointerPrefab;
     public Canvas uiCanvas;
     private bool showUIImmediatelyIfNoBounds = false;
@@ -94,7 +93,7 @@ public class ItemCollector : MonoBehaviour,
 
     #region Private Fields
 
-    // ★ Strategy 리스트 (추가)
+    // ★ Strategy 리스트
     private List<IItemCollectionStrategy> collectionStrategies;
 
     // 최적화된 내부 상태 필드
@@ -119,6 +118,7 @@ public class ItemCollector : MonoBehaviour,
     private GameObject activeNavGO = null;
     private Sprite cachedUnlockSprite = null;
     private StageBoundsUIUpdater uiUpdater;
+    private Transform player;
 
     // 배열 대신 리스트로 통일
     private List<SpriteRenderer>[] nextPointsSprs;
@@ -160,6 +160,11 @@ public class ItemCollector : MonoBehaviour,
         lockLayerIndex = LayerMask.NameToLayer("Lock");
         itemLayerIndex = LayerMask.NameToLayer("Item");
 
+        if (GameManager.Instance != null)
+        {
+            player = GameManager.Instance.playerTransform;
+        }
+
         InitializeNextPoints();
         BuildItemsList();
 
@@ -192,9 +197,16 @@ public class ItemCollector : MonoBehaviour,
 
     void Update()
     {
-        if (stageSettings == null || stageSettings.Length == 0 || playerTransform == null) return;
+        if (stageSettings == null || stageSettings.Length == 0) return;
+        if (player == null)
+        {
+            if (GameManager.Instance != null)
+                player = GameManager.Instance.playerTransform;
 
-        Vector3 playerPosition = playerTransform.position;
+            if (player == null) return; // 여전히 없으면 리턴
+        }
+
+        Vector3 playerPosition = player.position;
         int foundIndex = -1;
 
         for (int i = 0; i < stageSettings.Length; ++i)
@@ -260,7 +272,7 @@ public class ItemCollector : MonoBehaviour,
 
     #endregion
 
-    #region Collection Logic (★ 수정됨 - Strategy 패턴 적용)
+    #region Collection Logic ( Strategy 패턴 적용)
 
     /// <summary>
     /// Strategy 패턴 적용
@@ -288,7 +300,7 @@ public class ItemCollector : MonoBehaviour,
 
     #endregion
 
-    #region Initialization Methods (기존 유지)
+    #region Initialization Methods 
 
     void CacheUnlockSprite()
     {
@@ -331,7 +343,7 @@ public class ItemCollector : MonoBehaviour,
         {
             activeNavGO = Instantiate(navigationPointerPrefab, uiCanvas.transform);
             var nav = activeNavGO.GetComponent<NavigationPointer>();
-            if (nav != null) nav.Initialize(playerTransform, uiCanvas, stageController);
+            if (nav != null) nav.Initialize(player, uiCanvas, stageController);
         }
     }
 
@@ -526,7 +538,7 @@ public class ItemCollector : MonoBehaviour,
 
     #endregion
 
-    #region Caching System (기존 유지)
+    #region Caching System 
 
     private ObjectDataCache GetOrAddCache(GameObject go)
     {
@@ -567,7 +579,7 @@ public class ItemCollector : MonoBehaviour,
 
     #endregion
 
-    #region Visibility Management (기존 유지)
+    #region Visibility Management 
 
     void HideItemsInitially_Global(){ HideItemsForList(itemLayerItemsList, defaultInitialVisibleCount); }
 
@@ -700,7 +712,7 @@ public class ItemCollector : MonoBehaviour,
 
     #endregion
 
-    #region Obstacle Management (기존 유지 - IObstacleController 구현)
+    #region Obstacle Management 
 
     public void HandleKeyCollected(GameObject key, int keyStageIndex)
     {
@@ -855,7 +867,7 @@ public class ItemCollector : MonoBehaviour,
 
     #endregion
 
-    #region Fade Effects (기존 유지)
+    #region Fade Effects 
 
     IEnumerator HandleStageComplete(SpriteRotator rotator){ yield return StartCoroutine(rotator.WaitForDisappear()); }
 
@@ -879,7 +891,7 @@ public class ItemCollector : MonoBehaviour,
 
     #endregion
 
-    #region NextPoint Management (기존 유지)
+    #region NextPoint Management 
 
     public void RevealNextPointForStage(int stageIndex)
     {
@@ -897,7 +909,7 @@ public class ItemCollector : MonoBehaviour,
             activeNavGO = Instantiate(navigationPointerPrefab, uiCanvas.transform);
             var nav = activeNavGO.GetComponent<NavigationPointer>();
             var sc = FindAnyObjectByType<MapCameraStageController>();
-            nav.Initialize(playerTransform, uiCanvas, sc, nPoint.transform, 50f, 60f);
+            nav.Initialize(player, uiCanvas, sc, nPoint.transform, 50f, 60f);
         }
     }
 

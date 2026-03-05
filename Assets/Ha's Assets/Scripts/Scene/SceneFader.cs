@@ -37,7 +37,7 @@ public class SceneFader : MonoBehaviour
 
         _canvas.renderMode = RenderMode.ScreenSpaceOverlay;
         _canvas.overrideSorting = true;
-        _canvas.sortingOrder = 32767; // ÃÖ»ó´Ü À¯Áö
+        _canvas.sortingOrder = 32767; 
 
         if (GetComponent<GraphicRaycaster>() == null)
             gameObject.AddComponent<GraphicRaycaster>();
@@ -80,18 +80,18 @@ public class SceneFader : MonoBehaviour
         transform.SetAsLastSibling();
         _canvasGroup.blocksRaycasts = true;
 
-        // [Fade Out] È­¸é µ¤±â (0 -> 1)
+        // [Fade Out] È­ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ (0 -> 1)
         float t = 0f;
         while (t < fadeDuration)
         {
             t += Time.unscaledDeltaTime;
-            // Mathf.Saturate ´ë½Å Mathf.Clamp01 »ç¿ë
+            // Mathf.Saturate ï¿½ï¿½ï¿½ Mathf.Clamp01 ï¿½ï¿½ï¿½
             _canvasGroup.alpha = Mathf.Clamp01(t / fadeDuration);
             yield return null;
         }
         _canvasGroup.alpha = 1f;
 
-        // ¾À ·Îµù
+        // ï¿½ï¿½ ï¿½Îµï¿½
         AsyncOperation op = SceneManager.LoadSceneAsync(sceneName);
         op.allowSceneActivation = false;
 
@@ -103,12 +103,12 @@ public class SceneFader : MonoBehaviour
         transform.SetAsLastSibling();
         _canvas.sortingOrder = 32767;
 
-        // [Fade In] È­¸é ¹àÈ÷±â (1 -> 0)
+        // [Fade In] È­ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ (1 -> 0)
         t = 0f;
         while (t < fadeDuration)
         {
             t += Time.unscaledDeltaTime;
-            // Mathf.Saturate ´ë½Å Mathf.Clamp01 »ç¿ë
+            // Mathf.Saturate ï¿½ï¿½ï¿½ Mathf.Clamp01 ï¿½ï¿½ï¿½
             _canvasGroup.alpha = Mathf.Clamp01(1f - (t / fadeDuration));
             yield return null;
         }

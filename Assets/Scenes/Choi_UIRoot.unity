@@ -422,6 +422,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e89388eecf02993468279554e36fc3c7, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::UIRoot
+  itemBarRect: {fileID: 913674274}
+  itemBarCanvasGroup: {fileID: 913674277}
+  checkLayers:
+    serializedVersion: 2
+    m_Bits: 49600
+  transparentAlpha: 0.4
 --- !u!4 &172166895
 Transform:
   m_ObjectHideFlags: 0
@@ -853,6 +859,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::InventorySlotUI
   iconImage: {fileID: 1053532224}
   countText: {fileID: 2112733043}
+  button: {fileID: 0}
+  emptyColor: {r: 1, g: 1, b: 1, a: 0.3}
+  filledColor: {r: 1, g: 1, b: 1, a: 1}
   count: 0
 --- !u!1 &531289252
 GameObject:
@@ -1452,6 +1461,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::InventorySlotUI
   iconImage: {fileID: 1261287039}
   countText: {fileID: 171799893}
+  button: {fileID: 0}
+  emptyColor: {r: 1, g: 1, b: 1, a: 0.3}
+  filledColor: {r: 1, g: 1, b: 1, a: 1}
   count: 0
 --- !u!224 &679748985
 RectTransform:
@@ -1755,7 +1767,7 @@ MonoBehaviour:
     icon: {fileID: 21300000, guid: 53b62b68b60a62a47a099be44ae19854, type: 3}
   - type: 11
     icon: {fileID: 21300000, guid: 81cf0d38d117f0d47bc2e3374552d8d9, type: 3}
-  playerObject: {fileID: 0}
+  waitForGameManagerTimeout: 5
 --- !u!1 &792740623
 GameObject:
   m_ObjectHideFlags: 0
@@ -1850,6 +1862,7 @@ GameObject:
   - component: {fileID: 913674274}
   - component: {fileID: 913674276}
   - component: {fileID: 913674275}
+  - component: {fileID: 913674277}
   m_Layer: 0
   m_Name: ItemBar
   m_TagString: Untagged
@@ -1915,6 +1928,18 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 913674273}
   m_CullTransparentMesh: 1
+--- !u!225 &913674277
+CanvasGroup:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 913674273}
+  m_Enabled: 1
+  m_Alpha: 1
+  m_Interactable: 1
+  m_BlocksRaycasts: 1
+  m_IgnoreParentGroups: 0
 --- !u!1 &1035277545
 GameObject:
   m_ObjectHideFlags: 0
@@ -2542,6 +2567,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::InventorySlotUI
   iconImage: {fileID: 688741657}
   countText: {fileID: 305612817}
+  button: {fileID: 0}
+  emptyColor: {r: 1, g: 1, b: 1, a: 0.3}
+  filledColor: {r: 1, g: 1, b: 1, a: 1}
   count: 0
 --- !u!1 &1437786872
 GameObject:
@@ -3291,6 +3319,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::InventorySlotUI
   iconImage: {fileID: 190938924}
   countText: {fileID: 1967570516}
+  button: {fileID: 0}
+  emptyColor: {r: 1, g: 1, b: 1, a: 0.3}
+  filledColor: {r: 1, g: 1, b: 1, a: 1}
   count: 0
 --- !u!1 &1823054493
 GameObject:
@@ -3494,6 +3525,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::InventorySlotUI
   iconImage: {fileID: 602818217}
   countText: {fileID: 670908787}
+  button: {fileID: 0}
+  emptyColor: {r: 1, g: 1, b: 1, a: 0.3}
+  filledColor: {r: 1, g: 1, b: 1, a: 1}
   count: 0
 --- !u!1 &1825400027
 GameObject:
@@ -4062,6 +4096,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::InventorySlotUI
   iconImage: {fileID: 624150106}
   countText: {fileID: 623605242}
+  button: {fileID: 0}
+  emptyColor: {r: 1, g: 1, b: 1, a: 0.3}
+  filledColor: {r: 1, g: 1, b: 1, a: 1}
   count: 0
 --- !u!1 &2112733041
 GameObject:

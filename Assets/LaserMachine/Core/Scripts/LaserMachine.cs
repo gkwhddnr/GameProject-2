@@ -43,6 +43,13 @@ namespace Lightbug.LaserMachine
         private bool m_eventSubscribed = false;
         private Vector3 m_initialPosition;
 
+        // --- Static Sound Management to prevent overlap ---
+        private static int s_activeLasersCount = 0;
+        private static AudioSource s_sharedAudioSource = null;
+        private static LaserMachine s_soundOwner = null;
+        private AudioSource m_localAudioSource;
+        // --------------------------------------------------
+
         void OnEnable()
         {
             m_initialPosition = transform.position;
@@ -95,6 +102,9 @@ namespace Lightbug.LaserMachine
             }
 
             if (m_rotateOnPlayerTurn) TrySubscribeToGameManager();
+
+            // Sound Source Cache
+            m_localAudioSource = GetComponent<AudioSource>();
         }
 
         void Start()
@@ -121,6 +131,14 @@ namespace Lightbug.LaserMachine
             {
                 GameManager.Instance.OnPlayerTurnEnd -= OnPlayerTurnEnd;
                 m_eventSubscribed = false;
+            }
+
+            // Unregister sound if this was the owner
+            if (s_soundOwner == this)
+            {
+                if (s_sharedAudioSource != null) s_sharedAudioSource.Stop();
+                s_soundOwner = null;
+                s_sharedAudioSource = null;
             }
         }
 
@@ -192,6 +210,53 @@ namespace Lightbug.LaserMachine
                     element.lineRenderer.enabled = false;
                     if (m_assignSparks) element.sparks.SetActive(false);
                 }
+            }
+
+            HandleGlobalSound();
+        }
+
+        private void HandleGlobalSound()
+        {
+            if (m_localAudioSource == null) return;
+
+            // Update Global State
+            bool isEmitting = m_active && elementsList.Count > 0;
+            
+            // Manage static owner
+            if (isEmitting)
+            {
+                if (s_soundOwner == null || !s_soundOwner.isActiveAndEnabled)
+                {
+                    s_soundOwner = this;
+                    s_sharedAudioSource = m_localAudioSource;
+                }
+            }
+
+            // Only the owner plays sound
+            if (s_soundOwner == this)
+            {
+                // Count how many lasers are actually emitting across all objects
+                int currentTotalActiveLasers = 0;
+                LaserMachine[] allLasers = Object.FindObjectsByType<LaserMachine>(FindObjectsSortMode.None);
+                foreach (var lm in allLasers)
+                {
+                    if (lm.m_active && lm.isActiveAndEnabled) currentTotalActiveLasers++;
+                }
+
+                if (currentTotalActiveLasers > 0)
+                {
+                    if (!m_localAudioSource.isPlaying) m_localAudioSource.Play();
+                    m_localAudioSource.mute = false;
+                }
+                else
+                {
+                    if (m_localAudioSource.isPlaying) m_localAudioSource.Stop();
+                }
+            }
+            else
+            {
+                // Mute if not the owner but still playing (to handle transitions)
+                if (m_localAudioSource.isPlaying) m_localAudioSource.mute = true;
             }
         }
     }

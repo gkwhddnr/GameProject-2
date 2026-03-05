@@ -10,35 +10,41 @@ public class MapCameraStageController : MonoBehaviour
 {
     public enum StageCameraMode
     {
-        FitBoth,        // È­¸é ÀüÃ¼ Ãâ·Â (autoFit)
-        AutoScaleOnly,  // ÇÃ·¹ÀÌ¾î ÃßÀû ¹× ÀÚµ¿ ½ºÄÉÀÏ
-        None            // ÀÚµ¿ ¼³Á¤ ¾øÀ½
+        FitBoth,        // í™”ë©´ ì „ì²´ ì¶œë ¥ (autoFit)
+        AutoScaleOnly,  // í”Œë ˆì´ì–´ ì¶”ì  ë° ìë™ ìŠ¤ì¼€ì¼
+        None            // ìë™ ì„¤ì • ì—†ìŒ
     }
 
-    [Header("ÂüÁ¶")]
+    [Header("ì°¸ì¡°")]
     public MapCamera mapCamera;
     public GameManager gameManager;
 
-    [Header("½ºÅ×ÀÌÁöº° Ä«¸Ş¶ó ¸ğµå")]
+    [Header("ìŠ¤í…Œì´ì§€ë³„ ì¹´ë©”ë¼ ëª¨ë“œ")]
     public StageCameraMode[] perStageModes;
 
-    [Header("½ºÅ×ÀÌÁöº° AutoScaleOnly ¼³Á¤ (ÀÚµ¿ ÇÊÅÍ¸µ)")]
+    [Header("ìŠ¤í…Œì´ì§€ë³„ AutoScaleOnly ì„¤ì • (ìë™ í•„í„°ë§)")]
     public AutoScaleSettings[] autoScaleSettings;
+
+    [Header("Bounds ë³€ê²½ ê°ì§€ ì„¤ì •")]
+    [Tooltip("ìŠ¤í…Œì´ì§€ ì´ë™ ì‹œ Bounds ì¬ì¡°ì • ê°•ì œ ì‹¤í–‰")]
+    public bool forceRefreshBoundsOnStageChange = true;
 
     private bool applyOnStart = true;
     private bool snapCameraWhenChanging = true;
     private int lastAppliedStage = -1;
+    private int lastDetectedStage = -2;
+    private int stageExitCounter = 0;
+    private bool hasAppliedInitialStage = false;
 
     [Serializable]
     public class AutoScaleSettings
     {
-        // ÀÎ½ºÆåÅÍ¿¡¼­ ¾î¶² ½ºÅ×ÀÌÁö ¼³Á¤ÀÎÁö ½Äº°ÇÏ±â À§ÇÑ ¿ëµµ (ÀĞ±â Àü¿ë)
         [HideInInspector] public string stageLabel;
 
-        [Tooltip("AutoScaleOnly ¸ğµå¿¡¼­ »ç¿ëµÇ´Â followViewFraction °ª")]
+        [Tooltip("AutoScaleOnly ëª¨ë“œì—ì„œ ì‚¬ìš©ë˜ëŠ” followViewFraction ê°’")]
         [Range(0.01f, 1f)] public float followViewFraction = 0.25f;
 
-        [Tooltip("AutoScaleOnly ¸ğµå¿¡¼­ »ç¿ëµÇ´Â followZoomSmooth °ª")]
+        [Tooltip("AutoScaleOnly ëª¨ë“œì—ì„œ ì‚¬ìš©ë˜ëŠ” followZoomSmooth ê°’")]
         [Range(0f, 1f)] public float followZoomSmooth = 0.15f;
     }
 
@@ -50,6 +56,9 @@ public class MapCameraStageController : MonoBehaviour
 
     void OnEnable()
     {
+        hasAppliedInitialStage = false;
+        lastDetectedStage = -2;
+
         if (gameManager != null)
         {
             gameManager.OnPlayerTurnEnd -= OnPlayerTurnEnd;
@@ -58,10 +67,42 @@ public class MapCameraStageController : MonoBehaviour
         if (applyOnStart) ApplyCurrentStageSettings(forceImmediate: true);
     }
 
-    void OnDisable() { if (gameManager != null) gameManager.OnPlayerTurnEnd -= OnPlayerTurnEnd; }
-    private void OnPlayerTurnEnd() { ApplyCurrentStageSettings(forceImmediate: false); }
+    void LateUpdate()
+    {
+        if (!ValidateReferences()) return;
 
-    public void ApplyCurrentStageSettingsImmediate() { ApplyCurrentStageSettings(forceImmediate: true); }
+        int currentStage = GetStageIndexForPosition(gameManager.playerTransform.position);
+
+        if (!hasAppliedInitialStage)
+        {
+            hasAppliedInitialStage = true;
+            lastDetectedStage = currentStage;
+            ApplyCurrentStageSettings(forceImmediate: true);
+            return;
+        }
+
+        if (currentStage != lastDetectedStage)
+        {
+            lastDetectedStage = currentStage;
+            ApplyCurrentStageSettings(forceImmediate: true);
+        }
+    }
+
+
+    void OnDisable()
+    {
+        if (gameManager != null) gameManager.OnPlayerTurnEnd -= OnPlayerTurnEnd;
+    }
+
+    private void OnPlayerTurnEnd()
+    {
+        ApplyCurrentStageSettings(forceImmediate: false);
+    }
+
+    public void ApplyCurrentStageSettingsImmediate()
+    {
+        ApplyCurrentStageSettings(forceImmediate: true);
+    }
 
     private void ApplyCurrentStageSettings(bool forceImmediate = false)
     {
@@ -72,13 +113,32 @@ public class MapCameraStageController : MonoBehaviour
 
         if (idx < 0 || idx >= gameManager.stageSettings.Length)
         {
+            // ì—°ì†ìœ¼ë¡œ ë°–ì— ìˆìœ¼ë©´ ì¹´ìš´íŠ¸ ì¦ê°€
+            stageExitCounter++;
+
+            // ì•„ì§ ìœ ì˜ˆ íšŸìˆ˜ì— ë¯¸ë‹¬í•˜ë©´ ì•„ë¬´ ë™ì‘ë„ í•˜ì§€ ì•ŠìŒ (ì„¤ì • ìœ ì§€)
+            if (stageExitCounter < Mathf.Max(1, 99))
+            {
+                return;
+            }
+
+            // ìœ ì˜ˆê°€ ì™„ë£Œë˜ì—ˆê³  ì´ì „ì— ì ìš©ëœ ìŠ¤í…Œì´ì§€ê°€ ìˆì—ˆë‹¤ë©´ None ìƒíƒœë¡œ ì²˜ë¦¬(ì›í•˜ë©´ ë³€ê²½)
             if (lastAppliedStage != -1)
             {
                 lastAppliedStage = -1;
+
+                // ì£¼ì˜: ApplyModeToCameraì˜ None ë¶„ê¸°ëŠ” ë” ì´ìƒ ì¹´ë©”ë¼ ì„¤ì •ì„ ì´ˆê¸°í™”í•˜ì§€ ì•ŠìŒ.
                 ApplyModeToCamera(StageCameraMode.None, null, forceImmediate, -1);
+                Debug.Log("[MapCameraStageController] Player remained outside; applied None mode after grace turns.");
             }
             return;
         }
+
+        // í”Œë ˆì´ì–´ê°€ ìŠ¤í…Œì´ì§€ ì•ˆì— ë“¤ì–´ì˜¨ ê²½ìš°, exit ì¹´ìš´í„° ì´ˆê¸°í™”
+        stageExitCounter = 0;
+
+        // â˜… ìŠ¤í…Œì´ì§€ê°€ ë³€ê²½ë˜ì—ˆëŠ”ì§€ í™•ì¸
+        bool stageChanged = (lastAppliedStage != idx);
 
         if (lastAppliedStage == idx && !forceImmediate) return;
 
@@ -88,6 +148,27 @@ public class MapCameraStageController : MonoBehaviour
                                : StageCameraMode.None;
 
         ApplyModeToCamera(mode, gameManager.stageSettings[idx].bounds, forceImmediate, idx);
+
+        // â˜… ìŠ¤í…Œì´ì§€ ë³€ê²½ ì‹œ Bounds ê°•ì œ ì¬ì¡°ì •
+        if (stageChanged && forceRefreshBoundsOnStageChange && mapCamera != null)
+        {
+            // ì•½ê°„ì˜ ë”œë ˆì´ í›„ ì¬ì¡°ì • (Boundsê°€ ì™„ì „íˆ ì„¤ì •ëœ í›„)
+            StartCoroutine(DelayedBoundsRefresh());
+        }
+    }
+
+    /// <summary>
+    /// Bounds ì¬ì¡°ì •ì„ ì•½ê°„ ì§€ì—°ì‹œì¼œ ì‹¤í–‰
+    /// </summary>
+    private System.Collections.IEnumerator DelayedBoundsRefresh()
+    {
+        // 1í”„ë ˆì„ ëŒ€ê¸° (Boundsê°€ ì™„ì „íˆ ì—…ë°ì´íŠ¸ë  ì‹œê°„ í™•ë³´)
+        yield return null;
+
+        if (mapCamera != null)
+        {
+            mapCamera.ForceRefreshBounds();
+        }
     }
 
     private void ApplyModeToCamera(StageCameraMode mode, BoxCollider2D bounds, bool forceImmediate, int stageIndex)
@@ -106,7 +187,6 @@ public class MapCameraStageController : MonoBehaviour
                 mapCamera.forceFitIgnoreMaxOrtho = false;
                 mapCamera.autoScaleFollowView = true;
 
-                // --- ¸ÊÇÎ ·ÎÁ÷: ÀüÃ¼ ½ºÅ×ÀÌÁö Áß AutoScaleOnlyÀÎ °Íµé Áß ¸î ¹øÂ°ÀÎÁö °è»ê ---
                 int settingsIdx = GetAutoScaleSettingsIndex(stageIndex);
                 if (autoScaleSettings != null && settingsIdx >= 0 && settingsIdx < autoScaleSettings.Length)
                 {
@@ -128,7 +208,6 @@ public class MapCameraStageController : MonoBehaviour
         mapCamera.SetBounds(bounds, snapCameraToBounds: shouldSnap, fitViewToBounds: shouldFit);
     }
 
-    // Æ¯Á¤ ½ºÅ×ÀÌÁö ÀÎµ¦½º°¡ AutoScaleOnly ¹è¿­¿¡¼­ ¸î ¹øÂ° ÀÎµ¦½ºÀÎÁö ¹İÈ¯
     private int GetAutoScaleSettingsIndex(int stageIdx)
     {
         if (perStageModes == null || stageIdx >= perStageModes.Length) return -1;
@@ -144,7 +223,7 @@ public class MapCameraStageController : MonoBehaviour
 
     private int GetStageIndexForPosition(Vector3 worldPos)
     {
-        var settingsArray = gameManager.stageSettings; 
+        var settingsArray = gameManager.stageSettings;
         if (settingsArray == null) return -1;
         for (int i = 0; i < settingsArray.Length; i++)
         {
@@ -153,14 +232,16 @@ public class MapCameraStageController : MonoBehaviour
         return -1;
     }
 
-    private bool ValidateReferences() => gameManager != null && mapCamera != null && gameManager.stageSettings != null && gameManager.playerTransform != null;
+    private bool ValidateReferences()
+    {
+        return gameManager != null && mapCamera != null && gameManager.stageSettings != null && gameManager.playerTransform != null;
+    }
 
 #if UNITY_EDITOR
     void OnValidate()
     {
         if (gameManager == null) gameManager = GetComponent<GameManager>();
 
-        // --- ¼öÁ¤: stageSettings.Length¸¦ ±âÁØÀ¸·Î ¸ğµç ¹è¿­ Å©±â Á¶Á¤ ---
         if (gameManager != null && gameManager.stageSettings != null)
         {
             int stageCount = gameManager.stageSettings.Length;
