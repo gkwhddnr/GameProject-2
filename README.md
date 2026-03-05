@@ -9,9 +9,9 @@ Unity 엔진을 활용하여 진행 중이며, 다양한 기믹과 최적화된 
 
 게임 내에서 사용되는 주요 수집 아이템 및 오브젝트입니다.
 
-| Shield (방패) | Star (별) | Key (열쇠) |
-| :---: | :---: | :---: |
-| ![Shield](./Assets/Ha%27s%20Assets/Resources/Sprites/Shield.png) | ![Star](./Assets/Ha%27s%20Assets/Resources/Sprites/shooting-star-blue-large.png) | ![Key](./Assets/Ha%27s%20Assets/Resources/Sprites/lock-256.png) |
+| Shield (방패) | Star (별) | Lock (자물쇠) | Key (열쇠) |
+| :---: | :---: | :---: | :---: |
+| ![Shield](./Assets/Ha%27s%20Assets/Resources/Sprites/Shield.png) | ![Star](./Assets/Ha%27s%20Assets/Resources/Sprites/shooting-star-blue-large.png) | ![Lock](./Assets/Ha%27s%20Assets/Resources/Sprites/lock-256.png) | ![Key](./Assets/Space_Exploration_GUI_Kit/Picto_Icons/Dark_Purple/key-128.png) |
 
 
 ---
