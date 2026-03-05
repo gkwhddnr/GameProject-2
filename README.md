@@ -310,7 +310,7 @@ Unity 엔진을 활용하여 2D 퍼즐 어드벤쳐 게임으로 만들었으며
 | Shield (방패) | Star (별) | Lock (자물쇠) | Unlock (해제) | Key (열쇠) |
 | :---: | :---: | :---: | :---: | :---: |
 | <img src="./Assets/Ha%27s%20Assets/Resources/Sprites/Shield.png" width="80"> | <img src="./Assets/Ha%27s%20Assets/Resources/Sprites/shooting-star-blue-large.png" width="80"> | <img src="./Assets/Ha%27s%20Assets/Resources/Sprites/lock-256.png" width="80"> | <img src="./Assets/Ha%27s%20Assets/Resources/Sprites/unlock-256.png" width="80"> | <img src="./Assets/Space_Exploration_GUI_Kit/Picto_Icons/Dark_Purple/key-128.png" width="80"> |
-| 보호형 아이템 | 수집용 별 | 잠겨있는 상태 | 해제된 상태 | 열쇠 아이템 |
+| 보호형 아이템 | 수집용 별 (빛나는 별을 따로 캡처해서 사용함) | 잠겨있는 상태 | 해제된 상태 | 열쇠 아이템 |
 
 ### **장애물 (Obstacles)**
 
