@@ -317,7 +317,7 @@ Unity 엔진을 활용하여 2D 퍼즐 어드벤쳐 게임으로 만들었으며
 | Laser (레이저) | Cloud (구름 1) | Cloud (구름 2) | Rock (운석) |
 | :---: | :---: | :---: | :---: |
 | <img src="https://github.com/user-attachments/assets/7d7f83cf-737d-4015-874d-2ec1959b0c5d" width="120"> | <img src="./Assets/Space_Exploration_GUI_Kit/Other_Images/Large/cloud-1-large.png" width="100"> | <img src="./Assets/Space_Exploration_GUI_Kit/Other_Images/Large/cloud-2-large.png" width="100"> | <img src="https://github.com/user-attachments/assets/a8427606-df64-432f-b53c-bb7a87a4d4e8" width="80"> |
-| 턴제 회전 레이저 | 시야 방해 구름 1 | 시야 방해 구름 2 | 물리 충돌 운석 |
+| 턴제 회전 레이저 & 그냥 회전하는 레이저 | 시야 방해 구름 1 | 시야 방해 구름 2 | 길을 막는 운석 |
 
 ### **배경 (Backgrounds)**
 
@@ -379,10 +379,12 @@ graph LR
 
 ---
 
-## 📚 참고 자료
+## 📚 참고 AI
 - ChatGPT: 주로 구조를 설계하고 역할 및 이벤트 발생하는 로직 구현에 주로 사용함.
 - Gemini: ChatGPT로 짠 스크립트를 바탕으로, GC(Garbage Collection)을 줄이는 방향으로 최적화에 도움을 받았으며 그거를 중심으로 사용함.
 - Claude: 아키텍쳐 및 API 구조를 세부화해서 설계한 후 구현에 사용함 + 일부 스크립트의 Manager 구조를 디자인 패턴으로 적용시켜 성능을 개선시킴(ex. ItemCollector.cs의 구조를 Strategy + Factory Method 패턴으로 사용하여 세부 내용을 API로 분리한 후 코더가 구현하기 쉽게 만듦).
+
+### 📚 참고 AI agent
 - Codex: 폴더 구조를 파악 및 전체적인 구조의 흐름을 정리하는데 주로 사용함. 또한, 깃허브와 연결되어 있어 깃허브의 커밋 히스토리를 파악하는데 도움을 받음.
 - Antigravity: Planning 기능으로 명령 프롬포트의 구조를 세부화해서 설계한 후 구현에 사용함. 또한, 게임 프로젝트의 전반적인 구조를 파악하는데 도움을 받았으며, 전체 스크립트들의 구조와 참조의 형태를 파악하여 수정하는데 많은 도움을 얻었음. 자세한 내용은 "주요 기술 및 최적화"의 내용과 같음.
 - Cursor: Antigravity와 마찬가지로 명령 프롬포트의 구조를 세부화해서 설계함. 단, 차이점은 Cursor 창에서 바로 작업할 수 있다는 점에서 작업 효율이 좋았음. 또한, Antigravity보다 더 직관적으로 코드를 수정할 수 있었음.
