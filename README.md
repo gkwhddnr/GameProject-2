@@ -7,37 +7,33 @@ Unity 엔진을 활용하여 진행 중이며, 다양한 기믹과 최적화된 
 
 ## 📸 주요 에셋 (Key Assets)
 
-게임 내에서 사용되는 주요 수집 아이템 및 오브젝트입니다.
+게임 내에서 사용되는 주요 캐릭터, 아이템 및 배경 오브젝트입니다.
 
-**수집 아이템**
+### **캐릭터 (Character)**
 
-| Shield (방패) | Star (별) | Lock (자물쇠) | Unlock (자물쇠) | Key (열쇠) |
-| :---: | :---: | :---: | :---: |:---: |
-| ![Shield](./Assets/Ha%27s%20Assets/Resources/Sprites/Shield.png) | ![Star](./Assets/Ha%27s%20Assets/Resources/Sprites/shooting-star-blue-large.png) 밝은 별을 따로 캡처해서 사용함. | ![Lock](./Assets/Ha%27s%20Assets/Resources/Sprites/lock-256.png) | ![Unlock](./Assets/Ha%27s%20Assets/Resources/Sprites/unlock-256.png) |![Key](./Assets/Space_Exploration_GUI_Kit/Picto_Icons/Dark_Purple/key-128.png) |
+| 캐릭터 시트 (상태) | 캐릭터 시트 (이동) |
+| :---: | :---: |
+| <img src="./Assets/Jung%20Assets/Character/sheet_text.png" width="300"> | <img src="./Assets/Jung%20Assets/Character/sheet_walk.png" width="300"> |
 
-**장애물**
+### **수집 아이템 (Collectibles)**
+
+| Shield (방패) | Star (별) | Lock (자물쇠) | Unlock (해제) | Key (열쇠) |
+| :---: | :---: | :---: | :---: | :---: |
+| <img src="./Assets/Ha%27s%20Assets/Resources/Sprites/Shield.png" width="80"> | <img src="./Assets/Ha%27s%20Assets/Resources/Sprites/shooting-star-blue-large.png" width="80"> | <img src="./Assets/Ha%27s%20Assets/Resources/Sprites/lock-256.png" width="80"> | <img src="./Assets/Ha%27s%20Assets/Resources/Sprites/unlock-256.png" width="80"> | <img src="./Assets/Space_Exploration_GUI_Kit/Picto_Icons/Dark_Purple/key-128.png" width="80"> |
+| 보호형 아이템 | 수집용 별 | 잠겨있는 상태 | 해제된 상태 | 열쇠 아이템 |
+
+### **장애물 (Obstacles)**
 
 | Laser (레이저) | Cloud (구름) | Rock (운석) |
 | :---: | :---: | :---: |
-| ![Laser](<img width="155" height="147" alt="image" src="https://github.com/user-attachments/assets/7d7f83cf-737d-4015-874d-2ec1959b0c5d" />)
-) | ![Cloud](./Assets/Space_Exploration_GUI_Kit/Other_Image/Large/cloud-1-large.png), ![Cloud](./Assets/Space_Exploration_GUI_Kit/Other_Image/Large/cloud-2-large.png) | ![Rock](<img width="92" height="109" alt="image" src="https://github.com/user-attachments/assets/a8427606-df64-432f-b53c-bb7a87a4d4e8" />)
-), ![Rock](<img width="35" height="47" alt="image" src="https://github.com/user-attachments/assets/ae0a9f2b-b570-4a60-af1a-698cfc617b65" />)
-|
+| <img src="https://github.com/user-attachments/assets/7d7f83cf-737d-4015-874d-2ec1959b0c5d" width="150"> | <img src="./Assets/Space_Exploration_GUI_Kit/Other_Image/Large/cloud-1-large.png" width="120"> | <img src="https://github.com/user-attachments/assets/a8427606-df64-432f-b53c-bb7a87a4d4e8" width="100"> |
+| 턴제 회전 레이저 | 시야 방해 구름 | 물리 충돌 운석 |
 
-**배경**
+### **배경 (Backgrounds)**
 
-| Background (배경) | AI_Background (AI로 만든 배경) |
+| 일반 배경 (Legacy) | AI 생성 배경 (Stable Diffusion) |
 | :---: | :---: |
-| ![Background](./Assets/Space_Exploration_GUI_Kit/Background_Images/large/background-1-large.png), ![Background](./Assets/Space_Exploration_GUI_Kit/Background_Images/large/background-2-large.png), ![Background](./Assets/Space_Exploration_GUI_Kit/Background_Images/large/home-background-large.png)
-) | ![AI_Background](./Assets/Ha%27s%20Assets/Resources/Sprites/image1.png), ![AI_Background](./Assets/Ha%27s%20Assets/Resources/Sprites/image2.png), ![AI_Background](./Assets/Ha%27s%20Assets/Resources/Sprites/image3.png) |
-
-
-**캐릭터**
-
-| Character (인물) |
-| :---: |
-| ![Character](./Assets/Jung%20Assets/Character/sheet_text.png), ![Character](./Assets/Jung%20Assets/Character/sheet_walk.png)  |
-
+| <img src="./Assets/Space_Exploration_GUI_Kit/Background_Images/large/background-1-large.png" width="300"> | <img src="./Assets/Ha%27s%20Assets/Resources/Sprites/image1.png" width="300"> |
 
 ---
 
@@ -48,7 +44,7 @@ Unity 엔진을 활용하여 진행 중이며, 다양한 기믹과 최적화된 
 - **1. 간단한 맵 틀 구현**: 기본적인 맵의 구조와 타일맵 배치
 - **2. 카메라 설정 구현 + 맵 이동**: 스테이지 기반 카메라 시스템 및 이동 로직
 - **3. 배경 이동 + 빛 추가 + UI / 아이템 추가**: 조명 강화 및 기본 UI/아이템 배치
-- **4. count 구현 및 메모리 최적이화**: 게임 카운트 시스템 로직화 및 메모리 최적화
+- **4. count 구현 및 메모리 최적화**: 게임 카운트 시스템 로직화 및 메모리 최적화
 - **5. 이야기 서사 UI 및 업데이트**: 대화창 및 서사적 UI 요소 추가
 - **6. 기믹 구현 (Key/Lock) 및 사운드**: 잠금 시스템 및 오디오 시스템 통합
 - **7. 내비게이션 및 파티클 시스템**: 목표 안내 시스템 및 파티클 피드백 추가
