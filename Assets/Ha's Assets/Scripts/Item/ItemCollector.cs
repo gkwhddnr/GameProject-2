@@ -65,7 +65,6 @@ public class ItemCollector : MonoBehaviour,
 
     [Header("UI 참조")]
     public TextMeshProUGUI uiText;
-    public Transform playerTransform;
     public GameObject navigationPointerPrefab;
     public Canvas uiCanvas;
     private bool showUIImmediatelyIfNoBounds = false;
