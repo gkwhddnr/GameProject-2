@@ -317,7 +317,7 @@ Unity 엔진을 활용하여 2D 퍼즐 어드벤쳐 게임으로 만들었으며
 | Laser (레이저) | Cloud (구름 1) | Cloud (구름 2) | Rock (운석) |
 | :---: | :---: | :---: | :---: |
 | <img src="https://github.com/user-attachments/assets/7d7f83cf-737d-4015-874d-2ec1959b0c5d" width="120"> | <img src="./Assets/Space_Exploration_GUI_Kit/Other_Images/Large/cloud-1-large.png" width="100"> | <img src="./Assets/Space_Exploration_GUI_Kit/Other_Images/Large/cloud-2-large.png" width="100"> | <img src="https://github.com/user-attachments/assets/a8427606-df64-432f-b53c-bb7a87a4d4e8" width="80"> |
-| 턴제 회전 레이저 & 그냥 회전하는 레이저 | 시야 방해 구름 1 | 시야 방해 구름 2 | 길을 막는 운석 |
+| 턴제 회전 레이저 & 그냥 회전하는 레이저 | 시야 방해 구름 1 & 배경 이펙트 효과 1 | 시야 방해 구름 2 & 배경 이펙트 효과 2 | 길을 막는 운석 |
 
 ### **배경 (Backgrounds)**
 
