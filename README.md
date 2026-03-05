@@ -5,40 +5,31 @@ Unity 엔진을 활용하여 진행 중이며, 다양한 기믹과 최적화된 
 
 ---
 
-## 🎬 최종 결과물 (Final Result)
-
-프로젝트의 최종 완성 단계와 주요 기능을 시연한 영상입니다.
-
-![최종 결과물 시연](file:///c:/Users/하종욱/Videos/화면 녹화/최종 결과물.mp4)
-
----
-
-## � 주요 에셋 (Key Assets)
+## 📸 주요 에셋 (Key Assets)
 
 게임 내에서 사용되는 주요 수집 아이템 및 오브젝트입니다.
 
-| Shield (방패) | Star (별) | Key (열쇠) | Battery (배터리) |
-| :---: | :---: | :---: | :---: |
-| ![Shield](file:///c:/Users/하종욱/Documents/GameProject-2/Assets/Ha's Assets/Resources/Sprites/Shield.png) | ![Star](file:///c:/Users/하종욱/Documents/GameProject-2/Assets/Ha's Assets/Resources/Sprites/shooting-star-blue-large.png) | ![Key](file:///c:/Users/하종욱/Documents/GameProject-2/Assets/Ha's Assets/Resources/Sprites/lock-256.png) | ![Battery](file:///c:/Users/하종욱/Documents/GameProject-2/Assets/Ha's Assets/Resources/Sprites/Battery.png) |
+| Shield (방패) | Star (별) | Key (열쇠) |
+| :---: | :---: | :---: |
+| ![Shield](./Assets/Ha%27s%20Assets/Resources/Sprites/Shield.png) | ![Star](./Assets/Ha%27s%20Assets/Resources/Sprites/shooting-star-blue-large.png) | ![Key](./Assets/Ha%27s%20Assets/Resources/Sprites/lock-256.png) |
+
 
 ---
 
-## �🚀 개발 진행 상황 (Development History)
+## 🚀 개발 진행 상황 (Development History)
 
-`Jong's 작업현황` 폴더에 기록된 주요 마일스톤 비디오 리스트입니다. (오래된 순)
+주요 개발 마일스톤 히스토리입니다.
 
-| 순서 | 작업 내용 | 영상 링크 |
-| :--- | :--- | :--- |
-| 1 | **간단한 맵 틀 구현** | [영상 보기](file:///c:/Users/하종욱/Documents/GameProject-2/Jong's 작업현황/간단한 맵 틀 구현.mp4) |
-| 2 | **카메라 설정 구현 + 맵 이동** | [영상 보기](file:///c:/Users/하종욱/Documents/GameProject-2/Jong's 작업현황/카메라 설정 구현 + 맵 이동.mp4) |
-| 3 | **배경 이동 + 빛 추가 + UI / 아이템 추가** | [영상 보기](file:///c:/Users/하종욱/Documents/GameProject-2/Jong's 작업현황/배경 이동 + 빛 추가 + UI 및 아이템 추가.mp4) |
-| 4 | **count 구현 및 메모리 최적화** | [영상 보기](file:///c:/Users/하종욱/Documents/GameProject-2/Jong's 작업현황/count 구현 및 메모리 최소화.mp4) |
-| 5 | **이야기 서사 UI 및 업데이트** | [영상 보기](file:///c:/Users/하종욱/Documents/GameProject-2/Jong's 작업현황/이야기 서사 UI 추가 + UI 업데이트.mp4) |
-| 6 | **기믹 구현 (Key/Lock) 및 사운드** | [영상 보기](file:///c:/Users/하종욱/Documents/GameProject-2/Jong's 작업현황/애니메이션 + key 및 lock + 사운드 및 BGM + 빛 범위 추가.mp4) |
-| 7 | **내비게이션 및 파티클 시스템** | [영상 보기](file:///c:/Users/하종욱/Documents/GameProject-2/Jong's 작업현황/내비게이션 + 파티클 시스템 추가 (+ 스크립트 구조 개선).mp4) |
-| 8 | **ItemCollector 리메이크 & 인벤토리 구조화** | [영상 보기](file:///c:/Users/하종욱/Documents/GameProject-2/Jong's 작업현황/아이템 수집 구현 + ItemCollector.cs 리메이크 + InventoryManager 스크립트 구조화.mp4) |
-| 9 | **이펙트 효과 및 연출 강화** | [영상 보기](file:///c:/Users/하종욱/Documents/GameProject-2/Jong's 작업현황/이펙트 효과 강화.mp4) |
-| 10 | **캐릭터 동작 및 상태 최적화** | [영상 보기](file:///c:/Users/하종욱/Documents/GameProject-2/Jong's 작업현황/캐릭터.mp4) |
+- **1. 간단한 맵 틀 구현**: 기본적인 맵의 구조와 타일맵 배치
+- **2. 카메라 설정 구현 + 맵 이동**: 스테이지 기반 카메라 시스템 및 이동 로직
+- **3. 배경 이동 + 빛 추가 + UI / 아이템 추가**: 조명 강화 및 기본 UI/아이템 배치
+- **4. count 구현 및 메모리 최적이화**: 게임 카운트 시스템 로직화 및 메모리 최적화
+- **5. 이야기 서사 UI 및 업데이트**: 대화창 및 서사적 UI 요소 추가
+- **6. 기믹 구현 (Key/Lock) 및 사운드**: 잠금 시스템 및 오디오 시스템 통합
+- **7. 내비게이션 및 파티클 시스템**: 목표 안내 시스템 및 파티클 피드백 추가
+- **8. ItemCollector 리메이크 & 인벤토리 구조화**: Strategy 패턴 도입 및 인벤토리 시스템 고도화
+- **9. 이펙트 효과 및 연출 강화**: 몰입감을 위한 전반적인 이펙트 연출 강화
+- **10. 캐릭터 동작 및 상태 최적화**: 플레이어 캐릭터 움직임 및 상태 관리 정교화
 
 ---
 
@@ -51,16 +42,9 @@ graph LR
     A[초기 기믹 구현] --> B[배경 및 광원 업데이트]
     B --> C[인벤토리 사운드 및 아이템 버그 수정]
     C --> D[카메라 이동 및 맵 구역 최적화]
-    D --> E[Jong's 작업현황 업데이트]
-    E --> F[최종 작업현황 PUSH 완료]
+    D --> E[작업현황 업데이트]
+    E --> F[최종 작업 완료]
 ```
-
-**최근 주요 커밋 로그:**
-- `f5b65bc` Jong's 최종작업현황 (Final PUSH)
-- `2a12f78` Jong's 작업현황 (Videos Update)
-- `8cde6b2` 추가작업 (Script Refactoring)
-- `72a4936` Jong's 작업현황
-- `4bc0182` 배경 이미지 추가 & UI 개선
 
 ---
 
