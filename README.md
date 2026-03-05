@@ -24,16 +24,22 @@ Unity 엔진을 활용하여 진행 중이며, 다양한 기믹과 최적화된 
 
 ### **장애물 (Obstacles)**
 
-| Laser (레이저) | Cloud (구름) | Rock (운석) |
-| :---: | :---: | :---: |
-| <img src="https://github.com/user-attachments/assets/7d7f83cf-737d-4015-874d-2ec1959b0c5d" width="150"> | <img src="./Assets/Space_Exploration_GUI_Kit/Other_Image/Large/cloud-1-large.png" width="120"> | <img src="https://github.com/user-attachments/assets/a8427606-df64-432f-b53c-bb7a87a4d4e8" width="100"> |
-| 턴제 회전 레이저 | 시야 방해 구름 | 물리 충돌 운석 |
+| Laser (레이저) | Cloud (구름 1) | Cloud (구름 2) | Rock (운석) |
+| :---: | :---: | :---: | :---: |
+| <img src="https://github.com/user-attachments/assets/7d7f83cf-737d-4015-874d-2ec1959b0c5d" width="120"> | <img src="./Assets/Space_Exploration_GUI_Kit/Other_Images/Large/cloud-1-large.png" width="100"> | <img src="./Assets/Space_Exploration_GUI_Kit/Other_Images/Large/cloud-2-large.png" width="100"> | <img src="https://github.com/user-attachments/assets/a8427606-df64-432f-b53c-bb7a87a4d4e8" width="80"> |
+| 턴제 회전 레이저 | 시야 방해 구름 1 | 시야 방해 구름 2 | 물리 충돌 운석 |
 
 ### **배경 (Backgrounds)**
 
-| 일반 배경 (Legacy) | AI 생성 배경 (Stable Diffusion) |
-| :---: | :---: |
-| <img src="./Assets/Space_Exploration_GUI_Kit/Background_Images/large/background-1-large.png" width="300"> | <img src="./Assets/Ha%27s%20Assets/Resources/Sprites/image1.png" width="300"> |
+#### **일반 배경 (Standard Backgrounds)**
+| Background 1 | Background 2 | Home Background |
+| :---: | :---: | :---: |
+| <img src="./Assets/Space_Exploration_GUI_Kit/Background_Images/large/background-1-large.png" width="250"> | <img src="./Assets/Space_Exploration_GUI_Kit/Background_Images/large/background-2-large.png" width="250"> | <img src="./Assets/Space_Exploration_GUI_Kit/Background_Images/large/home-background-large.png" width="250"> |
+
+#### **AI 생성 배경 (Stable Diffusion)**
+| AI Background 1 | AI Background 2 | AI Background 3 |
+| :---: | :---: | :---: |
+| <img src="./Assets/Ha%27s%20Assets/Resources/Sprites/image1.png" width="250"> | <img src="./Assets/Ha%27s%20Assets/Resources/Sprites/image2.png" width="250"> | <img src="./Assets/Ha%27s%20Assets/Resources/Sprites/image3.png" width="250"> |
 
 ---
 
