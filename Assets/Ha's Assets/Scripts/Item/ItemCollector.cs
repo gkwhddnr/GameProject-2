@@ -56,18 +56,19 @@ public class ItemCollector : MonoBehaviour,
 
     #region Inspector Fields
 
+    [Header("스테이지별 통합 설정")]
+    public StageItemSettings[] stageSettings;
+
     [Header("수집 아이템 설정")]
     public LayerMask itemLayerMask = 0;
     private float nextPointFadeDuration = 0.8f;
 
     [Header("UI 참조")]
     public TextMeshProUGUI uiText;
+    public Transform playerTransform;
     public GameObject navigationPointerPrefab;
     public Canvas uiCanvas;
     private bool showUIImmediatelyIfNoBounds = false;
-
-    [Header("스테이지별 통합 설정")]
-    public StageItemSettings[] stageSettings;
 
     [Tooltip("연속으로 아이템 드러내기")]
     private bool revealItemsSequentially = true;
@@ -93,7 +94,7 @@ public class ItemCollector : MonoBehaviour,
 
     #region Private Fields
 
-    // ★ Strategy 리스트 (추가)
+    // ★ Strategy 리스트
     private List<IItemCollectionStrategy> collectionStrategies;
 
     // 최적화된 내부 상태 필드
@@ -300,7 +301,7 @@ public class ItemCollector : MonoBehaviour,
 
     #endregion
 
-    #region Initialization Methods
+    #region Initialization Methods 
 
     void CacheUnlockSprite()
     {
@@ -538,7 +539,7 @@ public class ItemCollector : MonoBehaviour,
 
     #endregion
 
-    #region Caching System
+    #region Caching System 
 
     private ObjectDataCache GetOrAddCache(GameObject go)
     {
@@ -712,7 +713,7 @@ public class ItemCollector : MonoBehaviour,
 
     #endregion
 
-    #region Obstacle Management (IObstacleController 구현)
+    #region Obstacle Management 
 
     public void HandleKeyCollected(GameObject key, int keyStageIndex)
     {
@@ -867,7 +868,7 @@ public class ItemCollector : MonoBehaviour,
 
     #endregion
 
-    #region Fade Effects
+    #region Fade Effects 
 
     IEnumerator HandleStageComplete(SpriteRotator rotator){ yield return StartCoroutine(rotator.WaitForDisappear()); }
 
@@ -891,7 +892,7 @@ public class ItemCollector : MonoBehaviour,
 
     #endregion
 
-    #region NextPoint Management
+    #region NextPoint Management 
 
     public void RevealNextPointForStage(int stageIndex)
     {
