@@ -1,7 +1,7 @@
 # DevNull_2팀 게임 사이드 프로젝트 🎮
 
 동계시즌 DevNull 2팀의 게임 개발 사이드 프로젝트입니다. 
-Unity 엔진을 활용하여 진행 중이며, 다양한 기믹과 최적화된 시스템을 구축하고 있습니다.
+Unity 엔진을 활용하여 2D 퍼즐 게임으로 만들었으며, 다양한 기믹과 최적화된 시스템을 구축했습니다.
 
 ---
 
@@ -13,7 +13,7 @@ Unity 엔진을 활용하여 진행 중이며, 다양한 기믹과 최적화된 
 
 | 캐릭터 시트 (상태) | 캐릭터 시트 (이동) |
 | :---: | :---: |
-| <img src="./Assets/Jung%20Assets/Character/sheet_text.png" width="300"> | <img src="./Assets/Jung%20Assets/Character/sheet_walk.png" width="300"> |
+| <img src="./Assets/Jung%20Assets/Character/sheet_test.png" width="300"> | <img src="./Assets/Jung%20Assets/Character/sheet_walk.png" width="300"> |
 
 ### **수집 아이템 (Collectibles)**
 
@@ -24,16 +24,22 @@ Unity 엔진을 활용하여 진행 중이며, 다양한 기믹과 최적화된 
 
 ### **장애물 (Obstacles)**
 
-| Laser (레이저) | Cloud (구름) | Rock (운석) |
-| :---: | :---: | :---: |
-| <img src="https://github.com/user-attachments/assets/7d7f83cf-737d-4015-874d-2ec1959b0c5d" width="150"> | <img src="./Assets/Space_Exploration_GUI_Kit/Other_Image/Large/cloud-1-large.png" width="120"> | <img src="https://github.com/user-attachments/assets/a8427606-df64-432f-b53c-bb7a87a4d4e8" width="100"> |
-| 턴제 회전 레이저 | 시야 방해 구름 | 물리 충돌 운석 |
+| Laser (레이저) | Cloud (구름 1) | Cloud (구름 2) | Rock (운석) |
+| :---: | :---: | :---: | :---: |
+| <img src="https://github.com/user-attachments/assets/7d7f83cf-737d-4015-874d-2ec1959b0c5d" width="120"> | <img src="./Assets/Space_Exploration_GUI_Kit/Other_Images/Large/cloud-1-large.png" width="100"> | <img src="./Assets/Space_Exploration_GUI_Kit/Other_Images/Large/cloud-2-large.png" width="100"> | <img src="https://github.com/user-attachments/assets/a8427606-df64-432f-b53c-bb7a87a4d4e8" width="80"> |
+| 턴제 회전 레이저 | 시야 방해 구름 1 | 시야 방해 구름 2 | 물리 충돌 운석 |
 
 ### **배경 (Backgrounds)**
 
-| 일반 배경 (Legacy) | AI 생성 배경 (Stable Diffusion) |
-| :---: | :---: |
-| <img src="./Assets/Space_Exploration_GUI_Kit/Background_Images/large/background-1-large.png" width="300"> | <img src="./Assets/Ha%27s%20Assets/Resources/Sprites/image1.png" width="300"> |
+#### **일반 배경 (Standard Backgrounds)**
+| Background 1 | Background 2 | Home Background |
+| :---: | :---: | :---: |
+| <img src="./Assets/Space_Exploration_GUI_Kit/Background_Images/large/background-1-large.png" width="250"> | <img src="./Assets/Space_Exploration_GUI_Kit/Background_Images/large/background-2-large.png" width="250"> | <img src="./Assets/Space_Exploration_GUI_Kit/Background_Images/large/home-background-large.png" width="250"> |
+
+#### **AI 생성 배경 (Stable Diffusion)**
+| AI Background 1 | AI Background 2 | AI Background 3 |
+| :---: | :---: | :---: |
+| <img src="./Assets/Ha%27s%20Assets/Resources/Sprites/image1.png" width="250"> | <img src="./Assets/Ha%27s%20Assets/Resources/Sprites/image2.png" width="250"> | <img src="./Assets/Ha%27s%20Assets/Resources/Sprites/image3.png" width="250"> |
 
 ---
 
@@ -51,6 +57,8 @@ Unity 엔진을 활용하여 진행 중이며, 다양한 기믹과 최적화된 
 - **8. ItemCollector 리메이크 & 인벤토리 구조화**: Strategy 패턴 도입 및 인벤토리 시스템 고도화
 - **9. 이펙트 효과 및 연출 강화**: 몰입감을 위한 전반적인 이펙트 연출 강화
 - **10. 캐릭터 동작 및 상태 최적화**: 플레이어 캐릭터 움직임 및 상태 관리 정교화
+
+자세한 내용은 'Jong's 작업현황' 폴더를 참고해주세요.
 
 ---
 
@@ -80,7 +88,8 @@ graph LR
 
 ## 👥 팀원 (Team Members)
 
-- **연수씨**: 개발
-- **종욱씨**: 개발
-- **준호씨**: 기획
-- **정수씨**: 개발 / 기획
+- **최연수**: 개발
+- **하종욱**: 개발
+- **변정수**: 개발
+- **송준호**: 기획
+
