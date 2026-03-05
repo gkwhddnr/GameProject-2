@@ -9,9 +9,34 @@ Unity 엔진을 활용하여 진행 중이며, 다양한 기믹과 최적화된 
 
 게임 내에서 사용되는 주요 수집 아이템 및 오브젝트입니다.
 
-| Shield (방패) | Star (별) | Lock (자물쇠) | Key (열쇠) |
-| :---: | :---: | :---: | :---: |
-| ![Shield](./Assets/Ha%27s%20Assets/Resources/Sprites/Shield.png) | ![Star](./Assets/Ha%27s%20Assets/Resources/Sprites/shooting-star-blue-large.png) | ![Lock](./Assets/Ha%27s%20Assets/Resources/Sprites/lock-256.png) | ![Key](./Assets/Space_Exploration_GUI_Kit/Picto_Icons/Dark_Purple/key-128.png) |
+**수집 아이템**
+
+| Shield (방패) | Star (별) | Lock (자물쇠) | Unlock (자물쇠) | Key (열쇠) |
+| :---: | :---: | :---: | :---: |:---: |
+| ![Shield](./Assets/Ha%27s%20Assets/Resources/Sprites/Shield.png) | ![Star](./Assets/Ha%27s%20Assets/Resources/Sprites/shooting-star-blue-large.png) 밝은 별을 따로 캡처해서 사용함. | ![Lock](./Assets/Ha%27s%20Assets/Resources/Sprites/lock-256.png) | ![Unlock](./Assets/Ha%27s%20Assets/Resources/Sprites/unlock-256.png) |![Key](./Assets/Space_Exploration_GUI_Kit/Picto_Icons/Dark_Purple/key-128.png) |
+
+**장애물**
+
+| Laser (레이저) | Cloud (구름) | Rock (운석) |
+| :---: | :---: | :---: |
+| ![Laser](<img width="155" height="147" alt="image" src="https://github.com/user-attachments/assets/7d7f83cf-737d-4015-874d-2ec1959b0c5d" />)
+) | ![Cloud](./Assets/Space_Exploration_GUI_Kit/Other_Image/Large/cloud-1-large.png), ![Cloud](./Assets/Space_Exploration_GUI_Kit/Other_Image/Large/cloud-2-large.png) | ![Rock](<img width="92" height="109" alt="image" src="https://github.com/user-attachments/assets/a8427606-df64-432f-b53c-bb7a87a4d4e8" />)
+), ![Rock](<img width="35" height="47" alt="image" src="https://github.com/user-attachments/assets/ae0a9f2b-b570-4a60-af1a-698cfc617b65" />)
+|
+
+**배경**
+
+| Background (배경) | AI_Background (AI로 만든 배경) |
+| :---: | :---: |
+| ![Background](./Assets/Space_Exploration_GUI_Kit/Background_Images/large/background-1-large.png), ![Background](./Assets/Space_Exploration_GUI_Kit/Background_Images/large/background-2-large.png), ![Background](./Assets/Space_Exploration_GUI_Kit/Background_Images/large/home-background-large.png)
+) | ![AI_Background](./Assets/Ha%27s%20Assets/Resources/Sprites/image1.png), ![AI_Background](./Assets/Ha%27s%20Assets/Resources/Sprites/image2.png), ![AI_Background](./Assets/Ha%27s%20Assets/Resources/Sprites/image3.png) |
+
+
+**캐릭터**
+
+| Character (인물) |
+| :---: |
+| ![Character](./Assets/Jung%20Assets/Character/sheet_text.png), ![Character](./Assets/Jung%20Assets/Character/sheet_walk.png)  |
 
 
 ---
