@@ -290,7 +290,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 15c38f6fa1940124db1ab7f6fe7268d1, type: 3}
   m_Name: Signal Emitter
   m_EditorClassIdentifier: Unity.Timeline::UnityEngine.Timeline.SignalEmitter
-  m_Time: 0
+  m_Time: 2.3666666666666667
   m_Retroactive: 0
   m_EmitOnce: 0
   m_Asset: {fileID: 11400000, guid: 766f03ae96a44e145bb701d0afa5183c, type: 2}
@@ -317,7 +317,16 @@ AnimationClip:
       m_Curve:
       - serializedVersion: 3
         time: 0
-        value: 1
+        value: 0.6404276
+        inSlope: 0
+        outSlope: 0
+        tangentMode: 136
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      - serializedVersion: 3
+        time: 2.3333333
+        value: 0.9969255
         inSlope: 0
         outSlope: 0
         tangentMode: 136
@@ -386,7 +395,16 @@ AnimationClip:
       m_Curve:
       - serializedVersion: 3
         time: 0
-        value: 1
+        value: 0.6404276
+        inSlope: 0
+        outSlope: 0
+        tangentMode: 136
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      - serializedVersion: 3
+        time: 2.3333333
+        value: 0.9969255
         inSlope: 0
         outSlope: 0
         tangentMode: 136
@@ -487,14 +505,14 @@ AnimationClip:
         inWeight: 0.33333334
         outWeight: 0.33333334
       - serializedVersion: 3
-        time: 1.8
-        value: 0.27118903
-        inSlope: 0.2815385
-        outSlope: 0.2815385
+        time: 2.2833333
+        value: -0.0088535845
+        inSlope: -0.0028394458
+        outSlope: -0.0028394458
         tangentMode: 0
         weightedMode: 0
         inWeight: 0.33333334
-        outWeight: 0.33333334
+        outWeight: 0.7707261
       - serializedVersion: 3
         time: 5
         value: 1
@@ -574,14 +592,14 @@ AnimationClip:
         inWeight: 0.33333334
         outWeight: 0.33333334
       - serializedVersion: 3
-        time: 1.8
-        value: 0.27118903
-        inSlope: 0.2815385
-        outSlope: 0.2815385
+        time: 2.2833333
+        value: -0.0088535845
+        inSlope: -0.0028394458
+        outSlope: -0.0028394458
         tangentMode: 0
         weightedMode: 0
         inWeight: 0.33333334
-        outWeight: 0.33333334
+        outWeight: 0.7707261
       - serializedVersion: 3
         time: 5
         value: 1

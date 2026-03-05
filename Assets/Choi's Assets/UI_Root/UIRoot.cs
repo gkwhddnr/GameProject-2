@@ -11,6 +11,14 @@ public class UIRoot : MonoBehaviour
     [Range(0f, 1f)] public float transparentAlpha = 0.4f;
 
     private readonly Vector3[] _corners = new Vector3[4];
+    // Physics 쿼리 주기 제한: 10회/초만 실행 (60fps 기준 6프레임마다 1회)
+    private const float CHECK_INTERVAL = 0.1f;
+    private float _nextCheckTime = 0f;
+    // GC 방지: 매프레임 new 대신 필드로 사전 할당
+    private readonly Collider2D[] _overlapResults = new Collider2D[1];
+    private ContactFilter2D _filter;
+    private Canvas _cachedCanvas;
+    private Camera _cachedCamera;
 
     private void Awake()
     {
@@ -22,11 +30,19 @@ public class UIRoot : MonoBehaviour
         }
 
         Instance = this;
-        DontDestroyOnLoad(gameObject); // 씬 바뀌어도 유지
+        DontDestroyOnLoad(gameObject);
+
+        // ContactFilter2D 사전 설정 (매프레임 new 방지)
+        _filter = new ContactFilter2D();
+        _filter.useLayerMask = true;
+        _filter.useTriggers = true;
     }
 
     private void Update()
     {
+        // 주기 제한: CHECK_INTERVAL마다만 Physics 쿼리 실행
+        if (Time.unscaledTime < _nextCheckTime) return;
+        _nextCheckTime = Time.unscaledTime + CHECK_INTERVAL;
         UpdateItemBarTransparency();
     }
 
@@ -35,47 +51,37 @@ public class UIRoot : MonoBehaviour
         if (itemBarRect == null || itemBarCanvasGroup == null) return;
 
         itemBarRect.GetWorldCorners(_corners);
-        
+
+        // 캐시된 Canvas 사용 (매 호출 GetComponentInParent 방지)
+        if (_cachedCanvas == null)
+            _cachedCanvas = itemBarCanvasGroup.GetComponentInParent<Canvas>();
+
         Vector2 min, max;
-        Canvas canvas = itemBarCanvasGroup.GetComponentInParent<Canvas>();
 
-        // Canvas 렌더 모드에 따라 월드 좌표를 적절히 변환합니다.
-        if (canvas != null && canvas.renderMode == RenderMode.ScreenSpaceOverlay)
+        if (_cachedCanvas != null && _cachedCanvas.renderMode == RenderMode.ScreenSpaceOverlay)
         {
-            Camera cam = Camera.main;
-            if (cam == null) return;
+            if (_cachedCamera == null) _cachedCamera = Camera.main;
+            if (_cachedCamera == null) return;
 
-            // 스크린 좌표를 메인 카메라 기준의 월드 좌표로 변환
-            float distance = Mathf.Abs(cam.transform.position.z);
-            Vector3 world0 = cam.ScreenToWorldPoint(new Vector3(_corners[0].x, _corners[0].y, distance));
-            Vector3 world2 = cam.ScreenToWorldPoint(new Vector3(_corners[2].x, _corners[2].y, distance));
-            
+            float distance = Mathf.Abs(_cachedCamera.transform.position.z);
+            Vector3 world0 = _cachedCamera.ScreenToWorldPoint(new Vector3(_corners[0].x, _corners[0].y, distance));
+            Vector3 world2 = _cachedCamera.ScreenToWorldPoint(new Vector3(_corners[2].x, _corners[2].y, distance));
+
             min = new Vector2(Mathf.Min(world0.x, world2.x), Mathf.Min(world0.y, world2.y));
             max = new Vector2(Mathf.Max(world0.x, world2.x), Mathf.Max(world0.y, world2.y));
         }
         else
         {
-            // ScreenSpaceCamera의 경우 이미 월드 좌표이므로 바로 사용
             min = new Vector2(Mathf.Min(_corners[0].x, _corners[2].x), Mathf.Min(_corners[0].y, _corners[2].y));
             max = new Vector2(Mathf.Max(_corners[0].x, _corners[2].x), Mathf.Max(_corners[0].y, _corners[2].y));
         }
 
-        // 아이템이나 플레이어 충돌체가 Trigger 상태일 수 있으므로 이를 포함하여 검사합니다.
-        ContactFilter2D filter = new ContactFilter2D();
-        filter.SetLayerMask(checkLayers);
-        filter.useLayerMask = true;
-        filter.useTriggers = true; 
+        // 사전 할당된 filter에 LayerMask 업데이트
+        _filter.SetLayerMask(checkLayers);
 
-        Collider2D[] results = new Collider2D[1];
-        int hitCount = Physics2D.OverlapArea(min, max, filter, results);
+        // NonAlloc 버전: GC Alloc 없이 결과를 재사용 배열에 담음
+        int hitCount = Physics2D.OverlapArea(min, max, _filter, _overlapResults);
 
-        if (hitCount > 0)
-        {
-            itemBarCanvasGroup.alpha = transparentAlpha;
-        }
-        else
-        {
-            itemBarCanvasGroup.alpha = 1f;
-        }
+        itemBarCanvasGroup.alpha = (hitCount > 0) ? transparentAlpha : 1f;
     }
 }

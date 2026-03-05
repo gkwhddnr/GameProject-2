@@ -1,4 +1,5 @@
 using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 
 /// <summary>
@@ -45,6 +46,7 @@ public class BGMManager : MonoBehaviour
             Instance = this;
             DontDestroyOnLoad(gameObject);
             SetupAudioSources();
+            InitializeWaitForSeconds();
         }
         else if (Instance != this)
         {
@@ -60,6 +62,7 @@ public class BGMManager : MonoBehaviour
         {
             playlistIndex = 0;
             PlayPlaylistTrack(playlistIndex, defaultFadeTime);
+            StartPlaylistCheck();
         }
         else if (initialTrack != null)
         {
@@ -67,18 +70,45 @@ public class BGMManager : MonoBehaviour
         }
     }
 
-    void Update()
+    private Dictionary<float, WaitForSeconds> _waitCache = new Dictionary<float, WaitForSeconds>();
+    private Coroutine _playlistCheckCoroutine = null;
+
+    private void InitializeWaitForSeconds()
     {
-        // 일시정지 중이 아니고, 플레이리스트가 설정되어 있으며, 현재 노래가 끝났을 때
-        if (!isPaused && playlist != null && playlist.Length > 0)
+        _waitCache[1f] = new WaitForSeconds(1f);
+    }
+
+    private WaitForSeconds GetWait(float seconds)
+    {
+        if (!_waitCache.TryGetValue(seconds, out var wait))
         {
-            var cur = audioSources[activeIndex];
-            // clip이 있던 곡이 실제로 끝나서 isPlaying이 false가 되었고 페이드가 없다면 다음곡 재생 시도
-            if (cur != null && cur.clip != null && !cur.isPlaying && fadeCoroutine == null)
+            wait = new WaitForSeconds(seconds);
+            _waitCache[seconds] = wait;
+        }
+        return wait;
+    }
+
+    private void StartPlaylistCheck()
+    {
+        if (_playlistCheckCoroutine != null) StopCoroutine(_playlistCheckCoroutine);
+        _playlistCheckCoroutine = StartCoroutine(PlaylistCheckRoutine());
+    }
+
+    private IEnumerator PlaylistCheckRoutine()
+    {
+        // 1초마다 노래 끝났는지 체크 (Update 매프레임 체크보다 훨씬 가벼움)
+        var wait = GetWait(1f);
+        while (true)
+        {
+            if (!isPaused && playlist != null && playlist.Length > 0 && fadeCoroutine == null)
             {
-                // 다음 곡으로 이동 (PlayNextInPlaylist 내부에서 loopPlaylist 처리를 함)
-                PlayNextInPlaylist(defaultFadeTime);
+                var cur = audioSources[activeIndex];
+                if (cur != null && cur.clip != null && !cur.isPlaying)
+                {
+                    PlayNextInPlaylist(defaultFadeTime);
+                }
             }
+            yield return wait;
         }
     }
 

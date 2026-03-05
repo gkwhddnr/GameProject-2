@@ -15,7 +15,6 @@ public class StageBoundsUIUpdater : MonoBehaviour
 
     [Header("References")]
     public StageEntry[] stageEntries;
-    public Transform playerTransform;
     public TextMeshProUGUI uiText;
 
     [Tooltip("Settings")]
@@ -25,6 +24,7 @@ public class StageBoundsUIUpdater : MonoBehaviour
 
     private float pollTimer = 0f;
     private int prevPlayerStageIndex = -2;
+    private Transform _playerTransform;
     private CanvasGroup cg;
     private Coroutine fadeCoroutine;
 
@@ -33,8 +33,8 @@ public class StageBoundsUIUpdater : MonoBehaviour
 
     void Start()
     {
-        if (playerTransform == null && GameManager.Instance != null)
-            playerTransform = GameManager.Instance.playerTransform;
+        if (_playerTransform == null && GameManager.Instance != null)
+            _playerTransform = GameManager.Instance.playerTransform;
 
         // 시작 시점에 딱 한 번만 캐싱 (과부하 방지)
         InitCanvasGroup();
@@ -52,7 +52,7 @@ public class StageBoundsUIUpdater : MonoBehaviour
 
     void Update()
     {
-        if (playerTransform == null || uiText == null) return;
+        if (_playerTransform == null || uiText == null) return;
 
         pollTimer += Time.deltaTime;
         if (pollTimer < pollInterval) return;
@@ -70,7 +70,7 @@ public class StageBoundsUIUpdater : MonoBehaviour
     private int GetPlayerStageIndex()
     {
         if (stageEntries == null) return -1;
-        Vector3 p = playerTransform.position;
+        Vector3 p = _playerTransform.position;
 
         for (int i = 0; i < stageEntries.Length; ++i)
         {

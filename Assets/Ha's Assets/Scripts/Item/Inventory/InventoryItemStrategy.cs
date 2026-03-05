@@ -1,8 +1,8 @@
 using UnityEngine;
 
 /// <summary>
-/// ÀÎº¥Åä¸® ¾ÆÀÌÅÛ ¼öÁı Àü·« (Kit, Shield, Bomb, Shuffle, Hint)
-/// ¼öÁı ½Ã ¾ÆÀÌÅÛ ¿ÀºêÁ§Æ®ÀÇ Sprite¸¦ ÀÚµ¿À¸·Î InventoryManager¿¡ µî·Ï
+/// ì¸ë²¤í† ë¦¬ ì•„ì´í…œ ìˆ˜ì§‘ ì „ëµ (Kit, Shield, Bomb, Shuffle, Hint)
+/// ìˆ˜ì§‘ ì‹œ ì•„ì´í…œ ì˜¤ë¸Œì íŠ¸ì˜ Spriteë¥¼ ìë™ìœ¼ë¡œ InventoryManagerì— ë“±ë¡
 /// </summary>
 public class InventoryItemStrategy : IItemCollectionStrategy
 {
@@ -10,11 +10,11 @@ public class InventoryItemStrategy : IItemCollectionStrategy
     {
         if (item == null) return false;
 
-        // ·¹ÀÌ¾î ÀÌ¸§À¸·Î ItemType È®ÀÎ
+        // ë ˆì´ì–´ ì´ë¦„ìœ¼ë¡œ ItemType í™•ì¸
         string layerName = LayerMask.LayerToName(item.layer);
         ItemType itemType = ItemLayers.GetItemType(layerName);
 
-        // Kit, Shield µî ÀÎº¥Åä¸® ¾ÆÀÌÅÛÀÌ¸é true
+        // Kit, Shield ë“± ì¸ë²¤í† ë¦¬ ì•„ì´í…œì´ë©´ true
         return itemType != ItemType.None &&
                (itemType == ItemType.Kit ||
                 itemType == ItemType.Shield ||
@@ -25,43 +25,43 @@ public class InventoryItemStrategy : IItemCollectionStrategy
 
     public void Collect(GameObject item, IItemCollectionContext context)
     {
-        // 1. ItemType È®ÀÎ
+        // 1. ItemType í™•ì¸
         string layerName = LayerMask.LayerToName(item.layer);
         ItemType itemType = ItemLayers.GetItemType(layerName);
 
-        Debug.Log($"[InventoryItemStrategy] {itemType} ¾ÆÀÌÅÛ ¼öÁı: {item.name}");
+        Debug.Log($"[InventoryItemStrategy] {itemType} ì•„ì´í…œ ìˆ˜ì§‘: {item.name}");
 
-        // 2. ¡Ú ¾ÆÀÌÅÛÀÇ Sprite¸¦ InventoryManager¿¡ µî·Ï
+        // 2. â˜… ì•„ì´í…œì˜ Spriteë¥¼ InventoryManagerì— ë“±ë¡
         SpriteRenderer spriteRenderer = item.GetComponent<SpriteRenderer>();
         if (spriteRenderer != null && spriteRenderer.sprite != null)
         {
             if (InventoryManager.Instance != null)
             {
                 InventoryManager.Instance.RegisterItemSprite(itemType, spriteRenderer.sprite);
-                Debug.Log($"[InventoryItemStrategy] {itemType} Sprite µî·Ï: {spriteRenderer.sprite.name}");
+                Debug.Log($"[InventoryItemStrategy] {itemType} Sprite ë“±ë¡: {spriteRenderer.sprite.name}");
             }
         }
         else
         {
-            Debug.LogWarning($"[InventoryItemStrategy] {item.name}¿¡ SpriteRenderer ¶Ç´Â Sprite°¡ ¾ø½À´Ï´Ù!");
+            Debug.LogWarning($"[InventoryItemStrategy] {item.name}ì— SpriteRenderer ë˜ëŠ” Spriteê°€ ì—†ìŠµë‹ˆë‹¤!");
         }
 
-        // 3. InventoryManager¿¡ ¾ÆÀÌÅÛ Ãß°¡
+        // 3. InventoryManagerì— ì•„ì´í…œ ì¶”ê°€
         if (InventoryManager.Instance != null)
         {
             InventoryManager.Instance.AddItem(itemType, 1);
         }
 
-        // 4. »ç¿îµå Àç»ı
+        // 4. ì‚¬ìš´ë“œ ì¬ìƒ
         context.PlaySound("collect");
 
-        // 5. ÇÃ·ÎÆÃ ÅØ½ºÆ® Ç¥½Ã
+        // 5. í”Œë¡œíŒ… í…ìŠ¤íŠ¸ í‘œì‹œ
         context.ShowFloatingText(item);
 
-        // 6. GameManager ¾Ë¸²
+        // 6. GameManager ì•Œë¦¼
         context.NotifyGameManager(item);
 
-        // 7. ÆÄÆ¼Å¬ ½Ã½ºÅÛ ÁßÁö (ÀÌÆåÆ® Á¦°Å)
+        // 7. íŒŒí‹°í´ ì‹œìŠ¤í…œ ì¤‘ì§€ (ì´í™íŠ¸ ì œê±°)
         ParticleSystem[] particles = item.GetComponentsInChildren<ParticleSystem>(true);
         foreach (var ps in particles)
         {
@@ -73,16 +73,14 @@ public class InventoryItemStrategy : IItemCollectionStrategy
             }
         }
 
-        // 8. SpriteRotator Ã³¸® (ÀÖ´Â °æ¿ì)
+        // 8. SpriteRotator ì²˜ë¦¬ (ìˆëŠ” ê²½ìš°)
         SpriteRotator rotator = item.GetComponent<SpriteRotator>();
         if (rotator != null)
         {
             rotator.TriggerDisappear();
         }
-        else
-        {
-            // SpriteRotator°¡ ¾øÀ¸¸é ±âº» ÆäÀÌµå¾Æ¿ô
-            context.FadeOutItem(item);
-        }
+
+        // 9. ì•„ì´í…œ í˜ì´ë“œì•„ì›ƒ ë° ì œê±° (í•­ìƒ ì‹¤í–‰í•˜ì—¬ ItemCollectorì˜ ë¹„í™œì„±í™”/íŒŒê´´ ë¡œì§ ë³´ì¥)
+        context.FadeOutItem(item);
     }
 }

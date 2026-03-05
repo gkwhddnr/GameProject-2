@@ -7,14 +7,14 @@ static class StartupSceneLoader
 {
     private const string MainSceneName = "Choi_MainScreen";
 
-    /*
+    
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
     static void EnsureMainMenuShown()
     {
-        // ÀÌ¹Ì ¸ÞÀÎ ¾ÀÀÌ¸é ¾Æ¹«°Íµµ ¾ÈÇÔ
+        // ï¿½Ì¹ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½Ì¸ï¿½ ï¿½Æ¹ï¿½ï¿½Íµï¿½ ï¿½ï¿½ï¿½ï¿½
         if (SceneManager.GetActiveScene().name == MainSceneName) return;
 
-        // Build Settings¿¡ ÇØ´ç ¾ÀÀÌ ÀÖ´ÂÁö È®ÀÎ
+        // Build Settingsï¿½ï¿½ ï¿½Ø´ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½Ö´ï¿½ï¿½ï¿½ È®ï¿½ï¿½
         bool found = false;
         int count = SceneManager.sceneCountInBuildSettings;
         for (int i = 0; i < count; i++)
@@ -30,8 +30,8 @@ static class StartupSceneLoader
 
         if (!found) return;
 
-        // ¸ÞÀÎ ¾ÀÀ¸·Î ·Îµå (µ¿±â)
+        // ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Îµï¿½ (ï¿½ï¿½ï¿½ï¿½)
         SceneManager.LoadScene(MainSceneName);
     }
-    */
+    
 }

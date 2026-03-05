@@ -15,7 +15,7 @@ public class SpriteRotator : MonoBehaviour
     [Header("Visual Effects")]
     [Range(0f, 1f)][SerializeField] private float ease = 0.85f;
     [SerializeField] private bool fadeOnDisappear = true;
-    [SerializeField] private bool disableOnComplete = false;
+    [SerializeField] private bool disableOnComplete = true;
 
     [Header("Animation States")]
     public Vector3 approachScale = new Vector3(0.85f, 0.85f, 1f);
@@ -33,6 +33,7 @@ public class SpriteRotator : MonoBehaviour
     private Coroutine _activeAnimation;
 
     private float _currentAnimationSpeed;
+    private bool _isVisible = true; // 프러파일러 분석: 카메라 밖이면 회전을 멈춰 CPU 절약
 
     // Property: 레이어 이름을 확인하여 NextPoint 여부 판단
     private bool IsNextPoint => gameObject.layer == LayerMask.NameToLayer("next");
@@ -43,7 +44,14 @@ public class SpriteRotator : MonoBehaviour
         _initialScale = transform.localScale;
         _initialColor = _spriteRenderer != null ? _spriteRenderer.color : Color.white;
         InitializeRotation();
+        
+        // m_rotate가 꺼져있으면 아예 Update를 시작하지 않음
+        enabled = m_rotate;
     }
+
+    // 카메라 렌더링 범위 안에 들어왔을 때만 Update 활성화
+    private void OnBecameVisible() { _isVisible = true; }
+    private void OnBecameInvisible() { _isVisible = false; }
 
     void OnEnable()
     {
@@ -52,10 +60,12 @@ public class SpriteRotator : MonoBehaviour
 
     void Update()
     {
-        if (!_isDisappearing && m_rotate)
+        // 1. 사라지는 중이 아님
+        // 2. 가시성 검사 (카메라에 보일 때만)
+        // 3. 회전 설정 활성화
+        if (!_isDisappearing && _isVisible && m_rotate)
         {
             float finalRotationDelta = _currentAnimationSpeed * Time.deltaTime;
-            // 로컬 Z축(Space.Self) 기준으로 회전하여 왜곡 방지
             transform.Rotate(0f, 0f, finalRotationDelta);
         }
     }
